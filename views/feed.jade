@@ -1,0 +1,14 @@
+extends layout
+
+block content
+	h1 Alghayma | الغيمة
+	br
+	- if (posts)
+		- for (post in posts)
+
+	- else
+		div(style='text-align: center')
+			h4 This feed isn't backed up by Alghayma
+			button#backItUp.btn.btn-primary Back it up !
+	script.
+		backItUp.
