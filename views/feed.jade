@@ -9,6 +9,16 @@ block content
 	- else
 		div(style='text-align: center')
 			h4 This feed isn't backed up by Alghayma
+			br
 			button#backItUp.btn.btn-primary Back it up !
-	script.
-		backItUp.
+		script.
+			function getSearchKey(keyName){
+				return decodeURI(window.location.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURI(sVar).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
+			}
+			backItUp.onclick = function(){
+				var fData = new FormData();
+				fData.append('sourceUrl', getSearchKey('sourceUrl'));
+				var ajaxReq = new XmlHTTPRequest();
+				ajaxReq.open('post', '/backup', true);
+				ajaxReq.send(fData);
+			};

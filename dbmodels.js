@@ -15,9 +15,17 @@ var Post = new Schema({
 	feed: String, //Name attribute of one of the Feeds (as defined above)
 	postDate: Date,
 	postText: String,
+	story: String,
+	tags: Array,
+	media: Array,
+	picture: String,
 	likes: Number,
-	replies: Number,
-	media: Array
+	replies: Number
+});
+
+var FbUser = new Schema({
+	id: String,
+	accessToken: String
 });
 
 var connectionString = 'mongodb://';
@@ -28,6 +36,7 @@ mongoose.connect(connectionString, function(err){ if (err) throw err; });
 
 mongoose.model('Feed', Feed);
 mongoose.model('Post', Post);
+mongoose.model('FbUser', FbUser);
 
 mongoose.connection.on('error', console.error.bind(console, 'DB connection error : '));
 mongoose.connection.once('open', function(){

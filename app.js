@@ -9,6 +9,7 @@ var routes = require('./routes');
 var http = require('http');
 var path = require('path');
 
+
 var app = express();
 
 // all environments
@@ -34,11 +35,9 @@ app.configure('production', function(){
 });
 
 app.get('/', routes.index);
-app.post('/p/', routes.viewpage);
+app.get('/p/', routes.viewpage);
 app.post('/backup', routes.backup);
-
-//In case this is needed...
-app.post('/fbcallback', routes.fbcallback);
+app.get('/auth', routes.fbauth);
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
