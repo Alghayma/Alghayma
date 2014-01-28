@@ -8,7 +8,14 @@ block content
 		br
 		br
 		button#backButton.btn.btn-primary Back
-	script.
-		backButton.onclick = function(){
-			window.history.back();
-		};
+	- if (goHome)
+		script.
+			backButton.textContent = 'Home';
+			backButton.onclick = function(){
+				window.location = 'http://localhost:3000';
+			}
+	- else
+		script.
+			backButton.onclick = function(){
+				window.history.back();
+			};

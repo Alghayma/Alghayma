@@ -4,6 +4,7 @@ var config = require('../config');
 
 var Feed = mongoose.model('Feed');
 var Post = mongoose.model('Post');
+var FbUser = mongoose.model('FbUser');
 
 var validFbPaths = ['http://facebook.com', 'https://facebook.com', 'http://www.facebook.com', 'https://www.facebook.com', 'http://m.facebook.com', 'https://m.facebook.com'];
 
@@ -43,7 +44,7 @@ exports.viewpage = function(req, res){
 	if (!isFbUrl(sourceUrl)){
 		res.render('message', {title: 'Error', message: 'Sorry, but this address doesn\'t seem to come from Facebook...'});
 	}
-	Feed.findOne(sourceUrl, function(err, feed){
+	Feed.findOne({url: sourceUrl}, function(err, feed){
 		if (err){
 			throw err;
 			res.send(500, 'Internal error');
@@ -63,6 +64,7 @@ exports.viewpage = function(req, res){
 				}
 			});
 		} else {
+			fbgraph.
 			res.render('feed', {title: 'Back it up!'});
 		}
 	})
@@ -80,17 +82,16 @@ exports.backup = function(req, res){
 
 exports.fbauth = function(req, res){
 	//FB Graph API authentication model is confusing me...
-	if (!req.query['access_token']){
+	if (!req.query.code){
 		var authUrl = fbgraph.getOauthUrl({
 			"client_id": config.fbappid,
-			"redirect_uri": 'http://localhost:3000/auth',
-			"response_type": 'token'
+			"redirect_uri": 'http://localhost:3000/auth'
 		});
 		if (!req.query.error){
 			res.redirect(authUrl);
 		} else {
 			console.log('Fb auth error : ' + req.query.error)
-			res.render('message', {title: 'Error', message: 'An error occured in the authentication process'});
+			res.render('message', {title: 'Error', message: 'An error occured in the authentication process', goHome: true});
 		}
 		return;
 	}
@@ -98,15 +99,41 @@ exports.fbauth = function(req, res){
 	fbgraph.authorize({
 		client_id: config.fbappid,
 		client_secret: config.fbapptoken,
-		access_token: req.query['access_token'],
+		code: req.query.code,
 		redirect_uri: 'http://localhost:3000/auth',
 	}, function(err, facebookRes){
 		if (err){
 			console.log('Error in FB authorization:\n' + JSON.stringify(err));
+			res.render('message', {title: 'Error', message: 'Error in FB authentication process. Sorry for that', goHome: true});
 			return;
 		}
-		console.log('FB Res, query:\n' + facebookRes.query);
-		console.log('FB Res, body:\n' + JSON.stringify(facebookRes.body));
-		res.redirect('/');
+		fbgraph.setAccessToken(facebookRes.access_token);
+		fbgraph.get('/me?fields=id', function(err, idRes){
+			if (err){
+				console.log('Error when getting userID from FB:\n' + JSON.stringify(err));
+				res.render('message', {title: 'Error', message: 'Error in FB authentication process. Sorry for that', goHome: true});
+				return;
+			}
+			FbUser.count({id: idRes.id}, function(err, count){
+				if (err){
+					console.log('Error when counting FB users with a given ID:\n' + JSON.stringify(err));
+					res.render('message', {title: 'Error', message: 'Error in FB authentication process. Sorry for that', goHome: true});
+					return;
+				}
+				if (count > 0){
+					FbUser.update({id: idRes.id}, {accessToken: facebookRes.access_token}, function(err){
+						if (err) console.log('Error when updating FB User list:\n' + JSON.stringify(err));
+						res.redirect('/');
+					});
+				} else {
+					var newFbUser = new FbUser({
+						id: idRes.id,
+						accessToken: facebookRes.access_token
+					});
+					newFbUser.save();
+					res.redirect('/')
+				}
+			});
+		});
 	});
 };
