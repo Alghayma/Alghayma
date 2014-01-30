@@ -40,5 +40,5 @@ app.post('/backup', routes.backup);
 app.get('/auth', routes.fbauth);
 
 http.createServer(app).listen(app.get('port'), function(){
-  console.log('Express server listening on port ' + app.get('port'));
+	console.log('Express server listening on port ' + app.get('port'));
 });

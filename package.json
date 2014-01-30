@@ -12,6 +12,7 @@
     "mongoose": "*",
     "csv": "~0.3.6",
     "feedparser": "~0.16.5",
-    "fbgraph": "~0.2.8"
+    "fbgraph": "~0.2.8",
+    "mime": "~1.2.11"
   }
 }

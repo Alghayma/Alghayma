@@ -21,7 +21,11 @@ function getFbPath(path){
 	for (var i = 0; i < validFbPaths.length; i++){
 		if (path.indexOf(validFbPaths[i]) == 0){
 			path = path.replace(validFbPaths[i], '');
-			if (path.indexOf('/Pages/') == 0) path = path.replace('/Pages', '');
+			if (path.indexOf('/pages/') == 0){ // Taking the /Page-Name from https://facebook.com/pages/Page-Name/batikhNumber (when a page doesn't have a vanity name)
+				path = path.replace('/pages', '');
+				var batikhNumberLocation = path.indexOf('/');
+				path = path.substring(0, batikhNumberLocation);
+			}
 			return path;
 		}
 	}
@@ -34,8 +38,6 @@ function getFbPath(path){
 
 exports.index = function(req, res){
   res.render('index', { title: 'Alghayma' });
-  console.log('Req body :\n' + JSON.stringify(req.body));
-  console.log('Req query:\n' + JSON.stringify(req.query));
 };
 
 exports.viewpage = function(req, res){
@@ -131,7 +133,7 @@ exports.fbauth = function(req, res){
 						accessToken: facebookRes.access_token
 					});
 					newFbUser.save();
-					res.redirect('/')
+					res.redirect('/');
 				}
 			});
 		});
