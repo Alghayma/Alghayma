@@ -6,6 +6,8 @@ var Feed = mongoose.model('Feed');
 var Post = mongoose.model('Post');
 var FbUser = mongoose.model('FbUser');
 
+var backupJobInstance;
+
 var validFbPaths = ['http://facebook.com', 'https://facebook.com', 'http://www.facebook.com', 'https://www.facebook.com', 'http://m.facebook.com', 'https://m.facebook.com'];
 
 function isFbUrl(path){
@@ -35,9 +37,8 @@ function getFbPath(path){
 /*
  * GET home page.
  */
-
 exports.index = function(req, res){
-  res.render('index', { title: 'Alghayma' });
+	res.render('index', { title: 'Alghayma' });
 };
 
 exports.viewpage = function(req, res){
@@ -66,20 +67,27 @@ exports.viewpage = function(req, res){
 				}
 			});
 		} else {
-			fbgraph.
 			res.render('feed', {title: 'Back it up!'});
 		}
 	})
 };
 
 exports.backup = function(req, res){
-	var sourceUrl = req.body.sourceUrl;
-	if (!isFbUrl(sourceUrl)){
-		res.render('message', {title: 'Error', message: 'Sorry, but this address doesn\'t seem to come from Facebook...'});
+	if (!req.body.sourceurl){
+		res.send(400, 'You didn\'t give us an address to backup');
+		return;
 	}
-	var feedAddress = sourceUrl.replace('facebook.com')
-	fbgraph.setAccessToken(config.fbusertokens[0].token);
-	//fbgraph.
+	var sourceUrl = req.body.sourceurl;
+	if (!isFbUrl(sourceUrl)){
+		res.send(400, 'The address you gave isn\'t from Facebook');
+		return;
+	}
+	if (!backupJobInstance) {
+		throw new TypeError('no backupJobInstance referenced!');
+		process.exit();
+	}
+	backupJobInstance.addFeed(sourceUrl);
+	res.send(200, 'The page was saved in Alghayma and will be backed up soon');
 };
 
 exports.fbauth = function(req, res){
@@ -138,4 +146,10 @@ exports.fbauth = function(req, res){
 			});
 		});
 	});
+};
+
+exports.setBackupJobInstance = function(instance){
+	if (!instance) throw new TypeError('"instance" was undefined');
+	if (typeof instance != 'object') throw new TypeError('"instance" must be an object');
+	backupJobInstance = instance;
 };

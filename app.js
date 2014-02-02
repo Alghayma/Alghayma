@@ -8,7 +8,10 @@ var dbmodels = require('./dbmodels');
 var routes = require('./routes');
 var http = require('http');
 var path = require('path');
+var backupJob = require('./backup-job');
 
+//Referencing the backupJob instance to the routes object
+routes.setBackupJobInstance(backupJob);
 
 var app = express();
 
@@ -41,4 +44,6 @@ app.get('/auth', routes.fbauth);
 
 http.createServer(app).listen(app.get('port'), function(){
 	console.log('Express server listening on port ' + app.get('port'));
+	backupJob.start();
+	console.log('Backup system started');
 });

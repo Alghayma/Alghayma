@@ -1,5 +1,6 @@
 var fs = require('fs');
-var mongooose = require('mongoose');
+var os = require('os');
+var mongoose = require('mongoose');
 var fbgraph = require('fbgraph');
 var config = require('./config');
 //var http = require('http');
@@ -20,7 +21,7 @@ if (os.platform().toString().toLowerCase().indexOf('win') > -1){
 }
 
 //Replacing the current accessToken by an other one from the DB
-function refreshToken(){
+function refreshToken(callback){
 	FbUser.find(function(err, users){
 		if (err){
 			console.log('Error while changing access token:\n' + err);
@@ -30,7 +31,8 @@ function refreshToken(){
 		var chosenUserIndex = Math.floor(Math.random() * numUsers);
 		var selectedUser = users[chosenUserIndex];
 		fbgraph.setAccessToken(selectedUser.accessToken);
-	})
+		if (callback && typeof callback == 'function') callback();
+	});
 }
 refreshToken();
 
@@ -146,12 +148,26 @@ function backupFbPost(postObj){
 	newPost.save();
 }
 
-module.exports = {};
+function backupAllFeeds(){
+	refreshToken(function(){
+		Feed.find(function(err, feeds){
+			if (err){
+				console.log('Can\'t update feeds metadata:\n' + err);
+				return;
+			}
+			if (!(feeds && feeds.length > 0)) return;
+			for (var i = 0; i < feeds.length; i++){
+				exports.launchFeedBackup(feeds[i]);
+			}
+		});
+	});
+}
 
 //Launching a feed backup process
-exports.launchFeedBackup = function(feedId, callback){
-	if (callback && typeof callback != 'function') throw new TypeError('');
-	Feed.findOne({id: feedId}, function(err, _feed){
+exports.launchFeedBackup = function(feedObj, callback){
+	if (!feedObj) throw new TypeError('feedObj must be an object')
+	if (callback && typeof callback != 'function') throw new TypeError('When defined, callback must be a parameter');
+	/*Feed.findOne({id: feedObj.id}, function(err, _feed){
 		if (err){
 			console.log('Error when checking if a certain feed exists:\n' + err);
 			return;
@@ -164,6 +180,10 @@ exports.launchFeedBackup = function(feedId, callback){
 		} else {
 			if (callback) callback(false);
 		}
+	});*/
+	console.log('Backing up : "' + feedObj.name + '"');
+	navigatePage(feedObj.id, undefined, feedObj.lastBackup, function(){
+		console.log('Backup finished : "' + feedObj.name + "'");
 	});
 };
 
@@ -188,7 +208,7 @@ exports.addFeed = function(feedUrl){
 			profileImage: res.picture.data.url
 		});
 		newFeed.save();
-		exports.launchFeedBackup(res.id);
+		exports.launchFeedBackup(newFeed);
 	});
 };
 
@@ -198,10 +218,10 @@ var reloadFeedMetadataInterval;
 //Creating the auto backup job
 exports.start = function(){
 	reloadFeedMetadataInterval = setInterval(config.metadataRefreshInterval, function(){
-
+		refreshMetadata();
 	});
 	backupInterval = setInterval(config.postsBackupInterval, function(){
-
+		backupAllFeeds();
 	});
 };
 
