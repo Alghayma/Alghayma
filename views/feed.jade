@@ -4,11 +4,15 @@ block content
 	h1 Alghayma | الغيمة
 	br
 	- if (posts)
+		h4 Here is what we have for #{feed.name}
 		- for (post in posts)
 			// TODO
+		div#infiniteScrollTrigger(style="width: 100%")
+		script.
+			infiniteScrollTrigger.onmouseenter = function(){};
 	- else
 		div(style='text-align: center')
-			h4 This feed isn't backed up by Alghayma
+			h4#header This feed isn't backed up by Alghayma
 			br
 			button#backItUp.btn.btn-primary Back it up !
 			br
@@ -47,6 +51,15 @@ block content
 						panelBody.className = 'panel-body';
 						$('#messagePanel').append(panelHeading, panelBody);
 					}
+					$('#backItUp').css('display: none');
+					$('#header').css('display: none');
+					$('#messagePanel').append('<p id="redirectP">Redirecting to Alghayma homepage in 5 seconds. If it doesn\'t, click <a href="http://localhost:3000">here</a>.</p>');
+					var intervalCount = 0;
+					setInterval(function(){
+						intervalCount++;
+						$('#redirectP').html('Redirecting to Alghayma homepage in ' + (5 - intervalCount).toString() + ' seconds. If it doesn\'t, click <a href="http://localhost:3000">here</a>.');
+						if (intervalCount == 5) window.history.back();
+					}, 1000);
 				};
 				ajaxReq.send(fData);
 			};

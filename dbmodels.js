@@ -6,7 +6,7 @@ var Feed = new Schema({
 	id: String, //Fb ID (which are digits only) or random alphanumerical string for other feed types
 	name: String,
 	type: String,
-	url: String,
+	url: String, //Vanity name
 	profileImage: String,
 	lastBackup: Date
 });

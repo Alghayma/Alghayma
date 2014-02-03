@@ -127,7 +127,7 @@ function backupFbPost(postObj){
 	var feedId = postObj.from.id;
 	var postId = postObj.id;
 	var postText = postObj.message;
-	var postDate = postObj.created_date;
+	var postDate = postObj.created_time;
 	var storyLink = postObj.link;
 	// LATER : Getting the story link. Backup it up if it's a picture, or a facebook post
 	/*if (isFbUrl(storyLink)){
@@ -165,31 +165,24 @@ function backupAllFeeds(){
 
 //Launching a feed backup process
 exports.launchFeedBackup = function(feedObj, callback){
-	if (!feedObj) throw new TypeError('feedObj must be an object')
+	if (!(feedObj && typeof feedObj == 'object')) throw new TypeError('feedObj must be an object')
 	if (callback && typeof callback != 'function') throw new TypeError('When defined, callback must be a parameter');
-	/*Feed.findOne({id: feedObj.id}, function(err, _feed){
-		if (err){
-			console.log('Error when checking if a certain feed exists:\n' + err);
-			return;
-		}
-		if (_feed){
-			console.log('Backing up : "' + _feed.name + '"');
-			navigatePage(_feed.id, undefined, _feed.lastBackup, function(){
-				console.log('Backup finished : "' + _feed.name + "'");
-			});
-		} else {
-			if (callback) callback(false);
-		}
-	});*/
 	console.log('Backing up : "' + feedObj.name + '"');
 	navigatePage(feedObj.id, undefined, feedObj.lastBackup, function(){
-		console.log('Backup finished : "' + feedObj.name + "'");
+		Feed.update({id: feedObj.id}, {lastBackup: Date.now()}).exec(function(err){
+			if (err){
+				console.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
+				return;
+			}
+			console.log('Backup finished : "' + feedObj.name + '"');
+		})
 	});
 };
 
 //Adding a feed a that will be backed up by the system
-exports.addFeed = function(feedUrl){
+exports.addFeed = function(feedUrl, callback){
 	if (!isFbUrl(feedUrl)) throw new TypeError('As of now, only FB pages are supported');
+	if (callback && typeof callback != 'function') throw new TypeError('When defined, callback must be a function');
 	var fbPath = getFbPath(feedUrl);
 	if (fbPath.lastIndexOf('/') != fbPath.length - 1){
 		fbPath += '/';
@@ -200,15 +193,25 @@ exports.addFeed = function(feedUrl){
 			console.log('Error when getting info of: ' + fbPath + '\n' + JSON.stringify(err));
 			return;
 		}
-		var newFeed = new Feed({
-			id: res.id,
-			name: res.name,
-			type: 'fbpage',
-			url: res.link,
-			profileImage: res.picture.data.url
+		//Check that the feed doesn't exist yet
+		Feed.find({id: res.id}, function(err, feed){
+			if (err){
+				console.log('Error when checking whether ' + res.name + ' is already being backed up or not');
+				return;
+			}
+			if (!feed.id){
+				var newFeed = new Feed({
+					id: res.id,
+					name: res.name,
+					type: 'fbpage',
+					url: getFbPath(feedUrl),
+					profileImage: res.picture.data.url
+				});
+				newFeed.save();
+				exports.launchFeedBackup(newFeed);
+			}
+			if (callback) callback(res.name);
 		});
-		newFeed.save();
-		exports.launchFeedBackup(newFeed);
 	});
 };
 

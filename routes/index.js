@@ -18,15 +18,18 @@ function isFbUrl(path){
 	return false;
 }
 
-function getFbPath(path){
+//Getting the page name (vanity and non-vanity)
+function getFbPath(path, removeEdges){
 	if (typeof path != 'string') throw new TypeError('path must be a string');
 	for (var i = 0; i < validFbPaths.length; i++){
 		if (path.indexOf(validFbPaths[i]) == 0){
 			path = path.replace(validFbPaths[i], '');
-			if (path.indexOf('/pages/') == 0){ // Taking the /Page-Name from https://facebook.com/pages/Page-Name/batikhNumber (when a page doesn't have a vanity name)
-				path = path.replace('/pages', '');
-				var batikhNumberLocation = path.indexOf('/');
-				path = path.substring(0, batikhNumberLocation);
+			if (path.indexOf('/pages/') == 0){ // Taking the Page-Name from https://facebook.com/pages/Page-Name/batikhNumber (when a page doesn't have a vanity name)
+				path = path.replace('/pages/', '');
+				if (removeEdges){
+					var batikhNumberLocation = path.indexOf('/');
+					path = path.substring(0, batikhNumberLocation);
+				}
 			}
 			return path;
 		}
@@ -47,21 +50,21 @@ exports.viewpage = function(req, res){
 	if (!isFbUrl(sourceUrl)){
 		res.render('message', {title: 'Error', message: 'Sorry, but this address doesn\'t seem to come from Facebook...'});
 	}
-	Feed.findOne({url: sourceUrl}, function(err, feed){
+	Feed.findOne().or([{url: getFbPath(sourceUrl)}, {id: getFbPath(sourceUrl)}]).exec(function(err, feed){
 		if (err){
 			throw err;
 			res.send(500, 'Internal error');
 			return;
 		}
 		if (feed){
-			Post.find({name: feed.name}, function(err, posts){
+			Post.find({feedId: feed.id}).sort({postDate: -1}).exec(function(err, posts){
 				if (err){
 					throw err;
 					res.send(500, 'Internal error');
 					return;
 				}
 				if (posts && posts.length > 0){
-					res.render('feed', {title: feed.name + ' - Alghayma', posts: posts})
+					res.render('feed', {title: feed.name + ' - Alghayma', feed: feed, posts: posts})
 				} else {
 					res.render('message', {title: 'Error', message: 'Sorry. This feed is registered on Alghayma, but it hasn\'t been backed up yet. Please come back later.'});
 				}
@@ -69,7 +72,20 @@ exports.viewpage = function(req, res){
 		} else {
 			res.render('feed', {title: 'Back it up!'});
 		}
-	})
+	});
+};
+
+exports.getPosts = function(req, res){
+	var feedId = req.query.feedId;
+	var offeset = req.query.offset;
+	var limit = req.query.limit;
+	if (!feedId){
+		res.send(400, 'No feedId provided');
+		return;
+	}
+	if (!limit) limit = 25;
+	if (!offset) offset = 0;
+
 };
 
 exports.backup = function(req, res){
@@ -86,8 +102,9 @@ exports.backup = function(req, res){
 		throw new TypeError('no backupJobInstance referenced!');
 		process.exit();
 	}
-	backupJobInstance.addFeed(sourceUrl);
-	res.send(200, 'The page was saved in Alghayma and will be backed up soon');
+	backupJobInstance.addFeed(sourceUrl, function(pageName){
+		res.send(200, pageName + ' was saved in Alghayma and will be backed up soon');
+	});
 };
 
 exports.fbauth = function(req, res){
