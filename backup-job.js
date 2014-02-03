@@ -46,7 +46,7 @@ function refreshMetadata(){
 		if (!(feeds && feeds.length > 0)) return;
 		for (var i = 0; i < feeds.length; i++){
 			fbgraph.get(feeds.id, {fields: 'id,name,link,picture'}, function(err, fbRes){
-				Feed.update({id: feeds.id}, {name: fbRes.name, }).exec();
+				Feed.update({id: feeds.id}, {name: fbRes.name, picture: fbRes.picture.data.url}).exec();
 			});
 		}
 	});
@@ -85,18 +85,20 @@ function getFbPath(path, removeEdges){
 //Getting all the posts, with an optional interval (since or until parameter)
 function navigatePage(pageId, until, since, cb){
 	if (typeof pageId != 'string') throw new TypeError('pageId must be a string');
-	if (typeof until != 'undefined' && !(typeof until == 'number' || typeof until == 'date')) throw new TypeError('When defined, "until" must be a number or a date');
-	if (typeof since != 'undefined' && !(typeof since == 'number' || typeof since == 'date')) throw new TypeError('When defined, "since" must be a number or a date');
+	//if (typeof until != 'undefined' && !(typeof until == 'number' || typeof until == 'date')) throw new TypeError('When defined, "until" must be a number or a date');
+	//if (typeof since != 'undefined' && !(typeof since == 'number' || typeof since == 'date')) throw new TypeError('When defined, "since" must be a number or a date');
 	if (cb && typeof cb != 'function') throw new TypeError('When defined, "cb" must be a function');
 	if (typeof until != 'undefined' && typeof since != 'since') throw new TypeError('You can use only one time pagination parameter at a time');
 	var reqText = pageId + '/posts';
 
 	function fbGet(path, until, since){
 		var options = {};
-		if (typeof until == 'date') options.until = until.getTime();
-		if (typeof until == 'number') options.until = until;
-		if (typeof since == 'date') options.since = since.getTime();
-		if (typeof since == 'number') options.since = since;
+		//if (typeof until == 'date') options.until = until.getTime();
+		//if (typeof until == 'number') options.until = until;
+		//if (typeof since == 'date') options.since = since.getTime();
+		//if (typeof since == 'number') options.since = since;
+		if (until) options.until = until.getTime();
+		if (since) options.since = since.getTime();
 		fbgraph.get(path, options, function(err, fbRes){
 			if (err) {
 				console.log('Error while getting updates from : ' + pageId + '\n' + JSON.stringify(err));
@@ -129,6 +131,7 @@ function backupFbPost(postObj){
 	var postText = postObj.message;
 	var postDate = postObj.created_time;
 	var storyLink = postObj.link;
+	var story = postObj.story;
 	// LATER : Getting the story link. Backup it up if it's a picture, or a facebook post
 	/*if (isFbUrl(storyLink)){
 
@@ -143,6 +146,7 @@ function backupFbPost(postObj){
 		postDate: postDate,
 		postText: postText,
 		storyLink: storyLink,
+		story: story,
 		picture: pictureLink
 	});
 	newPost.save();
@@ -162,6 +166,7 @@ function backupAllFeeds(){
 		});
 	});
 }
+exports.backupAllFeeds = backupAllFeeds;
 
 //Launching a feed backup process
 exports.launchFeedBackup = function(feedObj, callback){

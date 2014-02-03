@@ -16,6 +16,7 @@ var Post = new Schema({
 	feedId: String, //From Feed collection, or random alphanumerical
 	postDate: Date,
 	postText: String,
+	story: String,
 	storyLink: String, //Link preview text
 	media: Array, //path on server to linked media assets
 	picture: String //if a unique picture exists

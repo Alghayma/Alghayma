@@ -40,6 +40,7 @@ app.configure('production', function(){
 
 app.get('/', routes.index);
 app.get('/p/', routes.viewpage);
+app.get('/chunk', routes.chunk);
 app.post('/backup', routes.backup);
 app.get('/auth', routes.fbauth);
 

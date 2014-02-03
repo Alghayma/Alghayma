@@ -57,14 +57,14 @@ exports.viewpage = function(req, res){
 			return;
 		}
 		if (feed){
-			Post.find({feedId: feed.id}).sort({postDate: -1}).exec(function(err, posts){
+			Post.find({feedId: feed.id}).sort({postDate: -1}).limit(25).exec(function(err, posts){
 				if (err){
 					throw err;
 					res.send(500, 'Internal error');
 					return;
 				}
 				if (posts && posts.length > 0){
-					res.render('feed', {title: feed.name + ' - Alghayma', feed: feed, posts: posts})
+					res.render('feed', {title: feed.name + ' - Alghayma', feed: feed, posts: posts});
 				} else {
 					res.render('message', {title: 'Error', message: 'Sorry. This feed is registered on Alghayma, but it hasn\'t been backed up yet. Please come back later.'});
 				}
@@ -75,9 +75,9 @@ exports.viewpage = function(req, res){
 	});
 };
 
-exports.getPosts = function(req, res){
+exports.chunk = function(req, res){
 	var feedId = req.query.feedId;
-	var offeset = req.query.offset;
+	var offset = req.query.offset; //Beware : chunk offest, and not post offset
 	var limit = req.query.limit;
 	if (!feedId){
 		res.send(400, 'No feedId provided');
@@ -85,7 +85,13 @@ exports.getPosts = function(req, res){
 	}
 	if (!limit) limit = 25;
 	if (!offset) offset = 0;
-
+	Post.find({feedId: feedId}).sort({postDate: -1}).skip(offset * limit).limit(limit).exec(function(err, posts){
+		if (err){
+			console.log('Error while getting chunk ' + offset + ' with width ' + limit + ' for feedId ' + feedId);
+			return;
+		}
+		res.send(200, posts);
+	});
 };
 
 exports.backup = function(req, res){

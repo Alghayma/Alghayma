@@ -3,13 +3,76 @@ extends layout
 block content
 	h1 Alghayma | الغيمة
 	br
-	- if (posts)
-		h4 Here is what we have for #{feed.name}
-		- for (post in posts)
-			// TODO
-		div#infiniteScrollTrigger(style="width: 100%")
+	- if (posts && feed)
+		h4 Here is what we have for #{feed.name} :
+		div#postList
+			- each post in posts
+				.post
+					- if (post.postText)
+						.message #{post.postText}
+						if (post.story && post.postText != post.story)
+							.message #{post.story}
+					- else
+						.message #{post.story}
+					.date #{post.postDate}
+					-if (post.picture)
+						div.imageHolder
+							img(src="#{post.picture}")
+					.link
+						a(href="#{post.storyLink}") #{post.storyLink}
+		div#infiniteScrollTrigger
+			span#downIcon.glyphicon.glyphicon-arrow-down
+			img#ajaxLoaderGif(src="/images/ajax-loader.gif", style="display: none")
 		script.
-			infiniteScrollTrigger.onmouseenter = function(){};
+			var feedId = #{feed.id};
+			var loadChunk = function(offset, callback){
+				var req = new XMLHttpRequest();
+				req.open('get', '/chunk?feedId=' + feedId + '&offset=' + offset, true);
+				req.onload = function(){
+					if (this.status == 200){
+						var posts = JSON.parse(this.response);
+						if (!Array.isArray(posts)){
+							//alert('An error occured');
+							return;
+						}
+						for (var i = 0; i < posts.length; i++){
+							var newPostElement = document.createElement('div');
+							newPostElement.className = 'post'
+							if (posts[i].postText){
+								var messageDiv = document.createElement('div');
+								messageDiv.className = 'message';
+								messageDiv.textContent = posts[i].postText;
+								if (posts[i].story && posts[i].story != posts[i].textContent){
+									var storyDiv = document.createElement('div');
+									storyDiv.className = 'message';
+									storyDiv.textContent = posts[i].story;
+								}
+							} else {
+
+							}
+						}
+					} else {
+						//alert('');
+					}
+					if (callback && typeof callback == 'function') callback();
+				};
+				req.send();
+			}
+			var offsetCounter = 0;
+			var loadingStuff = false;
+			infiniteScrollTrigger.onmouseenter = function(){
+				if (!loadingStuff){
+					loadingStuff = true;
+					$('#downIcon').css('display: none');
+					$('#ajaxLoaderGif').css('display: block');
+					offsetCounter++;
+					loadChunk(offsetCounter, function(){
+						$('#ajaxLoaderGif').css('display: none');
+						$('#downIcon').css('display: block');
+						loadingStuff = false;
+					});
+				}
+			};
 	- else
 		div(style='text-align: center')
 			h4#header This feed isn't backed up by Alghayma
