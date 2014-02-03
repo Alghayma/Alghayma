@@ -99,7 +99,7 @@ function navigatePage(pageId, until, since, cb){
 		if (typeof since == 'number') options.since = since;
 		fbgraph.get(path, options, function(err, fbRes){
 			if (err) {
-				console.log('Error while getting updates from : ' + pageId + '\n' + err);
+				console.log('Error while getting updates from : ' + pageId + '\n' + JSON.stringify(err));
 				if (cb) cb();
 				return;
 			}
@@ -197,7 +197,7 @@ exports.addFeed = function(feedUrl){
 	fbPath += '?fields=id,name,link,picture';
 	fbgraph.get(fbPath, function(err, res){
 		if (err){
-			console.log('Error when getting info of: ' + fbPath + '\n' + err);
+			console.log('Error when getting info of: ' + fbPath + '\n' + JSON.stringify(err));
 			return;
 		}
 		var newFeed = new Feed({
@@ -217,12 +217,12 @@ var reloadFeedMetadataInterval;
 
 //Creating the auto backup job
 exports.start = function(){
-	reloadFeedMetadataInterval = setInterval(config.metadataRefreshInterval, function(){
+	reloadFeedMetadataInterval = setInterval(function(){
 		refreshMetadata();
-	});
-	backupInterval = setInterval(config.postsBackupInterval, function(){
+	}, config.metadataRefreshInterval);
+	backupInterval = setInterval(function(){
 		backupAllFeeds();
-	});
+	}, config.postsBackupInterval);
 };
 
 //Stopping the backup process

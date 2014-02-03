@@ -73,11 +73,11 @@ exports.viewpage = function(req, res){
 };
 
 exports.backup = function(req, res){
-	if (!req.body.sourceurl){
+	if (!req.body.sourceUrl){
 		res.send(400, 'You didn\'t give us an address to backup');
 		return;
 	}
-	var sourceUrl = req.body.sourceurl;
+	var sourceUrl = decodeURIComponent(req.body.sourceUrl);
 	if (!isFbUrl(sourceUrl)){
 		res.send(400, 'The address you gave isn\'t from Facebook');
 		return;

@@ -11,16 +11,21 @@ block content
 			h4 This feed isn't backed up by Alghayma
 			br
 			button#backItUp.btn.btn-primary Back it up !
+			br
+			br
 			div#messagePanel
 		script.
 			function getSearchKey(keyName){
-				return decodeURI(window.location.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURI(sVar).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
+				return decodeURI(window.location.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURI(keyName).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
 			}
 			backItUp.onclick = function(){
 				var fData = new FormData();
-				fData.append('sourceUrl', getSearchKey('sourceUrl'));
-				var ajaxReq = new XmlHTTPRequest();
+				var targetFeed = decodeURIComponent(getSearchKey('sourceUrl'));
+				console.log('sourceUrl : ' + targetFeed);
+				fData.append('sourceUrl', decodeURI(getSearchKey('sourceUrl')));
+				var ajaxReq = new XMLHttpRequest();
 				ajaxReq.open('post', '/backup', true);
+				ajaxReq.setRequestHeader('enctype', 'application/x-www-form-urlencoded');
 				ajaxReq.onload = function(){
 					document.getElementById('messagePanel').textContent = '';
 					var panelHeading = document.createElement('div');
