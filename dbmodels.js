@@ -18,7 +18,6 @@ var Post = new Schema({
 	postText: String,
 	story: String,
 	storyLink: String, //Link preview text
-	media: Array, //path on server to linked media assets
 	picture: String //if a unique picture exists
 });
 

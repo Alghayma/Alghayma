@@ -1,3 +1,7 @@
+var fs = require('fs');
+var os = require('os');
+var path = require('path');
+
 var mongoose = require('mongoose');
 var fbgraph = require('fbgraph');
 var config = require('../config');
@@ -7,6 +11,14 @@ var Post = mongoose.model('Post');
 var FbUser = mongoose.model('FbUser');
 
 var backupJobInstance;
+
+var mediaPath = path.join(process.cwd(), config.mediafolder);
+var folderSeperator;
+if (os.platform().toString().toLowerCase().indexOf('win') > -1){
+	folderSeperator = '\\';
+} else {
+	folderSeperator = '/';
+}
 
 var validFbPaths = ['http://facebook.com', 'https://facebook.com', 'http://www.facebook.com', 'https://www.facebook.com', 'http://m.facebook.com', 'https://m.facebook.com'];
 
@@ -92,6 +104,23 @@ exports.chunk = function(req, res){
 		}
 		res.send(200, posts);
 	});
+};
+
+exports.media = function(req, res){
+	var postId = req.param('postid');
+	var mediaId = req.param('mediaid');
+	var postMediaPath = path.join(mediaPath, postId);
+	if (!fs.existsSync(postMediaPath)){
+		res.send(404, 'Post media not found');
+		return;
+	}
+	var mediaElementPath = path.join(postMediaPath, mediaId);
+	if (!fs.existsSync(mediaElementPath)){
+		res.send(404, 'Media element not found');
+		return;
+	}
+	var fileListForMediaElem = fs.readdirSync(mediaElementPath);
+	res.sendfile(path.join(mediaElementPath, fileListForMediaElem[0]));
 };
 
 exports.backup = function(req, res){

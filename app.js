@@ -16,7 +16,7 @@ routes.setBackupJobInstance(backupJob);
 var app = express();
 
 // all environments
-app.set('port', process.env.PORT || 3000);
+app.set('port', config.httpport);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 app.use(express.favicon());
@@ -39,8 +39,9 @@ app.configure('production', function(){
 });
 
 app.get('/', routes.index);
-app.get('/p/', routes.viewpage);
+app.get('/p', routes.viewpage);
 app.get('/chunk', routes.chunk);
+app.get('/media/:postid/:mediaid', routes.media);
 app.post('/backup', routes.backup);
 app.get('/auth', routes.fbauth);
 

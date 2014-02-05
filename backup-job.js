@@ -1,17 +1,19 @@
 var fs = require('fs');
 var os = require('os');
+var path = require('path');
 var mongoose = require('mongoose');
 var fbgraph = require('fbgraph');
 var config = require('./config');
-//var http = require('http');
-//var https = require('https');
+var http = require('http');
+var https = require('https');
 
 var FbUser = mongoose.model('FbUser');
 var Feed = mongoose.model('Feed');
 var Post = mongoose.model('Post');
 
 //Creating the media folder, if it doesn't exist
-if (!fs.existsSync(config.mediafolder)) fs.mkdirSync(config.mediafolder);
+var mediaPath = path.join(process.cwd(), config.mediafolder);
+if (!fs.existsSync(config.mediafolder)) fs.mkdirSync(mediaPath);
 //Setting up folderSeperator character
 var folderSeperator;
 if (os.platform().toString().toLowerCase().indexOf('win') > -1){
@@ -102,6 +104,9 @@ function navigatePage(pageId, until, since, cb){
 		fbgraph.get(path, options, function(err, fbRes){
 			if (err) {
 				console.log('Error while getting updates from : ' + pageId + '\n' + JSON.stringify(err));
+				if (err.code == 2){ //Rate limiting
+					fbGet(path, until, since);
+				}
 				if (cb) cb();
 				return;
 			}
@@ -125,6 +130,10 @@ function navigatePage(pageId, until, since, cb){
 
 //Saving a single fb post on the server
 function backupFbPost(postObj){
+	function getSearchKey(path, keyName){
+		var search = path.substring(path.indexOf('?'));
+		return decodeURI(search.replace(new RegExp("^(?:.*[&\\?]" + encodeURI(keyName).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
+	}
 	if (typeof postObj !== 'object') throw new TypeError('postObj must be an object');
 	var feedId = postObj.from.id;
 	var postId = postObj.id;
@@ -133,23 +142,49 @@ function backupFbPost(postObj){
 	var storyLink = postObj.link;
 	var story = postObj.story;
 	// LATER : Getting the story link. Backup it up if it's a picture, or a facebook post
-	/*if (isFbUrl(storyLink)){
+	if (isFbUrl(storyLink) && storyLink.indexOf('photo.php') && getSearchKey(storyLink, 'fbid')){
+		var postMediaPath = path.join(mediaPath, postId);
+		fs.mkdirSync(postMediaPath);
+		var photoId = getSearchKey(storyLink, 'fbid');
+		fbgraph.get(photoId, function(err, fbImageRes){
+			if (err){
+				var pictureLink = postObj.picture;
+				var newPost = new Post({
+					postId: postId,
+					feedId: feedId,
+					postDate: postDate,
+					postText: postText,
+					storyLink: storyLink,
+					story: story,
+					picture: pictureLink
+				});
+				newPost.save();
+				return;
+			}
+			var pictureLink = fbImageRes.source;
+			if (pictureLink.indexOf('https://') == 0){
+				https.get(pictureLink, function(imgRes){
 
-	} else if {
-		var 
-	}*/
-	// LATER : Backing up the picture
-	var pictureLink = postObj.picture;
-	var newPost = new Post({
-		postId: postId,
-		feedId: feedId,
-		postDate: postDate,
-		postText: postText,
-		storyLink: storyLink,
-		story: story,
-		picture: pictureLink
-	});
-	newPost.save();
+				});
+			} else {
+				http.get(pictureLink, function(imgRes){
+					
+				});
+			}
+		});
+	} else {
+		var pictureLink = postObj.picture;
+		var newPost = new Post({
+			postId: postId,
+			feedId: feedId,
+			postDate: postDate,
+			postText: postText,
+			storyLink: storyLink,
+			story: story,
+			picture: pictureLink
+		});
+		newPost.save();
+	}
 }
 
 function backupAllFeeds(){
