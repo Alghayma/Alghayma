@@ -1,15 +1,19 @@
+/**
+ * Facebook extension for Alghayma
+ */
+
 var fs = require('fs');
 var os = require('os');
 var path = require('path');
 var mongoose = require('mongoose');
 var fbgraph = require('fbgraph');
-var config = require('./config');
+var config = require(path.join(process.cwd(), 'config'));
 var http = require('http');
 var https = require('https');
 
-var FbUser = mongoose.model('FbUser');
-var Feed = mongoose.model('Feed');
-var Post = mongoose.model('Post');
+var FBUser = mongoose.model('FBUser');
+var Feed = mongoose.model('FBFeed');
+var Post = mongoose.model('FBPost');
 
 //Creating the media folder, if it doesn't exist
 var mediaPath = path.join(process.cwd(), config.mediafolder);
@@ -24,7 +28,7 @@ if (os.platform().toString().toLowerCase().indexOf('win') > -1){
 
 //Replacing the current accessToken by an other one from the DB
 function refreshToken(callback){
-	FbUser.find(function(err, users){
+	FBUser.find(function(err, users){
 		if (err){
 			console.log('Error while changing access token:\n' + err);
 			return;
@@ -182,7 +186,7 @@ function backupFbPost(postObj){
 						});
 						imgRes.on('end', function(){
 							fsWriter.end();
-							pictureLink = '/media/' + postId;
+							pictureLink = '/fb/media/' + postId;
 							postInDb.picture = pictureLink;
 							saveInDb(postInDb);
 						});
@@ -200,7 +204,7 @@ function backupFbPost(postObj){
 						});
 						imgRes.on('end', function(){
 							fsWriter.end();
-							pictureLink = '/media/' + postId;
+							pictureLink = '/fb/media/' + postId;
 							postInDb.picture = pictureLink;
 							saveInDb(postInDb);
 						});
