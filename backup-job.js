@@ -58,7 +58,7 @@ var validFbPaths = ['http://facebook.com', 'https://facebook.com', 'http://www.f
 
 //Checking whether the given path is a Facebook url
 function isFbUrl(path){
-	if (typeof path != 'string') throw new TypeError('path must be a string');
+	if (typeof path != 'string')  return false;
 	for (var i = 0; i < validFbPaths.length; i++){
 		if (path.indexOf(validFbPaths[i]) == 0) return true;
 	}
@@ -155,7 +155,7 @@ function backupFbPost(postObj){
 		story: story
 	}
 	//Getting the story link. Backup it up if it's a picture on facebook. (Assuming that a facebook page that gets deleted, all its posted content goes away with it... Pictures included)
-	if (isFbUrl(storyLink) && storyLink.indexOf('photo.php') && getSearchKey(storyLink, 'fbid')){
+	if (isFbUrl(storyLink) && storyLink.indexOf('photo.php') > 0 && getSearchKey(storyLink, 'fbid')){
 		//Creating a media folder for the post
 		var postMediaPath = path.join(mediaPath, postId);
 		fs.mkdirSync(postMediaPath);

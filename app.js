@@ -9,6 +9,7 @@ var routes = require('./routes');
 var http = require('http');
 var path = require('path');
 var backupJob = require('./backup-job');
+var config = require('./config');
 
 //Referencing the backupJob instance to the routes object
 routes.setBackupJobInstance(backupJob);
