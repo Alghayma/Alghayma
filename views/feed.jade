@@ -27,7 +27,7 @@ block content
 			var feedId = #{feed.id};
 			var loadChunk = function(offset, callback){
 				var req = new XMLHttpRequest();
-				req.open('get', '/chunk?feedId=' + feedId + '&offset=' + offset, true);
+				req.open('get', '/fb/chunk?feedId=' + feedId + '&offset=' + offset, true);
 				req.onload = function(){
 					if (this.status == 200){
 						var posts = JSON.parse(this.response);
@@ -91,7 +91,7 @@ block content
 				console.log('sourceUrl : ' + targetFeed);
 				fData.append('sourceUrl', decodeURI(getSearchKey('sourceUrl')));
 				var ajaxReq = new XMLHttpRequest();
-				ajaxReq.open('post', '/backup', true);
+				ajaxReq.open('post', '/fb/backup/', true);
 				ajaxReq.setRequestHeader('enctype', 'application/x-www-form-urlencoded');
 				ajaxReq.onload = function(){
 					document.getElementById('messagePanel').textContent = '';
@@ -117,12 +117,7 @@ block content
 					$('#backItUp').css('display: none');
 					$('#header').css('display: none');
 					$('#messagePanel').append('<p id="redirectP">Redirecting to Alghayma homepage in 5 seconds. If it doesn\'t, click <a href="http://localhost:3000">here</a>.</p>');
-					var intervalCount = 0;
-					setInterval(function(){
-						intervalCount++;
-						$('#redirectP').html('Redirecting to Alghayma homepage in ' + (5 - intervalCount).toString() + ' seconds. If it doesn\'t, click <a href="http://localhost:3000">here</a>.');
-						if (intervalCount == 5) window.history.back();
-					}, 1000);
+					
 				};
 				ajaxReq.send(fData);
 			};

@@ -3,7 +3,7 @@ var mongoose = require('mongoose');
 var config = require('./config');
 var fbgraph = require('fbgraph');
 
-var FbUser = mongoose.model('FbUser');
+var FbUser = mongoose.model('FBUser');
 
 var usersUpdated = 0;
 var waitEndInterval;
