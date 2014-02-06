@@ -108,19 +108,17 @@ exports.chunk = function(req, res){
 
 exports.media = function(req, res){
 	var postId = req.param('postid');
-	var mediaId = req.param('mediaid');
 	var postMediaPath = path.join(mediaPath, postId);
 	if (!fs.existsSync(postMediaPath)){
 		res.send(404, 'Post media not found');
 		return;
 	}
-	var mediaElementPath = path.join(postMediaPath, mediaId);
-	if (!fs.existsSync(mediaElementPath)){
-		res.send(404, 'Media element not found');
+	var fileListForPost = fs.readdirSync(postMediaPath);
+	if (fileListForPost.length == 0){
+		res.send(404, 'Post media not found');
 		return;
 	}
-	var fileListForMediaElem = fs.readdirSync(mediaElementPath);
-	res.sendfile(path.join(mediaElementPath, fileListForMediaElem[0]));
+	res.sendfile(path.join(postMediaPath, fileListForPost[0]));
 };
 
 exports.backup = function(req, res){

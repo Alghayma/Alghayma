@@ -41,7 +41,7 @@ app.configure('production', function(){
 app.get('/', routes.index);
 app.get('/p', routes.viewpage);
 app.get('/chunk', routes.chunk);
-app.get('/media/:postid/:mediaid', routes.media);
+app.get('/media/:postid/', routes.media);
 app.post('/backup', routes.backup);
 app.get('/auth', routes.fbauth);
 
