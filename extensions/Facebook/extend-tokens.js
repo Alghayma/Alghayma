@@ -1,6 +1,7 @@
 var dbmodels = require('./dbmodels');
 var mongoose = require('mongoose');
-var config = require('./config');
+var path = require('path');
+var config = require(path.join(process.cwd(), 'config'));
 var fbgraph = require('fbgraph');
 
 var FbUser = mongoose.model('FBUser');
