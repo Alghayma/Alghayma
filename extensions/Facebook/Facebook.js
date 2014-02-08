@@ -108,7 +108,6 @@ exports.viewpage = function(req, res){
 					return;
 				}
 				if (posts && posts.length > 0){
-					console.log(posts)
 					res.render('feed', {title: feed.name + ' - Alghayma', feed: feed, posts: posts});
 				} else {
 					res.render('message', {title: 'Error', message: 'Sorry. This feed is registered on Alghayma, but it hasn\'t been backed up yet. Please come back later.'});
@@ -124,13 +123,15 @@ exports.chunk = function(req, res){
 	var feedId = req.query.feedId;
 	var offset = req.query.offset; //Beware : chunk offest, and not post offset
 	var limit = req.query.limit;
+	var FBPost = mongooseInstance.model('FBPost');
+
 	if (!feedId){
 		res.send(400, 'No feedId provided');
 		return;
 	}
 	if (!limit) limit = 25;
 	if (!offset) offset = 0;
-	Post.find({feedId: feedId}).sort({postDate: -1}).skip(offset * limit).limit(limit).exec(function(err, posts){
+	FBPost.find({feedId: feedId}).sort({postDate: -1}).skip(offset * limit).limit(limit).exec(function(err, posts){
 		if (err){
 			console.log('Error while getting chunk ' + offset + ' with width ' + limit + ' for feedId ' + feedId);
 			return;
