@@ -1,6 +1,7 @@
 var fbgraph = require('fbgraph');
 var path = require('path');
 var config = require(path.join(process.cwd(), 'config'));
+var fs = require('fs')
 var mongooseInstance;
 var backupJobInstance;
 
@@ -48,7 +49,7 @@ exports.setupRoutes = function(express, ext){
 	var shortname = require(path.join(__dirname, ext)).config.shortname
 	express.get('/'+ shortname +'/p', this.viewpage);
 	express.get('/' + shortname +'/chunk', this.chunk);
-	express.get('/' + shortname + '/media/:postid/', this.media);
+	express.get('/' + shortname + '/media/:postid', this.media);
 	express.post('/' + shortname + '/backup', this.backup);
 	express.get('/' + shortname + '/auth', this.fbauth);
 	console.log("Routes for Facebook initialized")
@@ -140,7 +141,6 @@ exports.chunk = function(req, res){
 
 exports.media = function(req, res){
 	var postId = req.param('postid');
-	var config = path.join(process.cwd(), 'config');
 	var mediaPath = path.join(process.cwd(), config.mediafolder);
 	var postMediaPath = path.join(mediaPath, postId);
 	if (!fs.existsSync(postMediaPath)){
