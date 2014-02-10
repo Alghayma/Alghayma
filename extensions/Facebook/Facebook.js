@@ -57,38 +57,25 @@ exports.setupRoutes = function(express, ext){
 
 // To-Do : front-end regex matching
 
-var validURLSchemes = ['http://facebook.com', 'https://facebook.com', 'http://www.facebook.com', 'https://www.facebook.com', 'http://m.facebook.com', 'https://m.facebook.com'];
-
-var isFBURL = function isFbUrl(path){
-	if (typeof path != 'string') throw new TypeError('path must be a string');
-	for (var i = 0; i < validURLSchemes.length; i++){
-		if (path.indexOf(validURLSchemes[i]) == 0) return true;
+var validator = function getFacebookPath(url){
+	// URL pasted can contain parameters, let's get rid of those
+	var apiRoute = url.split("?")[0];
+	var match = (apiRoute.match(/(https|http):\/\/(www|m)(.|\n)facebook(.|\n)com\/(pages\/)?(([0-9a-zA-Z_(.|\n)-]*)$|([0-9a-zA-Z_(.|\n)-]*)\/[0-9]*$)/))[0]
+	if (match === apiRoute) {
+		return true;
+	} else{
+		return false;
 	}
-	return false;
 }
 
-var getPath = function getFbPath(path, removeEdges){
-	if (typeof path != 'string') throw new TypeError('path must be a string');
-	for (var i = 0; i < validURLSchemes.length; i++){
-		if (path.indexOf(validURLSchemes[i]) == 0){
-			path = path.replace(validURLSchemes[i], '');
-			if (path.indexOf('/pages/') == 0){ // Taking the Page-Name from https://facebook.com/pages/Page-Name/batikhNumber (when a page doesn't have a vanity name)
-				path = path.replace('/pages/', '');
-				if (removeEdges){
-					var batikhNumberLocation = path.indexOf('/');
-					path = path.substring(0, batikhNumberLocation);
-				}
-			}
-			return path;
-		}
-	}
-	throw new TypeError('The given path isn\'t from facebook');
+var getPath = function getFbPath(path, removeEdges){ // Not sure of what removeEdges is supposed to do besides removing the page number
+		return ((path.match(/(?!((https|http):\/\/(www|m)(.|\n)facebook(.|\n)com\/))(pages\/)?(([0-9a-zA-Z_(.|\n)-]*)$|([0-9a-zA-Z_(.|\n)-]*)\/[0-9]*$)/))[0])
 }
 
 exports.viewpage = function(req, res){
 	var sourceUrl = req.query.sourceUrl;
 	//Checking that the user-provided URL is from facebook. Beware this is very dirty.
-	if (!isFBURL(sourceUrl)){
+	if (!validator(sourceUrl)){
 		res.render('message', {title: 'Error', message: 'Sorry, but this address doesn\'t seem to come from Facebook...'});
 	}
 	var FBFeed = mongooseInstance.model('FBFeed')
@@ -163,7 +150,7 @@ exports.backup = function(req, res){
 		return;
 	}
 	var sourceUrl = decodeURIComponent(req.body.sourceUrl);
-	if (!isFBURL(sourceUrl)){
+	if (!validator(sourceUrl)){
 		res.send(400, 'The address you gave isn\'t from Facebook');
 		return;
 	}
