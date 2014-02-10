@@ -58,35 +58,7 @@ function refreshMetadata(){
 	});
 }
 
-var validFbPaths = ['http://facebook.com', 'https://facebook.com', 'http://www.facebook.com', 'https://www.facebook.com', 'http://m.facebook.com', 'https://m.facebook.com'];
 
-//Checking whether the given path is a Facebook url
-function isFbUrl(path){
-	if (typeof path != 'string')  return false;
-	for (var i = 0; i < validFbPaths.length; i++){
-		if (path.indexOf(validFbPaths[i]) == 0) return true;
-	}
-	return false;
-}
-
-//Getting the page name (vanity and non-vanity)
-function getFbPath(path, removeEdges){
-	if (typeof path != 'string') throw new TypeError('path must be a string');
-	for (var i = 0; i < validFbPaths.length; i++){
-		if (path.indexOf(validFbPaths[i]) == 0){
-			path = path.replace(validFbPaths[i], '');
-			if (path.indexOf('/pages/') == 0){ // Taking the Page-Name from https://facebook.com/pages/Page-Name/batikhNumber (when a page doesn't have a vanity name)
-				path = path.replace('/pages/', '');
-				if (removeEdges){
-					var batikhNumberLocation = path.indexOf('/');
-					path = path.substring(0, batikhNumberLocation);
-				}
-			}
-			return path;
-		}
-	}
-	throw new TypeError('The given path isn\'t from facebook');
-}
 
 //Getting all the posts, with an optional interval (since or until parameter)
 function navigatePage(pageId, until, since, cb){
@@ -130,6 +102,8 @@ function navigatePage(pageId, until, since, cb){
 * BEWARE : IT MIGHT LOOK VERY DIRTY
 */
 function backupFbPost(postObj){
+	var isFbUrl = require("./Facebook").validator
+	var getFbPath = require("./Facebook").getFBPath
 	function getSearchKey(path, keyName){
 		var search = path.substring(path.indexOf('?'));
 		return decodeURI(search.replace(new RegExp("^(?:.*[&\\?]" + encodeURI(keyName).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
@@ -268,8 +242,11 @@ exports.launchFeedBackup = function(feedObj, callback){
 
 //Adding a feed a that will be backed up by the system
 exports.addFeed = function(feedUrl, callback){
+	var isFbUrl = require("./Facebook").validator
+	var getFbPath = require("./Facebook").getFBPath
 	if (!isFbUrl(feedUrl)) throw new TypeError('As of now, only FB pages are supported');
 	if (callback && typeof callback != 'function') throw new TypeError('When defined, callback must be a function');
+	console.log(feedUrl)
 	var fbPath = getFbPath(feedUrl);
 	if (fbPath.lastIndexOf('/') != fbPath.length - 1){
 		fbPath += '/';

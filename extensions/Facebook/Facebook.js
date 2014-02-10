@@ -10,6 +10,25 @@ exports.config = {
 	fullname: "Facebook"
 }
 
+exports.validator = function isFbUrl(path){
+	if (typeof path != 'string') return false
+	for (var i = 0; i < validURLSchemes.length; i++){
+		if (path.indexOf(validURLSchemes[i]) == 0) return true;
+	}
+	return false;
+}
+
+exports.getFBPath = function getFbPath(path, removeEdges){
+	if (typeof path != 'string') throw new TypeError('path must be a string');
+	for (var i = 0; i < validURLSchemes.length; i++){
+		if (path.indexOf(validURLSchemes[i]) == 0){
+			path = path.replace(validURLSchemes[i], '');
+			return path;
+		}
+	}
+	throw new TypeError('The given path isn\'t from facebook');
+}
+
 exports.initializeDBModels = function(mongoose){
 	var FBFeed = new mongoose.Schema({
 		id: String, //Fb ID (which are digits only) or random alphanumerical string for other feed types
@@ -72,13 +91,6 @@ var getPath = function getFbPath(path, removeEdges){
 	for (var i = 0; i < validURLSchemes.length; i++){
 		if (path.indexOf(validURLSchemes[i]) == 0){
 			path = path.replace(validURLSchemes[i], '');
-			if (path.indexOf('/pages/') == 0){ // Taking the Page-Name from https://facebook.com/pages/Page-Name/batikhNumber (when a page doesn't have a vanity name)
-				path = path.replace('/pages/', '');
-				if (removeEdges){
-					var batikhNumberLocation = path.indexOf('/');
-					path = path.substring(0, batikhNumberLocation);
-				}
-			}
 			return path;
 		}
 	}

@@ -25,6 +25,7 @@ app.use(require('stylus').middleware(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public')));
 
 require('./bootstrapping')(app, routes);
+//require('./extensions/Facebook/extend-tokens')();
 
 // development only
 app.configure('development', function(){
