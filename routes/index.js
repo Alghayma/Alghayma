@@ -10,6 +10,6 @@ exports.index = function(req, res){
 
 exports.validator = function(req, res){
 	// Iterate through each validator, return possible choices.
-
+	
 	res.send();
 }

@@ -60,7 +60,8 @@ exports.setupRoutes = function(express, ext){
 var validator = function getFacebookPath(url){
 	// URL pasted can contain parameters, let's get rid of those
 	var apiRoute = url.split("?")[0];
-	var match = (apiRoute.match(/(https|http):\/\/(www|m)(.|\n)facebook(.|\n)com\/(pages\/)?(([0-9a-zA-Z_(.|\n)-]*)$|([0-9a-zA-Z_(.|\n)-]*)\/[0-9]*$)/))[0]
+	// non-escaped regex ^(https|http)://(www|m).facebook.com/(pages/)?(([0-9a-zA-Z_-]*)$|([0-9a-zA-Z_-]*)/[0-9]*$)
+	var match = (apiRoute.match(/^(https|http):\/\/(www|m)(.|\n)facebook(.|\n)com\/(pages\/)?(([0-9a-zA-Z_-]*)$|([0-9a-zA-Z_-]*)\/[0-9]*$)/))[0]
 	if (match === apiRoute) {
 		return true;
 	} else{
@@ -69,7 +70,11 @@ var validator = function getFacebookPath(url){
 }
 
 var getPath = function getFbPath(path, removeEdges){ // Not sure of what removeEdges is supposed to do besides removing the page number
-		return ((path.match(/(?!((https|http):\/\/(www|m)(.|\n)facebook(.|\n)com\/))(pages\/)?(([0-9a-zA-Z_(.|\n)-]*)$|([0-9a-zA-Z_(.|\n)-]*)\/[0-9]*$)/))[0])
+		var apiRoute = path.split("?")[0];
+		// non-escaped regex (?!(https|http)://(www|m).facebook.com/(pages/)?)(([0-9a-zA-Z-]*)$|([0-9a-zA-Z_\-]*)/[0-9]*$)
+		var path = ((apiRoute.match(/(?!((https|http):\/\/(www|m)(.|\n)facebook(.|\n)com\/))(pages\/)?(([0-9a-zA-Z_(.|\n)-]*)$|([0-9a-zA-Z_(.|\n)-]*)\/[0-9]*$)/))[0])
+		console.log("Path: " + path);
+		return path
 }
 
 exports.viewpage = function(req, res){
