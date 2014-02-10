@@ -11,22 +11,26 @@ exports.config = {
 }
 
 exports.validator = function isFbUrl(path){
-	if (typeof path != 'string') return false
-	for (var i = 0; i < validURLSchemes.length; i++){
-		if (path.indexOf(validURLSchemes[i]) == 0) return true;
-	}
-	return false;
+	if (typeof path != "string") {return false};
+	var apiRoute = path.split("?")[0];
+	// non-escaped regex ^(https|http)://(www|m).facebook.com/(pages/)?(([0-9a-zA-Z_-]*)$|([0-9a-zA-Z_-]*)/[0-9]*$)
+	var matches = (apiRoute.match(/^(https|http):\/\/(www|m)(.|\n)facebook(.|\n)com\/(pages\/)?(([0-9a-zA-Z_-]*)$|([0-9a-zA-Z_-]*)\/[0-9]*$)/))	
+	if (matches) {
+		var match = matches[0]
+		if (match === apiRoute) {
+			return true;
+		} else{
+			return false;
+		}
+	};
 }
 
 exports.getFBPath = function getFbPath(path, removeEdges){
-	if (typeof path != 'string') throw new TypeError('path must be a string');
-	for (var i = 0; i < validURLSchemes.length; i++){
-		if (path.indexOf(validURLSchemes[i]) == 0){
-			path = path.replace(validURLSchemes[i], '');
-			return path;
-		}
-	}
-	throw new TypeError('The given path isn\'t from facebook');
+	var apiRoute = path.split("?")[0];
+	// non-escaped regex (?!(https|http)://(www|m).facebook.com/(pages/)?)(([0-9a-zA-Z-]*)$|([0-9a-zA-Z_\-]*)/[0-9]*$)
+	var path = ((apiRoute.match(/(?!((https|http):\/\/(www|m)(.|\n)facebook(.|\n)com\/))(pages\/)?(([0-9a-zA-Z_(.|\n)-]*)$|([0-9a-zA-Z_(.|\n)-]*)\/[0-9]*$)/))[0])
+	console.log("Path: " + path);
+	return path
 }
 
 exports.initializeDBModels = function(mongoose){
@@ -76,26 +80,8 @@ exports.setupRoutes = function(express, ext){
 
 // To-Do : front-end regex matching
 
-var validURLSchemes = ['http://facebook.com', 'https://facebook.com', 'http://www.facebook.com', 'https://www.facebook.com', 'http://m.facebook.com', 'https://m.facebook.com'];
-
-var isFBURL = function isFbUrl(path){
-	if (typeof path != 'string') throw new TypeError('path must be a string');
-	for (var i = 0; i < validURLSchemes.length; i++){
-		if (path.indexOf(validURLSchemes[i]) == 0) return true;
-	}
-	return false;
-}
-
-var getPath = function getFbPath(path, removeEdges){
-	if (typeof path != 'string') throw new TypeError('path must be a string');
-	for (var i = 0; i < validURLSchemes.length; i++){
-		if (path.indexOf(validURLSchemes[i]) == 0){
-			path = path.replace(validURLSchemes[i], '');
-			return path;
-		}
-	}
-	throw new TypeError('The given path isn\'t from facebook');
-}
+var isFBURL = this.validator
+var getPath = this.getFBPath
 
 exports.viewpage = function(req, res){
 	var sourceUrl = req.query.sourceUrl;
