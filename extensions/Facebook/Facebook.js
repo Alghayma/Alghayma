@@ -29,7 +29,6 @@ exports.getFBPath = function getFbPath(path, removeEdges){
 	var apiRoute = path.split("?")[0];
 	// non-escaped regex (?!(https|http)://(www|m).facebook.com/(pages/)?)(([0-9a-zA-Z-]*)$|([0-9a-zA-Z_\-]*)/[0-9]*$)
 	var path = ((apiRoute.match(/(?!((https|http):\/\/(www|m)(.|\n)facebook(.|\n)com\/))(pages\/)?(([0-9a-zA-Z_(.|\n)-]*)$|([0-9a-zA-Z_(.|\n)-]*)\/[0-9]*$)/))[0])
-	console.log("Path: " + path);
 	return path
 }
 
