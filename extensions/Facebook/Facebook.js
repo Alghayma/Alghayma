@@ -2,13 +2,39 @@ var fbgraph = require('fbgraph');
 var path = require('path');
 var config = require(path.join(process.cwd(), 'config'));
 var fs = require('fs')
-var mongooseInstance;
-var backupJobInstance;
+
+var mongoose = require('mongoose');
+
+mongoose.model('FBUser', require('./models').FBUser)
+mongoose.model('FBPost', require('./models').FBPost)
+mongoose.model('FBFeed', require('./models').FBFeed)
+
+var FBUser = mongoose.model('FBUser');
+var FBFeed = mongoose.model('FBFeed');
+var FBPost = mongoose.model('FBPost');
+
+var kue = require('kue');
+var jobs = kue.createQueue();
 
 exports.config = {
 	shortname: "fb",
 	fullname: "Facebook"
 }
+
+function refreshToken(callback){
+	FBUser.find(function(err, users){
+		if (err){
+			console.log('Error while changing access token:\n' + err);
+			return;
+		}
+		var numUsers = users.length;
+		var chosenUserIndex = Math.floor(Math.random() * numUsers);
+		var selectedUser = users[chosenUserIndex];
+		fbgraph.setAccessToken(selectedUser.accessToken);
+		if (callback && typeof callback == 'function') callback();
+	});
+}
+refreshToken();
 
 exports.validator = function isFbUrl(path){
 	if (typeof path != "string") {return false};
@@ -30,41 +56,6 @@ exports.getFBPath = function getFbPath(path, removeEdges){
 	// non-escaped regex (?!(https|http)://(www|m).facebook.com/(pages/)?)(([0-9a-zA-Z-]*)$|([0-9a-zA-Z_\-]*)/[0-9]*$)
 	var path = ((apiRoute.match(/(?!((https|http):\/\/(www|m)(.|\n)facebook(.|\n)com\/))(pages\/)?(([0-9a-zA-Z_(.|\n)-]*)$|([0-9a-zA-Z_(.|\n)-]*)\/[0-9]*$)/))[0])
 	return path
-}
-
-exports.initializeDBModels = function(mongoose){
-	var FBFeed = new mongoose.Schema({
-		id: String, //Fb ID (which are digits only) or random alphanumerical string for other feed types
-		name: String,
-		type: String,
-		url: String, //Vanity name
-		profileImage: String,
-		didBackupHead: {type: Boolean, default:0}, // The head is the oldest post of the feed. Because pages are navigated from newest to oldest post, this flag allows us to know if the oldest post was backed up.
-		lastBackup: Date
-	});
-
-	var FBPost = new mongoose.Schema({
-		postId: String, //Fb post id, or random alphanumerical string for other post types
-		feedId: String, //From Feed collection, or random alphanumerical
-		postDate: Date,
-		postText: String,
-		story: String,
-		storyLink: String, //Link preview text
-		picture: String //if a unique picture exists
-	});
-
-	var FBUser = new mongoose.Schema({
-		id: String,
-		accessToken: String
-	});
-
-	mongoose.model('FBFeed', FBFeed);
-	mongoose.model('FBPost', FBPost);
-	mongoose.model('FBUser', FBUser);
-
-	console.log("Mongoose models for Facebook initialized")
-
-	mongooseInstance = mongoose
 }
 
 exports.setupRoutes = function(express, ext){
@@ -89,7 +80,6 @@ exports.viewpage = function(req, res){
 	if (!isFBURL(sourceUrl)){
 		res.render('message', {title: 'Error', message: 'Sorry, but this address doesn\'t seem to come from Facebook...'});
 	}
-	var FBFeed = mongooseInstance.model('FBFeed')
 
 	FBFeed.findOne().or([{url: getPath(sourceUrl)}, {id: getPath(sourceUrl)}]).exec(function(err, feed){
 		if (err){
@@ -98,7 +88,7 @@ exports.viewpage = function(req, res){
 			return;
 		}
 		if (feed){
-			var FBPost = mongooseInstance.model('FBPost')
+			var FBPost = mongoose.model('FBPost')
 			FBPost.find({feedId: feed.id}).sort({postDate: -1}).limit(25).exec(function(err, posts){
 				if (err){
 					throw err;
@@ -121,7 +111,7 @@ exports.chunk = function(req, res){
 	var feedId = req.query.feedId;
 	var offset = req.query.offset; //Beware : chunk offest, and not post offset
 	var limit = req.query.limit;
-	var FBPost = mongooseInstance.model('FBPost');
+	var FBPost = mongoose.model('FBPost');
 
 	if (!feedId){
 		res.send(400, 'No feedId provided');
@@ -165,11 +155,8 @@ exports.backup = function(req, res){
 		res.send(400, 'The address you gave isn\'t from Facebook');
 		return;
 	}
-	if (!backupJobInstance) {
-		throw new TypeError('no backupJobInstance referenced!');
-		process.exit();
-	}
-	backupJobInstance.addFeed(sourceUrl, function(pageName){
+
+	exports.addFeed(sourceUrl, function(pageName){
 		res.send(200, pageName + ' was saved in Alghayma and will be backed up soon');
 	});
 };
@@ -209,8 +196,6 @@ exports.fbauth = function(req, res){
 				return;
 			}
 
-			var FBUser = mongooseInstance.model('FBUser')
-
 			FBUser.count({id: idRes.id}, function(err, count){
 				if (err){
 					console.log('Error when counting FB users with a given ID:\n' + JSON.stringify(err));
@@ -233,12 +218,45 @@ exports.fbauth = function(req, res){
 			});
 		});
 	});
-};
+}
 
-
-exports.setBackupJobInstance = function(instance){
-	if (!instance) throw new TypeError('"instance" was undefined');
-	if (typeof instance != 'object') throw new TypeError('"instance" must be an object');
-	backupJobInstance = instance;
-	backupJobInstance.start();
-};
+exports.addFeed = function(feedUrl, callback){
+	var isFbUrl = exports.validator
+	var getFbPath = exports.getFBPath
+	if (!isFbUrl(feedUrl)) throw new TypeError('As of now, only FB pages are supported');
+	if (callback && typeof callback != 'function') throw new TypeError('When defined, callback must be a function');
+	var fbPath = getFbPath(feedUrl);
+	if (fbPath.lastIndexOf('/') != fbPath.length - 1){
+		fbPath += '/';
+	}
+	fbPath += '?fields=id,name,link,picture';
+	fbgraph.get(fbPath, function(err, res){
+		if (err){
+			console.log('Error when getting info of: ' + fbPath + '\n' + JSON.stringify(err));
+			return;
+		}
+		//Check that the feed doesn't exist yet
+		FBFeed.find({id: res.id}, function(err, feed){
+			if (err){
+				console.log('Error when checking whether ' + res.name + ' is already being backed up or not');
+				return;
+			}
+			if (!feed.id){
+				var newFeed = new FBFeed({
+					id: res.id,
+					name: res.name,
+					type: 'fbpage',
+					url: getFbPath(feedUrl),
+					profileImage: res.picture.data.url,
+					didBackupHead: false
+				});
+				console.log("A new feed was added : " + res.name);
+				newFeed.save();
+				
+				// Start Queuing this feed
+				jobs.create('facebookJob', {feed: newFeed}).save();
+			}
+			if (callback) callback(res.name);
+		});
+	});
+}

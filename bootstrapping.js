@@ -8,10 +8,6 @@ module.exports = function (express, routes){
 	var path = require('path');
 	var config = require('./config');
 	var mongoose = require('mongoose');
-	var kue = require('kue');
-	kue.app.listen(3001);
-	var cluster = require('cluster')
-	var jobs = kue.createQueue();
 
 	var connectionString = 'mongodb://';
 	if (config.dbuser && config.dbpass) connectionString += config.dbuser + ':' + config.dbpass + '@';
@@ -25,20 +21,18 @@ module.exports = function (express, routes){
 	console.log("Loading extensions ...")
 	var extensions = [];
 	for (var i = exts.length - 1; i >= 0; i--){
+
+		var models = require(path.join(__dirname, "extensions", exts[i], "models.js"));
+
 		if (fs.statSync(path.join(__dirname, "extensions", exts[i])).isDirectory()){
 			var currentExt = require(path.join(__dirname, "extensions", exts[i], exts[i]));
-			// Initialize database models
-			currentExt.initializeDBModels(mongoose);
-			// Initialize backup job
-			currentExt.setBackupJobInstance(require(path.join(__dirname, "extensions", exts[i], "backup-job")));
-			
-			//TO DO Initializing Job Queue 
-
-
-
 			// Setup ExpressJS routes
 			currentExt.setupRoutes(express, exts[i]);
 			extensions.push(currentExt);
+		}
+		
+		if(models){
+			models.initializeDBModels(mongoose);
 		}
 	}
 
