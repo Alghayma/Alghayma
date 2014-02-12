@@ -18,13 +18,6 @@ var Post = mongoose.model('FBPost');
 //Creating the media folder, if it doesn't exist
 var mediaPath = path.join(process.cwd(), config.mediafolder);
 if (!fs.existsSync(config.mediafolder)) fs.mkdirSync(mediaPath);
-//Setting up folderSeperator character
-var folderSeperator;
-if (os.platform().toString().toLowerCase().indexOf('win') > -1){
-	folderSeperator = '\\';
-} else {
-	folderSeperator = '/';
-}
 
 //Replacing the current accessToken by an other one from the DB
 function refreshToken(callback){
@@ -57,8 +50,6 @@ function refreshMetadata(){
 		}
 	});
 }
-
-
 
 //Getting all the posts, with an optional interval (since or until parameter)
 function navigatePage(pageId, until, since, cb){
