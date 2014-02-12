@@ -5,18 +5,22 @@
 var fs = require('fs');
 var os = require('os');
 var path = require('path');
-var mongoose = require('mongoose');
-
-require("./models.js").initializeDBModels(mongoose);
 
 var fbgraph = require('fbgraph');
 var config = require(path.join(process.cwd(), 'config'));
 var http = require('http');
 var https = require('https');
 
+var mongoose = require('mongoose');
+var connectionString = 'mongodb://';
+if (config.dbuser && config.dbpass) connectionString += config.dbuser + ':' + config.dbpass + '@';
+connectionString += config.dbhost + ':' + config.dbport + '/' + config.dbname;
+mongoose.connect(connectionString, function(err){ if (err) throw err; });
+require("./models.js").initializeDBModels(mongoose);
+
 var FBUser = mongoose.model('FBUser');
-var FBFeed = mongoose.model('FBFeed');
-var FBPost = mongoose.model('FBPost');
+var	FBFeed = mongoose.model('FBFeed');
+var	FBPost = mongoose.model('FBPost');
 
 //Creating the media folder, if it doesn't exist
 var mediaPath = path.join(process.cwd(), config.mediafolder);
@@ -106,7 +110,7 @@ function backupFbPost(postObj){
 
 	function saveInDb(obj){
 		if (typeof obj != 'object') throw new TypeError('obj must be an object');
-		var newPost = new Post(obj);
+		var newPost = new FBPost(obj);
 		newPost.save();
 	}
 
@@ -242,13 +246,25 @@ exports.launchFeedBackup = function(feedObj, callback){
 		});
 
 	} else {
-
+		FBPost.findOne().where({feedId:feedObj.id}).sort('postDate').exec(function(err, post){console.log ("not called")})
 		// Find last that was added and continue from there.
-
 		FBPost.findOne().where({feedId:feedObj.id}).sort('postDate').exec(function(err, post){
         		if (err) {
         			console.log('Issue fetching post from DB : ' + err);
-        		} else{
+        		} else if (!post) {
+        			console.log("Page " + feedObj.name + " has no post yet. Let's start backing up");
+        			navigatePage(feedObj.id, undefined, undefined, function(){
+						FBFeed.update({id: feedObj.id}, {lastBackup: Date.now(), didBackupHead: true}).exec(function(err){
+							if (err){
+								console.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
+								return;
+							}
+							
+							console.log('Succesfully backed up the Facebook page : ' + feedObj.name);
+							if (callback) callback();
+						})
+					});
+        		}else{
         			console.log("Resuming backup of page : " + feedObj.name + " at date : " + post.postDate)
         			navigatePage(feedObj.id, post.postDate, undefined, function(){
 						FBFeed.update({id: feedObj.id}, {lastBackup: Date.now(), didBackupHead: true}).exec(function(err){
