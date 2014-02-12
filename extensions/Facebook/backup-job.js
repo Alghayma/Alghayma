@@ -55,7 +55,6 @@ function refreshMetadata(){
 function navigatePage(pageId, until, since, cb){
 	if (typeof pageId != 'string') throw new TypeError('pageId must be a string');
 	if (cb && typeof cb != 'function') throw new TypeError('When defined, "cb" must be a function');
-	if (typeof until != 'undefined' && typeof since != 'since') throw new TypeError('You can use only one time pagination parameter at a time');
 	var reqText = pageId + '/posts';
 
 	function fbGet(path, until, since){
@@ -77,6 +76,7 @@ function navigatePage(pageId, until, since, cb){
 			for (var i = 0; i < fbRes.data.length; i++){
 				backupFbPost(fbRes.data[i]);
 			}
+
 			if (fbRes.paging && fbRes.paging.next){
 				fbGet(fbRes.paging.next);
 			} else {
@@ -216,20 +216,46 @@ exports.backupAllFeeds = backupAllFeeds;
 
 //Launching a feed backup process
 exports.launchFeedBackup = function(feedObj, callback){
-	if (!(feedObj && typeof feedObj == 'object')) throw new TypeError('feedObj must be an object')
-	if (callback && typeof callback != 'function') throw new TypeError('When defined, callback must be a parameter');
-	console.log('Backing up : "' + feedObj.name + '"');
-	navigatePage(feedObj.id, undefined, feedObj.lastBackup, function(){
-		Feed.update({id: feedObj.id}, {lastBackup: Date.now()}).exec(function(err){
-			if (err){
-				console.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
-				return;
-			}
-			console.log('Backup finished : "' + feedObj.name + '"');
-			if (callback) callback();
-		})
-	});
-};
+	if (!(feedObj && typeof feedObj == 'object')) throw new TypeError('feedObj must be an object');
+	if (callback && typeof callback != 'function') throw new TypeError('When defined, callback must be a function');
+	
+	// We need to differentiate page updates, initial backups and the resuming of initial backups.
+
+	if (feedObj.didBackupHead) {
+		// Just proceed to an update to fetch newest post since the most recent one.
+		console.log('Updating Facebook page : ' + feedObj.name);
+
+		// Navigate page from undefined to the last backup we had
+		navigatePage(feedObj.id, undefined, feedObj.lastBackup, function(){
+			Feed.update({id: feedObj.id}, {lastBackup: Date.now()}).exec(function(err){
+				if (err){
+					console.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
+					return;
+				}
+				console.log('Succesfully completed the update of the Facebook page : ' + feedObj.name);
+			
+				if (callback) callback();
+			})
+		});
+
+	} else {
+
+		// Find last that was added and continue from there.
+
+		Feed.find()
+
+		navigatePage(feedObj.id, undefined, undefined, function(){
+			Feed.update({id: feedObj.id}, {lastBackup: Date.now(), didBackupHead: true}).exec(function(err){
+				if (err){
+					console.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
+					return;
+				}
+				console.log('Succesfully backed up the Facebook page : ' + feedObj.name);
+				if (callback) callback();
+			})
+		});
+	}
+}
 
 //Adding a feed a that will be backed up by the system
 exports.addFeed = function(feedUrl, callback){
@@ -260,8 +286,10 @@ exports.addFeed = function(feedUrl, callback){
 					name: res.name,
 					type: 'fbpage',
 					url: getFbPath(feedUrl),
-					profileImage: res.picture.data.url
+					profileImage: res.picture.data.url,
+					didBackupHead: false
 				});
+				console.log("A new feed was added : " + res.name);
 				newFeed.save();
 				exports.launchFeedBackup(newFeed);
 			}

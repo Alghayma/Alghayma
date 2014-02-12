@@ -39,6 +39,7 @@ exports.initializeDBModels = function(mongoose){
 		type: String,
 		url: String, //Vanity name
 		profileImage: String,
+		didBackupHead: {type: Boolean, default:0}, // The head is the oldest post of the feed. Because pages are navigated from newest to oldest post, this flag allows us to know if the oldest post was backed up.
 		lastBackup: Date
 	});
 
