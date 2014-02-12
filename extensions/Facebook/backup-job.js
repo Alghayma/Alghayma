@@ -242,18 +242,25 @@ exports.launchFeedBackup = function(feedObj, callback){
 
 		// Find last that was added and continue from there.
 
-		Feed.find()
-
-		navigatePage(feedObj.id, undefined, undefined, function(){
-			Feed.update({id: feedObj.id}, {lastBackup: Date.now(), didBackupHead: true}).exec(function(err){
-				if (err){
-					console.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
-					return;
-				}
-				console.log('Succesfully backed up the Facebook page : ' + feedObj.name);
-				if (callback) callback();
-			})
-		});
+		Post.findOne().where({feedId:feedObj.id}).sort('postDate').exec(function(err, post){
+        		if (err) {
+        			console.log('Issue fetching post from DB : ' + err);
+        		} else{
+        			console.log("Resuming backup of page : " + feedObj.name + " at date : " + post.postDate)
+        			navigatePage(feedObj.id, post.postDate, undefined, function(){
+						Feed.update({id: feedObj.id}, {lastBackup: Date.now(), didBackupHead: true}).exec(function(err){
+							if (err){
+								console.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
+								return;
+							}
+							
+							console.log('Succesfully backed up the Facebook page : ' + feedObj.name);
+							if (callback) callback();
+						})
+					});
+        		}
+        	}
+		);
 	}
 }
 
