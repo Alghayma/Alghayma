@@ -219,7 +219,6 @@ exports.backupAllFeeds = backupAllFeeds;
 
 //Launching a feed backup process
 exports.launchFeedBackup = function(feedObj, callback){
-	console.log(feedObj)
 	if (!(feedObj && typeof feedObj == 'object')) throw new TypeError('feedObj must be an object');
 	if (callback && typeof callback != 'function') throw new TypeError('When defined, callback must be a function');
 	
@@ -246,7 +245,7 @@ exports.launchFeedBackup = function(feedObj, callback){
 
 		// Find last that was added and continue from there.
 
-		Post.findOne().where({feedId:feedObj.id}).sort('postDate').exec(function(err, post){
+		FBPost.findOne().where({feedId:feedObj.id}).sort('postDate').exec(function(err, post){
         		if (err) {
         			console.log('Issue fetching post from DB : ' + err);
         		} else{

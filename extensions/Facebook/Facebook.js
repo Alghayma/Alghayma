@@ -53,8 +53,8 @@ exports.validator = function isFbUrl(path){
 
 exports.getFBPath = function getFbPath(path, removeEdges){
 	var apiRoute = path.split("?")[0];
-	// non-escaped regex (?!(https|http)://(www|m).facebook.com/(pages/)?)(([0-9a-zA-Z-]*)$|([0-9a-zA-Z_\-]*)/[0-9]*$)
-	var path = ((apiRoute.match(/(?!((https|http):\/\/(www|m)(.|\n)facebook(.|\n)com\/))(pages\/)?(([0-9a-zA-Z_(.|\n)-]*)$|([0-9a-zA-Z_(.|\n)-]*)\/[0-9]*$)/))[0])
+	// non-escaped regex (?!(https|http)://(www|m).facebook.com/(pages/)?)(([0-9a-zA-Z-]*)$|(?!([0-9a-zA-Z_\-]*)/)[0-9]*$)
+	var path = (apiRoute.match(/(?!(https|http):\/\/(www|m)(.|\n)facebook(.|\n)com\/(pages\/)?)(([0-9a-zA-Z-]*)$|(?!([0-9a-zA-Z_\-]*)\/)[0-9]*$)/))[0]
 	return path
 }
 
@@ -254,7 +254,7 @@ exports.addFeed = function(feedUrl, callback){
 				newFeed.save();
 				
 				// Start Queuing this feed
-				jobs.create('facebookJob', {feed: newFeed}).save();
+				jobs.create('facebookJob', {title: "Backup of " + newFeed.name, feed: newFeed}).save();
 			}
 			if (callback) callback(res.name);
 		});
