@@ -19,14 +19,17 @@ module.exports = function (express, routes){
 	var exts = fs.readdirSync(path.join(__dirname, "extensions"))
 
 	console.log("Loading extensions ...")
-
+	var extensions = [];
 	for (var i = exts.length - 1; i >= 0; i--){
 		if (fs.statSync(path.join(__dirname, "extensions", exts[i])).isDirectory()){
+			var currentExt = require(path.join(__dirname, "extensions", exts[i], exts[i]));
 			// Initialize database models
-			require(path.join(__dirname, "extensions", exts[i], exts[i])).initializeDBModels(mongoose)
-			require(path.join(__dirname, "extensions", exts[i], exts[i])).setBackupJobInstance(require(path.join(__dirname, "extensions", exts[i], "backup-job")))
+			currentExt.initializeDBModels(mongoose);
+			// Initialize backup job
+			currentExt.setBackupJobInstance(require(path.join(__dirname, "extensions", exts[i], "backup-job")));
 			// Setup ExpressJS routes
-			require(path.join(__dirname, "extensions", exts[i], exts[i] + ".js")).setupRoutes(express, exts[i])
+			currentExt.setupRoutes(express, exts[i]);
+			extensions.push(currentExt);
 		}
 	}
 
