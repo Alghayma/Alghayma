@@ -5,7 +5,7 @@ var fs = require('fs')
 
 var mongoose = require('mongoose');
 
-var FBUser  = mongoose.model('FBUser', require('./models').FBUser))
+var FBUser  = mongoose.model('FBUser', require('./models').FBUser)
 var FBPost  = mongoose.model('FBPost', require('./models').FBPost)
 var FBFeed  = mongoose.model('FBFeed', require('./models').FBFeed)
 
