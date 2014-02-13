@@ -221,8 +221,14 @@ function backupAllFeeds(){
 }
 exports.backupAllFeeds = backupAllFeeds;
 
+function scheduleNextOne(job, queue){
+	job.log("Scheduling next backup of " + job.data.feed.name + " in " + config.postsBackupInterval + " milliseconds." )
+	queue.create('facebookJob', {title: "Backup of " + newFeed.name, feed: newFeed}).delay(config.postsBackupInterval).save()
+}
+
 //Launching a feed backup process
-exports.launchFeedBackup = function(feedObj, callback){
+exports.launchFeedBackup = function(job, callback, queue){
+	var feedObj = job.data.feed; 
 	if (!(feedObj && typeof feedObj == 'object')) throw new TypeError('feedObj must be an object');
 	if (callback && typeof callback != 'function') throw new TypeError('When defined, callback must be a function');
 	
@@ -230,51 +236,54 @@ exports.launchFeedBackup = function(feedObj, callback){
 
 	if (feedObj.didBackupHead) {
 		// Just proceed to an update to fetch newest post since the most recent one.
-		console.log('Updating Facebook page : ' + feedObj.name);
+		job.log('Updating Facebook page : ' + feedObj.name);
 
 		// Navigate page from undefined to the last backup we had
 		navigatePage(feedObj.id, undefined, feedObj.lastBackup, function(){
 			FBFeed.update({id: feedObj.id}, {lastBackup: Date.now()}).exec(function(err){
 				if (err){
-					console.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
+					job.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
 					return;
 				}
-				console.log('Succesfully completed the update of the Facebook page : ' + feedObj.name);
+				
+				job.log('Succesfully completed the update of the Facebook page : ' + feedObj.name);
 			
 				if (callback) callback();
+				scheduleNextOne(job, queue)
 			})
 		});
 
 	} else {
-		FBPost.findOne().where({feedId:feedObj.id}).sort('postDate').exec(function(err, post){console.log ("not called")})
 		// Find last that was added and continue from there.
 		FBPost.findOne().where({feedId:feedObj.id}).sort('postDate').exec(function(err, post){
         		if (err) {
-        			console.log('Issue fetching post from DB : ' + err);
+        			job.log('Issue fetching post from DB : ' + err);
         		} else if (!post) {
-        			console.log("Page " + feedObj.name + " has no post yet. Let's start backing up");
+        			job.log("Page " + feedObj.name + " has no post yet. Let's start backing up");
         			navigatePage(feedObj.id, undefined, undefined, function(){
 						FBFeed.update({id: feedObj.id}, {lastBackup: Date.now(), didBackupHead: true}).exec(function(err){
 							if (err){
-								console.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
+								job.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
 								return;
 							}
 							
 							console.log('Succesfully backed up the Facebook page : ' + feedObj.name);
 							if (callback) callback();
+							scheduleNextOne(job, queue)
 						})
 					});
         		}else{
-        			console.log("Resuming backup of page : " + feedObj.name + " at date : " + post.postDate)
+        			job.log("Resuming backup of page : " + feedObj.name + " at date : " + post.postDate)
         			navigatePage(feedObj.id, post.postDate, undefined, function(){
 						FBFeed.update({id: feedObj.id}, {lastBackup: Date.now(), didBackupHead: true}).exec(function(err){
 							if (err){
-								console.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
+								job.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
 								return;
 							}
 							
-							console.log('Succesfully backed up the Facebook page : ' + feedObj.name);
+							job.log('Succesfully backed up the Facebook page : ' + feedObj.name);
 							if (callback) callback();
+							scheduleNextOne(job, queue)
 						})
 					});
         		}
