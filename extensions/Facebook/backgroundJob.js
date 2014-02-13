@@ -195,13 +195,13 @@ function backupFbPost(postObj){
 	}
 }
 
-function scheduleNextOne(job, queue){
+function scheduleNextOne(job, queue, done){
 	job.log("Scheduling next backup of " + job.data.feed.name + " in " + config.postsBackupInterval + " milliseconds." )
 	queue.create('facebookJob', {title: "Backup of " + job.data.feed.name, feed: job.data.feed}).delay(config.postsBackupInterval).save()
 }
 
 //Launching a feed backup process
-exports.launchFeedBackup = function(job, callback, queue){
+exports.launchFeedBackup = function(job, queue, done){
 	var feedObj = job.data.feed; 
 	if (!(feedObj && typeof feedObj == 'object')) throw new TypeError('feedObj must be an object');
 	if (callback && typeof callback != 'function') throw new TypeError('When defined, callback must be a function');
@@ -223,7 +223,7 @@ exports.launchFeedBackup = function(job, callback, queue){
 				job.log('Succesfully completed the update of the Facebook page : ' + feedObj.name);
 			
 				if (callback) callback();
-				scheduleNextOne(job, queue)
+				scheduleNextOne(job, queue, done)
 			})
 		}, job);
 
@@ -241,9 +241,9 @@ exports.launchFeedBackup = function(job, callback, queue){
 								return;
 							}
 							
-							console.log('Succesfully backed up the Facebook page : ' + feedObj.name);
+							log.log('Succesfully backed up the Facebook page : ' + feedObj.name);
 							if (callback) callback();
-							scheduleNextOne(job, queue)
+							scheduleNextOne(job, queue, done)
 						})
 					}, job);
         		}else{
@@ -257,7 +257,7 @@ exports.launchFeedBackup = function(job, callback, queue){
 							
 							job.log('Succesfully backed up the Facebook page : ' + feedObj.name);
 							if (callback) callback();
-							scheduleNextOne(job, queue)
+							scheduleNextOne(job, queue, done)
 						})
 					}, job);
         		}
