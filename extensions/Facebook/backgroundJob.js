@@ -59,7 +59,7 @@ function refreshMetadata(){
 }
 
 //Getting all the posts, with an optional interval (since or until parameter)
-function navigatePage(pageId, until, since, cb){
+function navigatePage(pageId, until, since, cb, job){
 	if (typeof pageId != 'string') throw new TypeError('pageId must be a string');
 	if (cb && typeof cb != 'function') throw new TypeError('When defined, "cb" must be a function');
 	var reqText = pageId + '/posts';
@@ -72,7 +72,7 @@ function navigatePage(pageId, until, since, cb){
 			if (err) {
 				if (err.code == 1 || err.code == 2){ //Internal FB errors
 					setTimeout(fbGet(path, until, since), 2000); //Waiting for 2 seconds before retrying
-				} else console.log('Error while getting updates from : ' + pageId + '\n' + JSON.stringify(err));
+				} else job.log('Error while getting updates from : ' + pageId + '\n' + JSON.stringify(err));
 				if (cb) cb();
 				return;
 			}
@@ -195,35 +195,9 @@ function backupFbPost(postObj){
 	}
 }
 
-function backupAllFeeds(){
-	refreshToken(function(){
-		FBFeed.find(function(err, feeds){
-			if (err){
-				console.log('Can\'t update feeds metadata:\n' + err);
-				return;
-			}
-			if (!(feeds && feeds.length > 0)) return;
-			//Magical queuing. Hopefully it works and doesn't ever reach the maxCallStack
-			var feedsIndex = 0;
-			var backupAFeed = function(callback){
-				exports.launchFeedBackup(feeds[feedsIndex], callback);
-			};
-			var feedBackupCallback = function(){
-				feedsIndex++;
-				if (feedsIndex < feeds.length) backupAFeed(feedBackupCallback);
-			};
-			backupAFeed(feedBackupCallback);
-			/*for (var i = 0; i < feeds.length; i++){
-				exports.launchFeedBackup(feeds[i]);
-			}*/
-		});
-	});
-}
-exports.backupAllFeeds = backupAllFeeds;
-
 function scheduleNextOne(job, queue){
 	job.log("Scheduling next backup of " + job.data.feed.name + " in " + config.postsBackupInterval + " milliseconds." )
-	queue.create('facebookJob', {title: "Backup of " + newFeed.name, feed: newFeed}).delay(config.postsBackupInterval).save()
+	queue.create('facebookJob', {title: "Backup of " + job.data.feed.name, feed: job.data.feed}).delay(config.postsBackupInterval).save()
 }
 
 //Launching a feed backup process
@@ -251,7 +225,7 @@ exports.launchFeedBackup = function(job, callback, queue){
 				if (callback) callback();
 				scheduleNextOne(job, queue)
 			})
-		});
+		}, job);
 
 	} else {
 		// Find last that was added and continue from there.
@@ -271,7 +245,7 @@ exports.launchFeedBackup = function(job, callback, queue){
 							if (callback) callback();
 							scheduleNextOne(job, queue)
 						})
-					});
+					}, job);
         		}else{
         			job.log("Resuming backup of page : " + feedObj.name + " at date : " + post.postDate)
         			navigatePage(feedObj.id, post.postDate, undefined, function(){
@@ -285,9 +259,43 @@ exports.launchFeedBackup = function(job, callback, queue){
 							if (callback) callback();
 							scheduleNextOne(job, queue)
 						})
-					});
+					}, job);
         		}
         	}
 		);
 	}
 }
+
+
+
+/*
+	Commented out for now because not used
+
+function backupAllFeeds(){
+	refreshToken(function(){
+		FBFeed.find(function(err, feeds){
+			if (err){
+				console.log('Can\'t update feeds metadata:\n' + err);
+				return;
+			}
+			if (!(feeds && feeds.length > 0)) return;
+			//Magical queuing. Hopefully it works and doesn't ever reach the maxCallStack
+			var feedsIndex = 0;
+			var backupAFeed = function(callback){
+				exports.launchFeedBackup(feeds[feedsIndex], callback);
+			};
+			var feedBackupCallback = function(){
+				feedsIndex++;
+				if (feedsIndex < feeds.length) backupAFeed(feedBackupCallback);
+			};
+			backupAFeed(feedBackupCallback);
+		});
+	});
+}
+
+*/
+
+
+
+
+
