@@ -92,7 +92,9 @@ exports.viewpage = function(req, res){
 					return;
 				}
 				if (posts && posts.length > 0){
-					res.render('feed', {title: feed.name + ' - Alghayma', feed: feed, posts: posts});
+					var description = "We " + ((feed.didBackupHead) ? " did sucesfully complete a full backup of " + feed.name + ". The last backup was performed " + feed.lastBackup + "." : " do not have yet a full backup of " + feed.name +". Here is what we have so far")
+					// Improvement: add the date of the next scheduled backup.
+					res.render('feed', {title: feed.name + ' - Alghayma', feed: feed, posts: posts, feedDescription:description});
 				} else {
 					res.render('message', {title: 'Error', message: 'Sorry. This feed is registered on Alghayma, but it hasn\'t been backed up yet. Please come back later.'});
 				}

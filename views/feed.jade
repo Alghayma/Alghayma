@@ -4,7 +4,7 @@ block content
 	h1 Alghayma | الغيمة
 	br
 	- if (posts && feed)
-		h4 Here is what we have for #{feed.name} :
+		h4 #{feedDescription} :
 		div#postList.container
 			ol.timeline.clearfix
 				- each post in posts
