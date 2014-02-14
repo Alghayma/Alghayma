@@ -20,7 +20,7 @@ if (cluster.isMaster) {
 } else {
 	jobs.process('facebookJob', function(job, done){
 		fbBgWorker.launchFeedBackup(job, jobs, done);
-    });
+  });
 }
 
 

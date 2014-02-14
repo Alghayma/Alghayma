@@ -5,21 +5,27 @@ block content
 	br
 	- if (posts && feed)
 		h4 Here is what we have for #{feed.name} :
-		div#postList
-			- each post in posts
-				.post
-					- if (post.postText)
-						.message #{post.postText}
-						if (post.story && post.postText != post.story)
-							.message #{post.story}
-					- else
-						.message #{post.story}
-					.date #{post.postDate}
-					-if (post.picture)
-						div.imageHolder
-							img(src="#{post.picture}")
-					.link
-						a(href="#{post.storyLink}") #{post.storyLink}
+		div#postList.container
+			ol.timeline.clearfix
+				- each post in posts
+					li.left
+						i.pointer
+						div.unit
+							div.storyUnit
+								div.imageUnit
+									img(src="#{feed.profileImage}")
+									div.imageUnit-content
+										p #{post.postDate}
+								- if (post.postText)
+									.message #{post.postText}
+									if (post.story && post.postText != post.story)
+										.message #{post.story}
+								- else
+									.message #{post.story}
+								-if (post.picture)
+									img.postPicture(src="#{post.picture}")
+								.link
+									a(href="#{post.storyLink}") Story link
 		div#infiniteScrollTrigger
 			span#downIcon.glyphicon.glyphicon-arrow-down
 			img#ajaxLoaderGif(src="/images/ajax-loader.gif", style="display: none")

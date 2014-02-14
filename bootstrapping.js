@@ -38,6 +38,6 @@ module.exports = function (express, routes){
 
 	mongoose.connection.on('error', console.error.bind(console, 'DB connection error : '));
 	mongoose.connection.once('open', function(){
-	console.log('Connection to DB established, ya zalameh.');
+		console.log('Connection to DB established, ya zalameh.');
 	});
 }

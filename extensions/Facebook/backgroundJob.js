@@ -134,7 +134,7 @@ function backupFbPost(postObj){
 	if (isFbUrl(storyLink) && storyLink.indexOf('photo.php') > 0 && getSearchKey(storyLink, 'fbid')){
 		//Creating a media folder for the post
 		var postMediaPath = path.join(mediaPath, postId);
-		fs.mkdirSync(postMediaPath);
+		if (!fs.existsSync(postMediaPath)) fs.mkdirSync(postMediaPath);
 		//Getting the photoID from the story link. Then getting that photoID in the Graph API
 		var photoId = getSearchKey(storyLink, 'fbid');
 		fbgraph.get(photoId, function(err, fbImageRes){
@@ -204,7 +204,7 @@ function scheduleNextOne(job, queue, done){
 exports.launchFeedBackup = function(job, queue, done){
 	var feedObj = job.data.feed; 
 	if (!(feedObj && typeof feedObj == 'object')) throw new TypeError('feedObj must be an object');
-	if (callback && typeof callback != 'function') throw new TypeError('When defined, callback must be a function');
+	//if (callback && typeof callback != 'function') throw new TypeError('When defined, callback must be a function');
 	
 	// We need to differentiate page updates, initial backups and the resuming of initial backups.
 
@@ -222,7 +222,7 @@ exports.launchFeedBackup = function(job, queue, done){
 				
 				job.log('Succesfully completed the update of the Facebook page : ' + feedObj.name);
 			
-				if (callback) callback();
+				//if (callback) callback();
 				scheduleNextOne(job, queue, done)
 			})
 		}, job);
@@ -241,8 +241,8 @@ exports.launchFeedBackup = function(job, queue, done){
 								return;
 							}
 							
-							log.log('Succesfully backed up the Facebook page : ' + feedObj.name);
-							if (callback) callback();
+							job.log('Succesfully backed up the Facebook page : ' + feedObj.name);
+							//if (callback) callback();
 							scheduleNextOne(job, queue, done)
 						})
 					}, job);
@@ -256,7 +256,7 @@ exports.launchFeedBackup = function(job, queue, done){
 							}
 							
 							job.log('Succesfully backed up the Facebook page : ' + feedObj.name);
-							if (callback) callback();
+							//if (callback) callback();
 							scheduleNextOne(job, queue, done)
 						})
 					}, job);

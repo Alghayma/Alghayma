@@ -4,6 +4,5 @@ block content
 	h1 Alghayma | الغيمة
 	br
 	form(action="/fb/p", method="get", role="form", style="text-align: center")
-		.form-group
-			input#urlBox.form-control(type="url", placeholder="Paste a Facebook page address to back it up or go back in time if it has been deleted", name="sourceUrl")
-		button.btn.btn-primary(type="submit") Go
+		input#urlBox(type="url", placeholder="Paste a Facebook page address to back it up or go back in time if it has been deleted", name="sourceUrl")
+		button(type="submit") Go
