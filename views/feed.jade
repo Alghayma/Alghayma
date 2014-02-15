@@ -4,7 +4,7 @@ block content
 	h1 Alghayma | الغيمة
 	br
 	- if (posts && feed)
-		h4 #{feedDescription} :
+		h4 #{feedDescription}
 		div#postList.container
 			ol.timeline.clearfix
 				- each post in posts
@@ -31,6 +31,13 @@ block content
 			img#ajaxLoaderGif(src="/images/ajax-loader.gif", style="display: none")
 		script.
 			var feedId = #{feed.id};
+			//Reformating dates according to computer's locale
+			function formatDate(date) { return 'On ' + date.getDate() + '-' + date.getMonth() + '-' + date.getFullYear() + ', at ' + date.getHours() + ':' + date.getMinutes();}
+			var postHeaders = document.getElementsByClassName('imageUnit-content');
+			for (var i = 0; i < postHeaders.length; i++){
+				postHeaders[i].textContent = formatDate(new Date(postHeaders[i].textContent));
+			}
+			//Dynamic post loading. For inifinite scrolling
 			var loadChunk = function(offset, callback){
 				var req = new XMLHttpRequest();
 				req.open('get', '/fb/chunk?feedId=' + feedId + '&offset=' + offset, true);
