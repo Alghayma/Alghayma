@@ -131,7 +131,7 @@ function backupFbPost(postObj){
 		story: story
 	}
 	//Getting the story link. Backup it up if it's a picture on facebook. (Assuming that a facebook page that gets deleted, all its posted content goes away with it... Pictures included)
-	if (isFbUrl(storyLink) && storyLink.indexOf('photo.php') > 0 && getSearchKey(storyLink, 'fbid')){
+	if (isFbUrl(storyLink, true) && storyLink.indexOf('photo.php') > 0 && getSearchKey(storyLink, 'fbid')){
 		//Creating a media folder for the post
 		var postMediaPath = path.join(mediaPath, postId);
 		if (!fs.existsSync(postMediaPath)) fs.mkdirSync(postMediaPath);
