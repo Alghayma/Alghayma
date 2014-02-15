@@ -9,5 +9,7 @@ module.exports = {
 	fbapptoken: '',
 	mediafolder: './backupmedia/',
 	postsBackupInterval: 7200000, //2h
-	metadataRefreshInterval: 86400000 //24h
+	metadataRefreshInterval: 86400000, //24h
+	kueBasicAuthLogin:"username",  
+	kueBasicAuthPass:"password"
 };
