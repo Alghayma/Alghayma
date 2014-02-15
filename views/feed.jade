@@ -8,7 +8,7 @@ block content
 		div#postList.container
 			ol.timeline.clearfix
 				- each post in posts
-					li.left
+					li.post
 						i.pointer
 						div.unit
 							div.storyUnit
@@ -24,8 +24,9 @@ block content
 									.message #{post.story}
 								-if (post.picture)
 									img.postPicture(src="#{post.picture}")
-								.link
-									a(href="#{post.storyLink}") Story link
+								-if (post.storyLink)
+									.link
+										a(href="#{post.storyLink}") Story link
 		div#infiniteScrollTrigger
 			span#downIcon.glyphicon.glyphicon-arrow-down
 			img#ajaxLoaderGif(src="/images/ajax-loader.gif", style="display: none")
@@ -37,6 +38,67 @@ block content
 			for (var i = 0; i < postHeaders.length; i++){
 				postHeaders[i].textContent = formatDate(new Date(postHeaders[i].textContent));
 			}
+			//Giving in-page post IDs
+			var nextIdNumber = 0;
+			function giveIDs(){
+				var postsElems = document.getElementsByTagName('li');
+				for (var i = 0; i < postsElems.length; i++){
+					if (!postsElems[i].id){
+						//Check that it's a timeline element
+						var classNames = postsElems[i].className.split(' ');
+						var isPost = postsElems[i].classList.contains('post');
+						//If it's not a timeline element, go to the next "li" tagged element
+						if (!isPost) continue;
+						//Otherwise, give him an ID
+						postsElems[i].id = 'post' + nextIdNumber;
+						nextIdNumber++;
+					}
+				}
+			}
+			giveIDs();
+			//"Layout balancing"
+			function balance(){
+				function getSide(elem){
+					if (elem.classList.contains('right')) return 'r';
+					if (elem.classList.contains('left')) return 'l';
+					return undefined;
+				}
+				var leftColumnSize = 0, rightColumnSize = 0;
+				var LiElements = document.getElementsByTagName('li');
+				console.log('Num post elements : ' + LiElements.length);
+				var unassignedElements = [];
+				for (var i = 0; i < LiElements.length; i++){
+					if (!LiElements[i].classList.contains('post')) continue;
+					var elemSide = getSide(LiElements[i]);
+					if (typeof elemSide == 'undefined'){
+						unassignedElements.push(LiElements[i]);
+						continue;
+					}
+					if (elemSide == 'r'){
+						rightColumnSize += LiElements[i].offsetHeight;
+						LiElements[i].classList.remove('right');
+						continue;
+					}
+					if (elemSide == 'l'){
+						leftColumnSize += LiElements[i].offsetHeight;
+						LiElements[i].classList.remove('left');
+					}
+				}
+				var newLeftHeight = 0;
+				var newRightHeight = 0;
+				console.log('Num post elements (after) : ' + LiElements.length);
+				for (var i = 0; i < LiElements.length; i++){
+					console.log('offsetHeight[' + i + ']: '  + LiElements[i].offsetHeight);
+					if (newLeftHeight <= newRightHeight){
+						LiElements[i].classList.add('left');
+						newLeftHeight += LiElements[i].offsetHeight;
+					} else {
+						LiElements[i].classList.add('right');
+						newRightHeight += LiElements[i].offsetHeight;
+					}
+				}
+			}
+			balance();
 			//Dynamic post loading. For inifinite scrolling
 			var loadChunk = function(offset, callback){
 				var req = new XMLHttpRequest();
