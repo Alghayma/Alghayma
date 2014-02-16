@@ -1,8 +1,9 @@
 extends layout
 
 block content
-	h1 Alghayma | الغيمة
+	img.logoHeader(src="/images/alghayma-logo.png", width="400")
 	br
 	form(action="/fb/p", method="get", role="form", style="text-align: center")
 		input#urlBox(type="url", placeholder="Paste a Facebook page address to back it up or go back in time if it has been deleted", name="sourceUrl")
-		button(type="submit") Go
+		br
+		button#searchButton(type="submit") Go
