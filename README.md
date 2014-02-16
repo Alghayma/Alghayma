@@ -30,4 +30,5 @@ Alghayma is *free and open-source* software. You can find us on GitHub to report
 - http://gigaom.com/2014/02/05/critics-say-facebook-is-erasing-pieces-of-history-by-deleting-pages-about-the-war-in-syria/
 - http://www.al-bab.com/blog/2014/february/is-facebook-deleting-history.htm
 - http://www.editorandpublisher.com/Article/Critics-Say-Facebook-is-Erasing-Pieces-of-History-by-Deleting-Pages-About-the-War-in-Syria
+- http://www.ottawacitizen.com/opinion/op-ed/Social+media+must+stop+censoring+images/9514044/story.html
 - http://www.al-bab.com/blog/2014/february/off-the-record.htm
