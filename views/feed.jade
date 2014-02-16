@@ -28,7 +28,7 @@ block content
 									.link
 										a(href="#{post.storyLink}") Story link
 		div#infiniteScrollTrigger
-			span#downIcon.glyphicon.glyphicon-arrow-down
+			span &#8595;
 			img#ajaxLoaderGif(src="/images/ajax-loader.gif", style="display: none")
 		script.
 			var feedId = #{feed.id};
@@ -65,7 +65,6 @@ block content
 				}
 				var leftColumnSize = 0, rightColumnSize = 0;
 				var LiElements = document.getElementsByTagName('li');
-				console.log('Num post elements : ' + LiElements.length);
 				var unassignedElements = [];
 				for (var i = 0; i < LiElements.length; i++){
 					if (!LiElements[i].classList.contains('post')) continue;
@@ -86,9 +85,8 @@ block content
 				}
 				var newLeftHeight = 0;
 				var newRightHeight = 0;
-				console.log('Num post elements (after) : ' + LiElements.length);
 				for (var i = 0; i < LiElements.length; i++){
-					console.log('offsetHeight[' + i + ']: '  + LiElements[i].offsetHeight);
+					if (!LiElements[i].classList.contains('post')) continue;
 					if (newLeftHeight <= newRightHeight){
 						LiElements[i].classList.add('left');
 						newLeftHeight += LiElements[i].offsetHeight;

@@ -19,14 +19,6 @@ a {
 #infiniteScrollTrigger:hover {
   background-color: #a9a9a9;
 }
-.post {
-  border-width: 0px;
-  border-bottom-width: 1px;
-  border-color: #000;
-  border-style: solid;
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
 .post > .imageHolder {
   text-align: center;
 }

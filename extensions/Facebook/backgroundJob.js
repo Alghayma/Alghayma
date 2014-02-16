@@ -131,12 +131,13 @@ function backupFbPost(postObj){
 		story: story
 	}
 	//Getting the story link. Backup it up if it's a picture on facebook. (Assuming that a facebook page that gets deleted, all its posted content goes away with it... Pictures included)
-	if (isFbUrl(storyLink, true) && storyLink.indexOf('photo.php') > 0 && getSearchKey(storyLink, 'fbid')){
+	if (isFbUrl(storyLink, true) && ((storyLink.indexOf('photo.php') > 0 && getSearchKey(storyLink, 'fbid')) || (storyLink.indexOf('safe_image.php') > 0 && getSearchKey(storyLink, 'url')))) {
 		//Creating a media folder for the post
 		var postMediaPath = path.join(mediaPath, postId);
 		if (!fs.existsSync(postMediaPath)) fs.mkdirSync(postMediaPath);
 		//Getting the photoID from the story link. Then getting that photoID in the Graph API
 		var photoId = getSearchKey(storyLink, 'fbid');
+		console.log('photoid : ' + photoId);
 		fbgraph.get(photoId, function(err, fbImageRes){
 			if (err){
 				//If an error occurs while trying to get the post picture, give up and save the data you already have
@@ -152,7 +153,7 @@ function backupFbPost(postObj){
 			var fsWriter = fs.createWriteStream(path.join(postMediaPath, pictureName)); //Creating after the picture name, in the posts media folder
 			if (pictureLink.indexOf('https://') == 0){ //Checking whether the image path is batikh (ie, https) or not.
 				https.get(pictureLink, function(imgRes){
-					if (imgRes.statusCode == 200){ //image found, then save it
+					if (imgRes.statusCode >= 200 && imgRes.statusCode < 400) { //image found, then save it
 						imgRes.on('data', function(data){
 							fsWriter.write(data);
 						});
@@ -170,7 +171,7 @@ function backupFbPost(postObj){
 				});
 			} else {
 				http.get(pictureLink, function(imgRes){
-					if (imgRes.statusCode == 200){
+					if (imgRes.statusCode >= 200 && imgRes.statusCode < 400){
 						imgRes.on('data', function(data){
 							fsWriter.write(data);
 						});
