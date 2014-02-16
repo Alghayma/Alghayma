@@ -1,7 +1,8 @@
 extends layout
 
 block content
-	img.logoHeader(src="/images/alghayma-logo.png", width="400")
+	.logoHeader
+		img(src="/images/alghayma-logo.png", width="400")
 	br
 	- if (posts && feed)
 		h4 #{feedDescription}

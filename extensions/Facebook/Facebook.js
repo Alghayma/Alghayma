@@ -72,6 +72,9 @@ var isFBURL = this.validator
 var getPath = this.getFBPath
 
 exports.viewpage = function(req, res){
+
+	function formatDate(date) { return 'on ' + date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear() + ', at ' + date.getHours() + ':' + date.getMinutes();}
+
 	var sourceUrl = req.query.sourceUrl;
 	//Checking that the user-provided URL is from facebook. Beware this is very dirty.
 	if (!isFBURL(sourceUrl)){
@@ -93,7 +96,7 @@ exports.viewpage = function(req, res){
 					return;
 				}
 				if (posts && posts.length > 0){
-					var description = "We " + ((feed.didBackupHead) ? " did sucesfully complete a full backup of " + feed.name + ". The last backup was performed " + feed.lastBackup + "." : " do not have yet a full backup of " + feed.name +". Here is what we have so far")
+					var description = "We " + ((feed.didBackupHead) ? " did sucesfully complete a full backup of " + feed.name + ". The last backup was performed " + formatDate(feed.lastBackup) + "." : " do not have yet a full backup of " + feed.name +". Here is what we have so far")
 					// Improvement: add the date of the next scheduled backup.
 					res.render('feed', {title: feed.name + ' - Alghayma', feed: feed, posts: posts, feedDescription:description});
 				} else {
