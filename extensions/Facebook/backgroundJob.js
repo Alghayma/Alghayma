@@ -198,6 +198,7 @@ function backupFbPost(postObj){
 function scheduleNextOne(job, queue, done){
 	job.log("Scheduling next backup of " + job.data.feed.name + " in " + config.postsBackupInterval + " milliseconds." )
 	queue.create('facebookJob', {title: "Backup of " + job.data.feed.name, feed: job.data.feed}).delay(config.postsBackupInterval).save()
+	done();
 }
 
 //Launching a feed backup process
