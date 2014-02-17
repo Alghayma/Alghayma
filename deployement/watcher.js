@@ -3,7 +3,7 @@ var app = express();
 var forever = require('forever-monitor');
 var shell = require('shelljs');
 var githubSourceSubnet = "192.30.252.0/22";
-var execPath = process.cwd();
+var execPath = __dirname;
 var path = require('path')
 var fs = require('fs');
 
@@ -22,10 +22,13 @@ if (!fs.existsSync(pathToLogs)) {
 app.use(express.bodyParser());
 app.listen(3002);
 
-app.post('/deploy', function(req, res){
-	if (inSubnet(req.connection.remoteAddress, githubSourceSubnet)){
+app.post('/deploy/instance', function(req, res){
+	if (inSubNet(req.header("X-Real-IP"), githubSourceSubnet)){
 		if(req.body.ref === "refs/heads/production"){
 			console.log("Time to deploy a new instance")
+            console.log(req.body.pusher.name + " is so awesome for pushing code!")
+            res.send(); // Be polite with GitHub and acknowledge their post!
+            deploy();
 		}
 	}
 	else{
@@ -65,38 +68,41 @@ var inSubNet = function(ip, subnet)
 
 function gitPull(root, options)
 {
-
     var cmd = 'git pull --rebase';
 	shell.cd(root);
     shell.exec(cmd, function(code, output) {
     	console.log(cmd + ' exited with code ' + code);
 
-    	// Awesome, we checked out the new changes. Let's now restart the instances!
+        shell.exec("npm install", function(code, output) {
 
-    	mainInstance = new (forever.Monitor)("app.js", {
-    		'silent': true,
-    		'killTree': true,
-    		'sourceDir': repoRootPath,
-    		'watch': false,
-    		'logFile': path.join(pathToLogs, "mainDeamon.log"),
-    		'outFile': path.join(pathToLogs, "mainOut.log"),
-    		'errFile': path.join(pathToLogs, "mainError.log")
-    	});
-    	queue = new (forever.Monitor)("worker.js", {
-    		'silent': true,
-    		'killTree': true,
-    		'sourceDir': repoRootPath,
-    		'watch': false,
-    		'logFile': path.join(pathToLogs, "queueDeamon.log"),
-    		'outFile': path.join(pathToLogs, "queueOut.log"),
-    		'errFile': path.join(pathToLogs, "queueError.log")
-    	});
+            // Awesome, we checked out the new changes. Let's now restart the instances!
 
-    	mainInstance.start();
-    	queue.start();
+            mainInstance = new (forever.Monitor)("app.js", {
+            	'silent': true,
+            	'killTree': true,
+            	'sourceDir': repoRootPath,
+            	'watch': false,
+            	'logFile': path.join(pathToLogs, "mainDeamon.log"),
+            	'outFile': path.join(pathToLogs, "mainOut.log"),
+            	'errFile': path.join(pathToLogs, "mainError.log")
+            });
+            queue = new (forever.Monitor)("worker.js", {
+            	'silent': true,
+            	'killTree': true,
+            	'sourceDir': repoRootPath,
+            	'watch': false,
+            	'logFile': path.join(pathToLogs, "queueDeamon.log"),
+            	'outFile': path.join(pathToLogs, "queueOut.log"),
+            	'errFile': path.join(pathToLogs, "queueError.log")
+            });
 
+            mainInstance.start();
+            queue.start();
+
+            console.log("Instances (re)started");
+
+            });
     });
-
    
 }
 
