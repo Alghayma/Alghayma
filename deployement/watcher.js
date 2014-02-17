@@ -26,6 +26,7 @@ app.post('/deploy', function(req, res){
 	if (inSubnet(req.connection.remoteAddress, githubSourceSubnet)){
 		if(req.body.ref === "refs/heads/production"){
 			console.log("Time to deploy a new instance")
+            deploy();
 		}
 	}
 	else{
@@ -71,32 +72,36 @@ function gitPull(root, options)
     shell.exec(cmd, function(code, output) {
     	console.log(cmd + ' exited with code ' + code);
 
-    	// Awesome, we checked out the new changes. Let's now restart the instances!
+        shell.exec("npm install", function(code, output) {
 
-    	mainInstance = new (forever.Monitor)("app.js", {
-    		'silent': true,
-    		'killTree': true,
-    		'sourceDir': repoRootPath,
-    		'watch': false,
-    		'logFile': path.join(pathToLogs, "mainDeamon.log"),
-    		'outFile': path.join(pathToLogs, "mainOut.log"),
-    		'errFile': path.join(pathToLogs, "mainError.log")
-    	});
-    	queue = new (forever.Monitor)("worker.js", {
-    		'silent': true,
-    		'killTree': true,
-    		'sourceDir': repoRootPath,
-    		'watch': false,
-    		'logFile': path.join(pathToLogs, "queueDeamon.log"),
-    		'outFile': path.join(pathToLogs, "queueOut.log"),
-    		'errFile': path.join(pathToLogs, "queueError.log")
-    	});
+            // Awesome, we checked out the new changes. Let's now restart the instances!
 
-    	mainInstance.start();
-    	queue.start();
+            mainInstance = new (forever.Monitor)("app.js", {
+            	'silent': true,
+            	'killTree': true,
+            	'sourceDir': repoRootPath,
+            	'watch': false,
+            	'logFile': path.join(pathToLogs, "mainDeamon.log"),
+            	'outFile': path.join(pathToLogs, "mainOut.log"),
+            	'errFile': path.join(pathToLogs, "mainError.log")
+            });
+            queue = new (forever.Monitor)("worker.js", {
+            	'silent': true,
+            	'killTree': true,
+            	'sourceDir': repoRootPath,
+            	'watch': false,
+            	'logFile': path.join(pathToLogs, "queueDeamon.log"),
+            	'outFile': path.join(pathToLogs, "queueOut.log"),
+            	'errFile': path.join(pathToLogs, "queueError.log")
+            });
 
+            mainInstance.start();
+            queue.start();
+
+            console.log("Instances started");
+                
+            });
     });
-
    
 }
 
