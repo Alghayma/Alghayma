@@ -23,7 +23,7 @@ app.use(express.bodyParser());
 app.listen(3002);
 
 app.post('/deploy/instance', function(req, res){
-	if (inSubnet(req.connection.remoteAddress, githubSourceSubnet)){
+	if (inSubNet(req.connection.remoteAddress, githubSourceSubnet)){
 		if(req.body.ref === "refs/heads/production"){
 			console.log("Time to deploy a new instance")
             deploy();
