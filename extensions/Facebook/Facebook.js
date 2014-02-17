@@ -173,7 +173,7 @@ exports.fbauth = function(req, res){
 	if (!req.query.code){
 		var authUrl = fbgraph.getOauthUrl({
 			"client_id": config.fbappid,
-			"redirect_uri": 'http://localhost:3000/fb/auth'
+			"redirect_uri": 'https://www.alghayma.com/fb/auth'
 		});
 		if (!req.query.error){
 			res.redirect(authUrl);
@@ -188,7 +188,7 @@ exports.fbauth = function(req, res){
 		client_id: config.fbappid,
 		client_secret: config.fbapptoken,
 		code: req.query.code,
-		redirect_uri: 'http://localhost:3000/fb/auth',
+		redirect_uri: 'https://www.alghayma.com/fb/auth',
 	}, function(err, facebookRes){
 		if (err){
 			console.log('Error in FB authorization:\n' + JSON.stringify(err));
