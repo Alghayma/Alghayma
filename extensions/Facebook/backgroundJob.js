@@ -97,7 +97,7 @@ function navigatePage(pageId, until, since, cb, job){
 
 //Saving a single fb post on the server
 /*
-* BEWARE : IT MIGHT LOOK VERY DIRTY
+* BEWARE : IT MIGHT LOOK VERY VERY DIRTY. It could be optimized
 */
 function backupFbPost(postObj){
 	var isFbUrl = require("./Facebook").validator
@@ -131,13 +131,12 @@ function backupFbPost(postObj){
 		story: story
 	}
 	//Getting the story link. Backup it up if it's a picture on facebook. (Assuming that a facebook page that gets deleted, all its posted content goes away with it... Pictures included)
-	if (isFbUrl(storyLink, true) && ((storyLink.indexOf('photo.php') > 0 && getSearchKey(storyLink, 'fbid')) || (storyLink.indexOf('safe_image.php') > 0 && getSearchKey(storyLink, 'url')))) {
+	if (isFbUrl(storyLink, true) && (storyLink.indexOf('photo.php') > 0 && getSearchKey(storyLink, 'fbid'))) {
 		//Creating a media folder for the post
 		var postMediaPath = path.join(mediaPath, postId);
 		if (!fs.existsSync(postMediaPath)) fs.mkdirSync(postMediaPath);
 		//Getting the photoID from the story link. Then getting that photoID in the Graph API
 		var photoId = getSearchKey(storyLink, 'fbid');
-		console.log('photoid : ' + photoId);
 		fbgraph.get(photoId, function(err, fbImageRes){
 			if (err){
 				//If an error occurs while trying to get the post picture, give up and save the data you already have
@@ -151,7 +150,7 @@ function backupFbPost(postObj){
 			var pictureName = pictureLink.split('/'); //Assuming that the url finishes with the image's file name
 			pictureName = pictureName[pictureName.length - 1];
 			var fsWriter = fs.createWriteStream(path.join(postMediaPath, pictureName)); //Creating after the picture name, in the posts media folder
-			if (pictureLink.indexOf('https://') == 0){ //Checking whether the image path is batikh (ie, https) or not.
+			if (pictureLink.indexOf('https://') == 0){ //Checking whether the image path is https or not.
 				https.get(pictureLink, function(imgRes){
 					if (imgRes.statusCode >= 200 && imgRes.statusCode < 400) { //image found, then save it
 						imgRes.on('data', function(data){
@@ -191,8 +190,56 @@ function backupFbPost(postObj){
 		});
 	} else {
 		var pictureLink = postObj.picture;
-		postInDb.picture = pictureLink;
-		saveInDb(postInDb);
+		if (isFbUrl(pictureLink, true) && pictureLink.indexOf('safe_image.php') > 0 && getSearchKey(pictureLink, 'url')){
+			//Creating a media folder for the post
+			var postMediaPath = path.join(mediaPath, postId);
+			if (!fs.existsSync(postMediaPath)) fs.mkdirSync(postMediaPath);
+			//Creating the image file
+			var theoricImageUrl = decodeURIComponent(getSearchKey(pictureLink, url));
+			theoricImageUrl = theoricImageUrl.split('/');
+			var imageName = theoricImageUrl[theoricImageUrl.length - 1];
+			var fsWriter = fs.createWriteStream(path.join(postMediaPath, imageName));
+			if (pictureLink.indexOf('https://') == 0){
+				https.get(pictureLink, function(imgRes){
+					if (imgRes.statusCode >= 200 && imgRes.statusCode < 400){
+						imgRes.on('data', function(data){
+							fsWriter.write(data);
+						});
+						imgRes.on('end', function(){
+							fsWriter.end();
+							pictureLink = '/fb/media/' + postId;
+							postInDb.picture = pictureLink;
+							saveInDb(postInDb);
+						});
+					} else {
+						//Error while getting the picture. Saving what we have
+						postInDb.picture = pictureLink;
+						saveInDb(postInDb);
+					}
+				});
+			} else {
+				http.get(pictureLink, function(imgRes){
+					if (imgRes.statusCode >= 200 && imgRes.statusCode < 400){
+						imgRes.on('data', function(data){
+							fsWriter.write(data);
+						});
+						imgRes.on('end', function(){
+							fsWriter.end();
+							pictureLink = '/fb/media/' + postId;
+							postInDb.picture = pictureLink;
+							saveInDb(postInDb);
+						});
+					} else {
+						//Error while getting the picture. Saving what we have
+						postInDb.picture = pictureLink;
+						saveInDb(postInDb);
+					}
+				});
+			}
+		} else {
+			postInDb.picture = pictureLink;
+			saveInDb(postInDb);
+		}
 	}
 }
 
