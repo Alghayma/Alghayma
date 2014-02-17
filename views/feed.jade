@@ -29,6 +29,7 @@ block content
 								-if (post.storyLink)
 									.link
 										a(href="#{post.storyLink}") Story link
+		div#theEndBanner The Start
 		div#infiniteScrollTrigger
 			span#downIcon &#8595;
 			img#ajaxLoaderGif(src="/images/ajax-loader.gif", style="display: none")
@@ -112,7 +113,9 @@ block content
 				req.onload = function(){
 					if (this.status == 200){
 						var posts = JSON.parse(this.response);
-						if (!Array.isArray(posts)){
+						if (!Array.isArray(posts) || posts.length == 0){
+							$('#infiniteScrollTrigger').css('display', 'none');
+							$('#theEndBanner').css('display', 'block');
 							return;
 						}
 						for (var i = 0; i < posts.length; i++){
@@ -161,6 +164,11 @@ block content
 									storyDiv.textContent = posts[i].story;
 									storyunit.appendChild(storyDiv);
 								}
+							} else {
+								var storyDiv = document.createElement('div');
+								storyDiv.className = 'message';
+								storyDiv.textContent = posts[i].story;
+								storyunit.appendChild(storyDiv);
 							}
 							//Adding the post's picture, if any
 							if (posts[i].picture){
@@ -184,7 +192,7 @@ block content
 					} else {
 						//alert('');
 					}
-					setTimeout(balance, 25);
+					setTimeout(balance, 50); //Giving the browser some time to render all the posts. Might trigger a buffer overflow in IE :p
 					if (callback && typeof callback == 'function') callback();
 				};
 				req.send();
