@@ -55,6 +55,12 @@ exports.getFBPath = function getFbPath(path, removeEdges){
 	return path
 }
 
+exports.permalink = function getPermalink(postId){
+	if (typeof postId != 'string') return '#';
+	var postIdParts = postId.split('_');
+	return 'https://facebook.com/' + postIdParts[0] + '/posts/' + postIdParts[1]; 
+}
+
 exports.setupRoutes = function(express, ext){
 	var path = require('path');
 	var shortname = require(path.join(__dirname, ext)).config.shortname
@@ -70,15 +76,11 @@ exports.setupRoutes = function(express, ext){
 
 var isFBURL = this.validator
 var getPath = this.getFBPath
+var permalink = this.permalink;
 
 exports.viewpage = function(req, res){
 
-	function formatDate(date) { return 'on ' + date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear() + ', at ' + date.getHours() + ':' + date.getMinutes();}
-
-	function permalink(postId){
-		var postIdParts = postId.split('_');
-		return 'https://facebook.com/' + postIdParts[0] + '/posts/' + postIdParts[1]; 
-	}
+	function formatDate(date) { return 'on ' + date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear() + ', at ' + date.getHours() + ':' + (date.getMinutes().toString().length == 1 ? date.getMinutes().toString() + '0' : date.getMinutes());} //That last part prevents from getting timestamps such as 15:0
 
 	var sourceUrl = req.query.sourceUrl;
 	//Checking that the user-provided URL is from facebook. Beware this is very dirty.
@@ -101,9 +103,19 @@ exports.viewpage = function(req, res){
 					return;
 				}
 				if (posts && posts.length > 0){
+					var postsCopy = [];
+					var attributesToCopy = ['postId', 'feedId', 'postDate', 'postText', 'story', 'storyLink', 'picture'];
+					for (var i = 0; i < posts.length; i++){
+						var postCopy = {};
+						for (var j = 0; j < attributesToCopy.length; j++){
+							postCopy[attributesToCopy[j]] = posts[i][attributesToCopy[j]];
+						}
+						postCopy.permalink = permalink(postCopy.postId);
+						postsCopy.push(postCopy);
+					}
 					var description = "We " + ((feed.didBackupHead) ? " did sucesfully complete a full backup of " + feed.name + ". The last backup was performed " + formatDate(feed.lastBackup) + "." : " do not have yet a full backup of " + feed.name +". Here is what we have so far")
 					// Improvement: add the date of the next scheduled backup.
-					res.render('feed', {title: feed.name + ' - Alghayma', feed: feed, posts: posts, feedDescription:description});
+					res.render('feed', {title: feed.name + ' - Alghayma', feed: feed, posts: postsCopy, feedDescription:description});
 				} else {
 					res.render('message', {title: 'Error', message: 'Sorry. This feed is registered on Alghayma, but it hasn\'t been backed up yet. Please come back later.'});
 				}
@@ -131,7 +143,17 @@ exports.chunk = function(req, res){
 			console.log('Error while getting chunk ' + offset + ' with width ' + limit + ' for feedId ' + feedId);
 			return;
 		}
-		res.send(200, posts);
+		var postsCopy = [];
+		var attributesToCopy = ['postId', 'feedId', 'postDate', 'postText', 'story', 'storyLink', 'picture'];
+		for (var i = 0; i < posts.length; i++){
+			var postCopy = {};
+			for (var j = 0; j < attributesToCopy.length; j++){
+				postCopy[attributesToCopy[j]] = posts[i][attributesToCopy[j]];
+			}
+			postCopy.permalink = permalink(posts[i].postId);
+			postsCopy.push(postCopy);
+		}
+		res.send(200, postsCopy);
 	});
 };
 
