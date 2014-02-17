@@ -3,7 +3,7 @@ var app = express();
 var forever = require('forever-monitor');
 var shell = require('shelljs');
 var githubSourceSubnet = "192.30.252.0/22";
-var execPath = process.cwd();
+var execPath = __dirname;
 var path = require('path')
 var fs = require('fs');
 
