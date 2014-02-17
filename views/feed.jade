@@ -40,6 +40,11 @@ block content
 			for (var i = 0; i < postHeaders.length; i++){
 				postHeaders[i].textContent = formatDate(new Date(postHeaders[i].textContent));
 			}
+			//Getting a permalink from a postid
+			function permalink(postId){
+				var postIdParts = postId.split('_');
+				return 'https://facebook.com/' + postIdParts[0] + '/posts/' + postIdParts[1];
+			}
 			//Giving in-page post IDs
 			var nextIdNumber = 0;
 			function giveIDs(){

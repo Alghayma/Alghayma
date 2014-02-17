@@ -75,6 +75,11 @@ exports.viewpage = function(req, res){
 
 	function formatDate(date) { return 'on ' + date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear() + ', at ' + date.getHours() + ':' + date.getMinutes();}
 
+	function permalink(postId){
+		var postIdParts = postId.split('_');
+		return 'https://facebook.com/' + postIdParts[0] + '/posts/' + postIdParts[1]; 
+	}
+
 	var sourceUrl = req.query.sourceUrl;
 	//Checking that the user-provided URL is from facebook. Beware this is very dirty.
 	if (!isFBURL(sourceUrl)){
