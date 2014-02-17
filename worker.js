@@ -47,4 +47,3 @@ if (cluster.isMaster) {
 
   });
 }
-
