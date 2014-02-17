@@ -98,7 +98,7 @@ function gitPull(root, options)
             mainInstance.start();
             queue.start();
 
-            console.log("Instances started");
+            console.log("Instances (re)started");
 
             });
     });
