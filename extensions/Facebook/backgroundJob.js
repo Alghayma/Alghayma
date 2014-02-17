@@ -19,8 +19,8 @@ mongoose.connect(connectionString, function(err){ if (err) throw err; });
 require("./models.js").initializeDBModels(mongoose);
 
 var FBUser = mongoose.model('FBUser');
-var	FBFeed = mongoose.model('FBFeed');
-var	FBPost = mongoose.model('FBPost');
+var FBFeed = mongoose.model('FBFeed');
+var FBPost = mongoose.model('FBPost');
 
 //Creating the media folder, if it doesn't exist
 var mediaPath = path.join(process.cwd(), config.mediafolder);
@@ -137,7 +137,6 @@ function backupFbPost(postObj){
 		if (!fs.existsSync(postMediaPath)) fs.mkdirSync(postMediaPath);
 		//Getting the photoID from the story link. Then getting that photoID in the Graph API
 		var photoId = getSearchKey(storyLink, 'fbid');
-		console.log('photoid : ' + photoId);
 		fbgraph.get(photoId, function(err, fbImageRes){
 			if (err){
 				//If an error occurs while trying to get the post picture, give up and save the data you already have
