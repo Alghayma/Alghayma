@@ -2,8 +2,11 @@
 
 @font-face
 {
-font-family: Maagkramp;
-src: url(Maagkramp.woff);
+	font-family: Maagkramp;
+	src:	url('fonts/Maagkramp.eot?#iefix') format('embedded-opentype'), 
+	     	url('fonts/Maagkramp.woff') format('woff'), 
+	     	url('fonts/Maagkramp.ttf')  format('truetype'),
+	     	url('fonts/Maagkramp.svg#svgFontName') format('svg');
 }
 
 .Aligner {
