@@ -258,7 +258,12 @@ block content
 					$('#backItUp').css('display: none');
 					$('#header').css('display: none');
 					$('#messagePanel').append('<p id="redirectP">Redirecting to Alghayma homepage in 5 seconds. If it doesn\'t, click <a href="/">here</a>.</p>');
-					
+					var intervalCount = 0;
+					setInterval(function(){
+						intervalCount++;
+						$('#redirectP').html('Redirecting to Alghayma homepage in ' + (5 - intervalCount).toString() + ' seconds. If it doesn\'t, click <a href="/">here</a>.');
+						if (intervalCount == 5) window.history.back();
+					}, 1000);
 				};
 				ajaxReq.send(fData);
 			};
