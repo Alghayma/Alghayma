@@ -66,7 +66,6 @@ var inSubNet = function(ip, subnet)
 
 function gitPull(root, options)
 {
-
     var cmd = 'git pull --rebase';
 	shell.cd(root);
     shell.exec(cmd, function(code, output) {
