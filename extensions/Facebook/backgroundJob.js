@@ -195,12 +195,12 @@ function backupFbPost(postObj){
 			var postMediaPath = path.join(mediaPath, postId);
 			if (!fs.existsSync(postMediaPath)) fs.mkdirSync(postMediaPath);
 			//Creating the image file
-			var theoricImageUrl = decodeURIComponent(getSearchKey(pictureLink, url));
+			var theoricImageUrl = decodeURIComponent(getSearchKey(pictureLink, "url"));
 			theoricImageUrl = theoricImageUrl.split('/');
 			var imageName = theoricImageUrl[theoricImageUrl.length - 1];
 			var fsWriter = fs.createWriteStream(path.join(postMediaPath, imageName));
-			if (pictureLink.indexOf('https://') == 0){
-				https.get(pictureLink, function(imgRes){
+			if (theoricImageUrl.indexOf('https://') == 0){
+				https.get(theoricImageUrl, function(imgRes){
 					if (imgRes.statusCode >= 200 && imgRes.statusCode < 400){
 						imgRes.on('data', function(data){
 							fsWriter.write(data);
@@ -218,7 +218,7 @@ function backupFbPost(postObj){
 					}
 				});
 			} else {
-				http.get(pictureLink, function(imgRes){
+				http.get(theoricImageUrl, function(imgRes){
 					if (imgRes.statusCode >= 200 && imgRes.statusCode < 400){
 						imgRes.on('data', function(data){
 							fsWriter.write(data);
