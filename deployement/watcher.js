@@ -26,6 +26,7 @@ app.post('/deploy/instance', function(req, res){
 	if (inSubNet(req.header("X-Real-IP"), githubSourceSubnet)){
 		if(req.body.ref === "refs/heads/production"){
 			console.log("Time to deploy a new instance")
+            console.log(req.body.pusher.name + " is so awesome for pushing code!")
             res.send(); // Be polite with GitHub and acknowledge their post!
             deploy();
 		}
