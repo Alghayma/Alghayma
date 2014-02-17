@@ -19,8 +19,8 @@ mongoose.connect(connectionString, function(err){ if (err) throw err; });
 require("./models.js").initializeDBModels(mongoose);
 
 var FBUser = mongoose.model('FBUser');
-var	FBFeed = mongoose.model('FBFeed');
-var	FBPost = mongoose.model('FBPost');
+var FBFeed = mongoose.model('FBFeed');
+var FBPost = mongoose.model('FBPost');
 
 //Creating the media folder, if it doesn't exist
 var mediaPath = path.join(process.cwd(), config.mediafolder);
