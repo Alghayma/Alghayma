@@ -6,6 +6,7 @@ var numCPUs = require('os').cpus().length;
 var path = require('path');
 var config = require(path.join(process.cwd(), "config"));
 var fbBgWorker = require(path.join(process.cwd(), 'extensions', 'Facebook', 'backgroundJob'));
+var net = require('net);
 var noop = function() {};
 
 if (cluster.isMaster) {
@@ -32,7 +33,7 @@ if (cluster.isMaster) {
 
   jobs.promote(); // Resumes delayed jobs that expired
 
-  // Queue cleanup 
+  // Queue cleanup
 
   // REPL Methods
 
@@ -139,7 +140,7 @@ if (cluster.isMaster) {
   promoteDelayed();
 
   // Make administration REPL
-  
+
   net.createServer(function (socket) {
     repl.start("node via TCP socket> ", socket);
   }).listen(5001, "localhost");
