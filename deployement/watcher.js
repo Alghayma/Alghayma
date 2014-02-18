@@ -85,7 +85,7 @@ function gitPull(root, options)
             	'logFile': path.join(pathToLogs, "mainDeamon.log"),
             	'outFile': path.join(pathToLogs, "mainOut.log"),
             	'errFile': path.join(pathToLogs, "mainError.log"),
-                'killSignal': 'SIGINT';
+                'killSignal': 'SIGINT'
             });
             queue = new (forever.Monitor)("worker.js", {
             	'silent': true,
