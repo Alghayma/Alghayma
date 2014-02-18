@@ -66,8 +66,8 @@ function navigatePage(pageId, until, since, cb, job){
 
 	function fbGet(path, until, since){
 		var options = {};
-		if (until) options.until = until.getTime();
-		if (since) options.since = since.getTime();
+		if (until) options.until = until.getTime() / 1000; //Number of seconds, and not milliseconds
+		if (since) options.since = since.getTime() / 1000;
 		fbgraph.get(path, options, function(err, fbRes){
 			if (err) {
 				if (err.code == 1 || err.code == 2){ //Internal FB errors
@@ -81,18 +81,26 @@ function navigatePage(pageId, until, since, cb, job){
 				return;
 			}
 			for (var i = 0; i < fbRes.data.length; i++){
-				backupFbPost(fbRes.data[i]);
+				//Backup a post if it meets the conditions and go to the next one
+				if ((!until || fbRes.data[i].created_time < until.getTime() / 1000) && (!since || fbRes.data[i].created_time > since.getTime() / 1000)){
+					backupFbPost(fbRes.data[i]);
+					continue;
+				}
+				//If we went beyond the "until" clause, stop paging
+				if (until && fbRes.data[i].created_time < until.getTime() / 1000){
+					if (cb) cb();
+					return;
+				}
 			}
-
 			if (fbRes.paging && fbRes.paging.next){
-				fbGet(fbRes.paging.next);
+				fbGet(fbRes.paging.next, until, since);
 			} else {
 				if (cb) cb();
 			}
 		})
 	}
 
-	fbGet(reqText);
+	fbGet(reqText, until, since);
 }
 
 //Saving a single fb post on the server
@@ -196,8 +204,8 @@ function backupFbPost(postObj){
 			if (!fs.existsSync(postMediaPath)) fs.mkdirSync(postMediaPath);
 			//Creating the image file
 			var theoricImageUrl = decodeURIComponent(getSearchKey(pictureLink, "url"));
-			theoricImageUrl = theoricImageUrl.split('/');
-			var imageName = theoricImageUrl[theoricImageUrl.length - 1];
+			var theoricImageUrlParts = theoricImageUrl.split('/');
+			var imageName = theoricImageUrlParts[theoricImageUrlParts.length];
 			var fsWriter = fs.createWriteStream(path.join(postMediaPath, imageName));
 			if (theoricImageUrl.indexOf('https://') == 0){
 				https.get(theoricImageUrl, function(imgRes){

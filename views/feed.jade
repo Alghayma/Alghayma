@@ -215,6 +215,11 @@ block content
 			};
 			$(infiniteScrollTrigger).mouseenter(triggerHandler);
 			infiniteScrollTrigger.onmouseclick = triggerHandler;
+			window.onscroll = function(){
+				/*var atBottom = document.body.offsetHeight + document.body.scrollTop == document.body.scrollHeight;
+				console.log('At bottom? : ' + atBottom + '. Difference : ' + (document.body.scrollTop + document.body.offsetHeight) + '. clientHeight: ' + document.body.scrollHeight);
+				if (atBottom) triggerHandler();*/
+			};
 	- else
 		div(style='text-align: center')
 			h4#header This feed isn't backed up by Alghayma
