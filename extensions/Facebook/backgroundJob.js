@@ -22,6 +22,8 @@ var FBUser = mongoose.model('FBUser');
 var FBFeed = mongoose.model('FBFeed');
 var FBPost = mongoose.model('FBPost');
 
+var shouldEnd = false;
+
 //Creating the media folder, if it doesn't exist
 var mediaPath = path.join(process.cwd(), config.mediafolder);
 if (!fs.existsSync(config.mediafolder)) fs.mkdirSync(mediaPath);
@@ -65,7 +67,9 @@ function navigatePage(pageId, until, since, cb, job){
 	var reqText = pageId + '/posts';
 
 	function fbGet(path, until, since){
-		console.log('fbget');
+		if (shouldEnd) {
+			process.exit(0)
+		}
 		var options = {};
 		if (until) options.until = until.getTime() / 1000; //Number of seconds, and not milliseconds
 		if (since) options.since = since.getTime() / 1000;
@@ -84,7 +88,6 @@ function navigatePage(pageId, until, since, cb, job){
 			for (var i = 0; i < fbRes.data.length; i++){
 				//Backup a post if it meets the conditions and go to the next one
 				if ((!until || fbRes.data[i].created_time < until.getTime() / 1000) && (!since || fbRes.data[i].created_time > since.getTime() / 1000)){
-					console.log('Post backup : ' + JSON.stringify(fbRes.data[i]));
 					backupFbPost(fbRes.data[i]);
 					continue;
 				}
@@ -131,6 +134,8 @@ function backupFbPost(postObj){
 	var storyLink = postObj.link;
 	var story = postObj.story;
 
+	if (!fs.existsSync(path.join(mediaPath, feedId))) fs.mkdirSync(path.join(mediaPath, feedId));
+
 	//Pre-modelling the object before saving it in the DB 
 	var postInDb = {
 		postId: postId,
@@ -143,7 +148,7 @@ function backupFbPost(postObj){
 	//Getting the story link. Backup it up if it's a picture on facebook. (Assuming that a facebook page that gets deleted, all its posted content goes away with it... Pictures included)
 	if (isFbUrl(storyLink, true) && (storyLink.indexOf('photo.php') > 0 && getSearchKey(storyLink, 'fbid'))) {
 		//Creating a media folder for the post
-		var postMediaPath = path.join(mediaPath, postId);
+		var postMediaPath = path.join(mediaPath, feedId,postId);
 		if (!fs.existsSync(postMediaPath)) fs.mkdirSync(postMediaPath);
 		//Getting the photoID from the story link. Then getting that photoID in the Graph API
 		var photoId = getSearchKey(storyLink, 'fbid');
@@ -168,7 +173,7 @@ function backupFbPost(postObj){
 						});
 						imgRes.on('end', function(){
 							fsWriter.end();
-							pictureLink = '/fb/media/' + postId;
+							pictureLink = '/fb/media/' + feedId + "/" + postId;
 							postInDb.picture = pictureLink;
 							saveInDb(postInDb);
 						});
@@ -186,7 +191,7 @@ function backupFbPost(postObj){
 						});
 						imgRes.on('end', function(){
 							fsWriter.end();
-							pictureLink = '/fb/media/' + postId;
+							pictureLink = '/fb/media/' + feedId + "/" + postId;
 							postInDb.picture = pictureLink;
 							saveInDb(postInDb);
 						});
@@ -202,7 +207,7 @@ function backupFbPost(postObj){
 		var pictureLink = postObj.picture;
 		if (isFbUrl(pictureLink, true) && pictureLink.indexOf('safe_image.php') > 0 && getSearchKey(pictureLink, 'url')){
 			//Creating a media folder for the post
-			var postMediaPath = path.join(mediaPath, postId);
+			var postMediaPath = path.join(mediaPath, feedId, postId);
 			if (!fs.existsSync(postMediaPath)) fs.mkdirSync(postMediaPath);
 			//Creating the image file
 			var theoricImageUrl = decodeURIComponent(getSearchKey(pictureLink, "url"));
@@ -217,7 +222,7 @@ function backupFbPost(postObj){
 						});
 						imgRes.on('end', function(){
 							fsWriter.end();
-							pictureLink = '/fb/media/' + postId;
+							pictureLink = '/fb/media/' + feedId + "/" + postId;
 							postInDb.picture = pictureLink;
 							saveInDb(postInDb);
 						});
@@ -235,7 +240,7 @@ function backupFbPost(postObj){
 						});
 						imgRes.on('end', function(){
 							fsWriter.end();
-							pictureLink = '/fb/media/' + postId;
+							pictureLink = '/fb/media/' + feedId + "/" + postId;
 							postInDb.picture = pictureLink;
 							saveInDb(postInDb);
 						});
@@ -257,6 +262,10 @@ function scheduleNextOne(job, queue, done){
 	job.log("Scheduling next backup of " + job.data.feed.name + " in " + config.postsBackupInterval + " milliseconds." )
 	queue.create('facebookJob', {title: "Backup of " + job.data.feed.name, feed: job.data.feed}).delay(config.postsBackupInterval).save()
 	done();
+}
+
+exports.setKiller = function(){
+	shouldEnd = true;
 }
 
 //Launching a feed backup process
