@@ -2,10 +2,11 @@ extends layout
 
 block content
 	.logoHeader
-		img(src="/images/alghayma-logo.png", width="400")
+		a(href="/")
+			img(src="/images/alghayma-logo.png", width="400")
 	br
 	- if (posts && feed)
-		h4 #{feedDescription}
+		h4(style='text-align: center') #{feedDescription}
 		div#postList.container
 			ol.timeline.clearfix
 				- each post in posts
@@ -202,12 +203,12 @@ block content
 			var triggerHandler = function(){
 				if (!loadingStuff){
 					loadingStuff = true;
-					$('#downIcon').css('display: none');
-					$('#ajaxLoaderGif').css('display: inline');
+					$('#downIcon').css('display', 'none');
+					$('#ajaxLoaderGif').css('display', 'inline');
 					offsetCounter++;
 					loadChunk(offsetCounter, function(){
-						$('#ajaxLoaderGif').css('display: none');
-						$('#downIcon').css('display: block');
+						$('#ajaxLoaderGif').css('display', 'none');
+						$('#downIcon').css('display', 'block');
 						loadingStuff = false;
 					});
 				}

@@ -33,6 +33,10 @@ a {
 #infiniteScrollTrigger:hover {
   background-color: #a9a9a9;
 }
+#ajaxLoaderGif {
+  height: 22px;
+  width: 22px;
+}
 .link {
   padding-top: 5px;
   padding-bottom: 5px;
