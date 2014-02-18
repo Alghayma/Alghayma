@@ -84,7 +84,8 @@ function gitPull(root, options)
             	'watch': false,
             	'logFile': path.join(pathToLogs, "mainDeamon.log"),
             	'outFile': path.join(pathToLogs, "mainOut.log"),
-            	'errFile': path.join(pathToLogs, "mainError.log")
+            	'errFile': path.join(pathToLogs, "mainError.log"),
+                'killSignal': 'SIGINT';
             });
             queue = new (forever.Monitor)("worker.js", {
             	'silent': true,
@@ -93,7 +94,8 @@ function gitPull(root, options)
             	'watch': false,
             	'logFile': path.join(pathToLogs, "queueDeamon.log"),
             	'outFile': path.join(pathToLogs, "queueOut.log"),
-            	'errFile': path.join(pathToLogs, "queueError.log")
+            	'errFile': path.join(pathToLogs, "queueError.log"),
+                'killSignal': 'SIGINT';
             });
 
             mainInstance.start();
