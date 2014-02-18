@@ -140,12 +140,6 @@ if (cluster.isMaster) {
 
   promoteDelayed();
 
-  // Make administration REPL
-
-  net.createServer(function (socket) {
-    repl.start("node via TCP socket> ", socket);
-  }).listen(5001, "localhost");
-
 } else {
   jobs.process('facebookJob', function(job, done){
     console.log("New Job starting : Backupping " + job.data.feed.name);

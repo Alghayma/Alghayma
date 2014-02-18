@@ -141,7 +141,7 @@ function backupFbPost(postObj){
 	//Getting the story link. Backup it up if it's a picture on facebook. (Assuming that a facebook page that gets deleted, all its posted content goes away with it... Pictures included)
 	if (isFbUrl(storyLink, true) && (storyLink.indexOf('photo.php') > 0 && getSearchKey(storyLink, 'fbid'))) {
 		//Creating a media folder for the post
-		var postMediaPath = path.join(mediaPath, postId);
+		var postMediaPath = path.join(mediaPath, feedId,postId);
 		if (!fs.existsSync(postMediaPath)) fs.mkdirSync(postMediaPath);
 		//Getting the photoID from the story link. Then getting that photoID in the Graph API
 		var photoId = getSearchKey(storyLink, 'fbid');
@@ -166,7 +166,7 @@ function backupFbPost(postObj){
 						});
 						imgRes.on('end', function(){
 							fsWriter.end();
-							pictureLink = '/fb/media/' + postId;
+							pictureLink = '/fb/media/' + feedId + "/" + postId;
 							postInDb.picture = pictureLink;
 							saveInDb(postInDb);
 						});
@@ -184,7 +184,7 @@ function backupFbPost(postObj){
 						});
 						imgRes.on('end', function(){
 							fsWriter.end();
-							pictureLink = '/fb/media/' + postId;
+							pictureLink = '/fb/media/' + feedId + "/" + postId;
 							postInDb.picture = pictureLink;
 							saveInDb(postInDb);
 						});
@@ -200,7 +200,7 @@ function backupFbPost(postObj){
 		var pictureLink = postObj.picture;
 		if (isFbUrl(pictureLink, true) && pictureLink.indexOf('safe_image.php') > 0 && getSearchKey(pictureLink, 'url')){
 			//Creating a media folder for the post
-			var postMediaPath = path.join(mediaPath, postId);
+			var postMediaPath = path.join(mediaPath, feedId, postId);
 			if (!fs.existsSync(postMediaPath)) fs.mkdirSync(postMediaPath);
 			//Creating the image file
 			var theoricImageUrl = decodeURIComponent(getSearchKey(pictureLink, "url"));
@@ -215,7 +215,7 @@ function backupFbPost(postObj){
 						});
 						imgRes.on('end', function(){
 							fsWriter.end();
-							pictureLink = '/fb/media/' + postId;
+							pictureLink = '/fb/media/' + feedId + "/" + postId;
 							postInDb.picture = pictureLink;
 							saveInDb(postInDb);
 						});
@@ -233,7 +233,7 @@ function backupFbPost(postObj){
 						});
 						imgRes.on('end', function(){
 							fsWriter.end();
-							pictureLink = '/fb/media/' + postId;
+							pictureLink = '/fb/media/' + feedId + "/" + postId;
 							postInDb.picture = pictureLink;
 							saveInDb(postInDb);
 						});
