@@ -65,6 +65,7 @@ function navigatePage(pageId, until, since, cb, job){
 	var reqText = pageId + '/posts';
 
 	function fbGet(path, until, since){
+		console.log('fbget');
 		var options = {};
 		if (until) options.until = until.getTime() / 1000; //Number of seconds, and not milliseconds
 		if (since) options.since = since.getTime() / 1000;
@@ -83,6 +84,7 @@ function navigatePage(pageId, until, since, cb, job){
 			for (var i = 0; i < fbRes.data.length; i++){
 				//Backup a post if it meets the conditions and go to the next one
 				if ((!until || fbRes.data[i].created_time < until.getTime() / 1000) && (!since || fbRes.data[i].created_time > since.getTime() / 1000)){
+					console.log('Post backup : ' + JSON.stringify(fbRes.data[i]));
 					backupFbPost(fbRes.data[i]);
 					continue;
 				}
@@ -205,7 +207,7 @@ function backupFbPost(postObj){
 			//Creating the image file
 			var theoricImageUrl = decodeURIComponent(getSearchKey(pictureLink, "url"));
 			var theoricImageUrlParts = theoricImageUrl.split('/');
-			var imageName = theoricImageUrlParts[theoricImageUrlParts.length];
+			var imageName = theoricImageUrlParts[theoricImageUrlParts.length - 1];
 			var fsWriter = fs.createWriteStream(path.join(postMediaPath, imageName));
 			if (theoricImageUrl.indexOf('https://') == 0){
 				https.get(theoricImageUrl, function(imgRes){
