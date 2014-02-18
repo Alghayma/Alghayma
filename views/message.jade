@@ -9,12 +9,12 @@ block content
 		| #{message}
 		br
 		br
-	- if (goHome)
-		a(href="/")
-			button#backButton Home
-	- else
-		button#backButton Back
-		script.
-			backButton.onclick = function(){
-				window.history.back();
-			};
+		- if (goHome)
+			a(href="/")
+				button#backButton Home
+		- else
+			button#backButton Back
+			script.
+				backButton.onclick = function(){
+					window.history.back();
+				};

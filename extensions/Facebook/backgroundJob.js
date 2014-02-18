@@ -212,7 +212,7 @@ function backupFbPost(postObj){
 			//Creating the image file
 			var theoricImageUrl = decodeURIComponent(getSearchKey(pictureLink, "url"));
 			var theoricImageUrlParts = theoricImageUrl.split('/');
-			var imageName = theoricImageUrlParts[theoricImageUrlParts.length];
+			var imageName = theoricImageUrlParts[theoricImageUrlParts.length - 1];
 			var fsWriter = fs.createWriteStream(path.join(postMediaPath, imageName));
 			if (theoricImageUrl.indexOf('https://') == 0){
 				https.get(theoricImageUrl, function(imgRes){
