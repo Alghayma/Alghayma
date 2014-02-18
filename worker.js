@@ -9,8 +9,6 @@ var fbBgWorker = require(path.join(process.cwd(), 'extensions', 'Facebook', 'bac
 
 if (cluster.isMaster) {
 
-  jobs.promote();
-
   for (var i = 0; i < numCPUs; i++) {
     cluster.fork();
   }
@@ -26,24 +24,21 @@ if (cluster.isMaster) {
 
   process.once( 'SIGINT', function ( sig ) {
     jobs.shutdown(function(err) {
-      // TODO: Backup jobs in MongoDB
       console.log( 'Kue is shut down.', err||'' );
       process.exit( 0 );
     } , 600000);
   });
 
+  jobs.promote(); // Resumes delayed jobs that expired
+
 } else {
-
   jobs.process('facebookJob', function(job, done){
-
-    console.log("New Job starting");
+    console.log("New Job starting : Backupping " + job.data.feed.name);
     process.once( 'SIGINT', function (sig){
       // It is okay to do this because all writes in Mongo are atomic: http://docs.mongodb.org/manual/core/write-operations/
       job.log("Shutting down but rescheduling backup of " + job.data.feed.name);
-      jobs.create('facebookJob', {title: "Backup of " + job.data.feed.name, feed: job.data.feed}).priority('high').delay(10).save(done("Failed to complete task because process shut down"));
+      jobs.create('facebookJob', {title: "Backup of " + job.data.feed.name, feed: job.data.feed}).priority('high').save(done("Failed to complete task because process shut down"));
     });
-
     fbBgWorker.launchFeedBackup(job, jobs, done);
-
   });
 }

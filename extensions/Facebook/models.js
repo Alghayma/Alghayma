@@ -11,8 +11,6 @@ exports.initializeDBModels = function(mongoose){
 	mongoose.model('FBPost', FBPost);
 	mongoose.model('FBUser', FBUser);
 
-	console.log("Mongoose models for Facebook initialized")
-
 	mongoose = mongoose
 }
 
