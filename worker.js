@@ -29,18 +29,16 @@ if (cluster.isMaster) {
     } , 600000);
   });
 
+  jobs.promote(); // Resumes delayed jobs that expired
+
 } else {
-
   jobs.process('facebookJob', function(job, done){
-
     console.log("New Job starting : Backupping " + job.data.feed.name);
     process.once( 'SIGINT', function (sig){
       // It is okay to do this because all writes in Mongo are atomic: http://docs.mongodb.org/manual/core/write-operations/
       job.log("Shutting down but rescheduling backup of " + job.data.feed.name);
       jobs.create('facebookJob', {title: "Backup of " + job.data.feed.name, feed: job.data.feed}).priority('high').save(done("Failed to complete task because process shut down"));
     });
-
     fbBgWorker.launchFeedBackup(job, jobs, done);
-
   });
 }
