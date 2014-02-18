@@ -264,6 +264,18 @@ function scheduleNextOne(job, queue, done){
 	done();
 }
 
+exports.scheduleAllFeeds = function(queue){
+	FBFeed.find(function(err, feeds){
+		if (err){
+			console.log('Can\'t update feeds metadata:\n' + err);
+			return;
+		}
+		for (var i = feeds.length - 1; i >= 0; i--) {
+			queue.create('facebookJob', {title: "Backup of " + feeds[i].name, feed: feeds[i]}).save()
+		};
+	});
+}
+
 exports.setKiller = function(){
 	shouldEnd = true;
 }
