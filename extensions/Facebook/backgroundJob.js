@@ -22,6 +22,8 @@ var FBUser = mongoose.model('FBUser');
 var FBFeed = mongoose.model('FBFeed');
 var FBPost = mongoose.model('FBPost');
 
+var shouldEnd = false;
+
 //Creating the media folder, if it doesn't exist
 var mediaPath = path.join(process.cwd(), config.mediafolder);
 if (!fs.existsSync(config.mediafolder)) fs.mkdirSync(mediaPath);
@@ -65,6 +67,9 @@ function navigatePage(pageId, until, since, cb, job){
 	var reqText = pageId + '/posts';
 
 	function fbGet(path, until, since){
+		if (shouldEnd) {
+			process.exit(0)
+		}
 		var options = {};
 		if (until) options.until = until.getTime() / 1000; //Number of seconds, and not milliseconds
 		if (since) options.since = since.getTime() / 1000;
@@ -128,6 +133,8 @@ function backupFbPost(postObj){
 	var postDate = postObj.created_time;
 	var storyLink = postObj.link;
 	var story = postObj.story;
+
+	if (!fs.existsSync(path.join(mediaPath, feedId))) fs.mkdirSync(path.join(mediaPath, feedId));
 
 	//Pre-modelling the object before saving it in the DB 
 	var postInDb = {
@@ -255,6 +262,10 @@ function scheduleNextOne(job, queue, done){
 	job.log("Scheduling next backup of " + job.data.feed.name + " in " + config.postsBackupInterval + " milliseconds." )
 	queue.create('facebookJob', {title: "Backup of " + job.data.feed.name, feed: job.data.feed}).delay(config.postsBackupInterval).save()
 	done();
+}
+
+exports.setKiller = function(){
+	shouldEnd = true;
 }
 
 //Launching a feed backup process
