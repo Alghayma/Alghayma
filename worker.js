@@ -31,6 +31,21 @@ if (cluster.isMaster) {
 
   jobs.promote(); // Resumes delayed jobs that expired
 
+  function rebuildAllQueue(){
+
+  }
+
+  function clearCompletedJobs(){
+    //
+  }
+
+  function promoteDelayed(){
+    jobs.promote();
+  }
+
+  promoteDelayed();
+
+
 } else {
   jobs.process('facebookJob', function(job, done){
     console.log("New Job starting : Backupping " + job.data.feed.name);
@@ -39,6 +54,18 @@ if (cluster.isMaster) {
       job.log("Shutting down but rescheduling backup of " + job.data.feed.name);
       jobs.create('facebookJob', {title: "Backup of " + job.data.feed.name, feed: job.data.feed}).priority('high').save(done("Failed to complete task because process shut down"));
     });
-    fbBgWorker.launchFeedBackup(job, jobs, done);
+
+    var domain = require('domain').create();
+
+    domain.on('error', function(er) {
+      // If the backup crashes, log the error and return failed.
+      console.log("The Facebook page " + job.data.feed.name + " couldn't be backed up. Because " + er)
+      done(er);
+    });
+
+    domain.run(function() {
+      fbBgWorker.launchFeedBackup(job, jobs, done);
+    });
+
   });
 }
