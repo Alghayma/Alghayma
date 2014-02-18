@@ -95,7 +95,7 @@ function gitPull(root, options)
             	'logFile': path.join(pathToLogs, "queueDeamon.log"),
             	'outFile': path.join(pathToLogs, "queueOut.log"),
             	'errFile': path.join(pathToLogs, "queueError.log"),
-                'killSignal': 'SIGINT';
+                'killSignal': 'SIGINT'
             });
 
             mainInstance.start();
