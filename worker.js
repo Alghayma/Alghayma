@@ -11,7 +11,6 @@ var remakeJobQueue = false;
 
 if (cluster.isMaster) {
   
-
   var clearJobs = function(err, ids){
     ids.forEach(function(id){
       kue.Job.get(id, function(err, aJob){

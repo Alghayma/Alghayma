@@ -28,16 +28,17 @@ var Throttle = require('redis-throttle');
 
 Throttle.configure({
   port: 6379,
-  host: 'localhost'
-})
+  host: '127.0.0.1'
+});
 
-var incrementKey = "facebookAPICalls";
+console.log(Throttle);
+
+var incrementKey = "fbAPI";
 
 var throttle = new Throttle(incrementKey, {
   span: 600 * 1000, // 600 seconds
   accuracy: 1000       // margin of error = span / accuracy
 });
-
 
 //Creating the media folder, if it doesn't exist
 var mediaPath = path.join(process.cwd(), config.mediafolder);
