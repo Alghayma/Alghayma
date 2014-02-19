@@ -11,7 +11,7 @@ var config = require(path.join(process.cwd(), 'config'));
 var http = require('http');
 var https = require('https');
 var rateLimiter = require('limiter').RateLimiter;
-var limiter = new RateLimiter(150, 'hour');
+//var limiter = new RateLimiter(150, 'hour');
 
 var mongoose = require('mongoose');
 var connectionString = 'mongodb://';
