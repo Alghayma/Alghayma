@@ -1,9 +1,12 @@
 var fbgraph = require('fbgraph');
 var path = require('path');
 var config = require(path.join(process.cwd(), 'config'));
-var fs = require('fs')
+var fs = require('fs');
+var https = require('https');
 
 var mongoose = require('mongoose');
+
+var fbUtil = require('./fbUtils');
 
 var FBUser  = mongoose.model('FBUser', require('./models').FBUser)
 var FBPost  = mongoose.model('FBPost', require('./models').FBPost)
@@ -17,20 +20,7 @@ exports.config = {
 	fullname: "Facebook"
 }
 
-function refreshToken(callback){
-	FBUser.find(function(err, users){
-		if (err){
-			console.log('Error while changing access token:\n' + err);
-			return;
-		}
-		var numUsers = users.length;
-		var chosenUserIndex = Math.floor(Math.random() * numUsers);
-		var selectedUser = users[chosenUserIndex];
-		fbgraph.setAccessToken(selectedUser.accessToken);
-		if (callback && typeof callback == 'function') callback();
-	});
-}
-refreshToken();
+fbUtil.refreshToken(fbgraph, mongoose);
 
 exports.validator = function isFbUrl(path, andCDN){
 	if (typeof path != "string") {return false};

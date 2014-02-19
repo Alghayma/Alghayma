@@ -1,19 +1,21 @@
 {
-    "name": "application-name",
-    "version": "0.0.1",
-    "private": true,
-    "scripts": {
-        "start": "node app.js"
-    },
-    "dependencies": {
-        "express": "3.4.8",
-        "jade": "*",
-        "stylus": "*",
-        "mongoose": "*",
-        "csv": "~0.3.6",
-        "feedparser": "~0.16.5",
-        "fbgraph": "~0.2.8",
-        "mime": "~1.2.11",
-        "kue": "~0.7.4"
-    }
+  "name": "application-name",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "3.4.8",
+    "jade": "*",
+    "stylus": "*",
+    "mongoose": "*",
+    "csv": "~0.3.6",
+    "feedparser": "~0.16.5",
+    "fbgraph": "~0.2.8",
+    "mime": "~1.2.11",
+    "kue": "~0.7.4",
+    "redis-throttle": "0.0.1",
+    "sleep": "~1.1.3"
+  }
 }

@@ -7,7 +7,6 @@ var path = require('path');
 var config = require(path.join(process.cwd(), "config"));
 var fbBgWorker = require(path.join(process.cwd(), 'extensions', 'Facebook', 'backgroundJob'));
 var net = require('net');
-var noop = function() {};
 var remakeJobQueue = false;
 
 if (cluster.isMaster) {
@@ -87,32 +86,34 @@ if (cluster.isMaster) {
     console.log("SIGINT Received");
     jobs.shutdown(function(err) {
       console.log( 'Kue is shut down.', err||'' );
-  //    process.exit( 0 );
     } , 600000);
   });
 
   jobs.promote();
 
 } else {
-  
-    jobs.process('facebookJob', function(job, done){
-      process.once( 'SIGINT', function ( sig ) {
-        fbBgWorker.setKiller();
-        jobs.shutdown()
+    
+    fbBgWorker.setToken(function(){
+      console.log("Worker is spawned, token set and ready to process your requests sir");
+      jobs.process('facebookJob', function(job, done){
+        process.once( 'SIGINT', function ( sig ) {
+          fbBgWorker.setKiller();
+          jobs.shutdown();
+        });
+        console.log("New Job starting : Backupping " + job.data.feed.name);
+
+        var domain = require('domain').create();
+
+        domain.on('error', function(er) {
+        // If the backup crashes, log the error and return failed.
+          console.log("The Facebook page " + job.data.feed.name + " couldn't be backed up. Because " + er);
+          done(er);
+        });
+
+        domain.run(function() {
+          fbBgWorker.launchFeedBackup(job, jobs, done);
+        });
       });
-      console.log("New Job starting : Backupping " + job.data.feed.name);
+    });
 
-      var domain = require('domain').create();
-
-      domain.on('error', function(er) {
-      // If the backup crashes, log the error and return failed.
-        console.log("The Facebook page " + job.data.feed.name + " couldn't be backed up. Because " + er)
-        done(er);
-      });
-
-      domain.run(function() {
-        fbBgWorker.launchFeedBackup(job, jobs, done);
-      });
-
-  });
 }
