@@ -14,7 +14,7 @@ exports.refreshToken = function refreshToken(graph, mongoose,callback){
 			if (users.length == 0) {console.log("We ran out of tokens"); process.exit(0)};
 			var chosenUserIndex = Math.round(Math.random()*(numUsers-1));
 			var selectedUser = users[chosenUserIndex];
-
+			if (!config.fbGraphAccessToken) {console.log("You need to provide an application token to proceed to the verification");process.exit(0);};
 			var options = {
 			  hostname: 'graph.facebook.com',
 			  port: 443,
