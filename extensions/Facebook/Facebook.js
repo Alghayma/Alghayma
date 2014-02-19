@@ -2,6 +2,7 @@ var fbgraph = require('fbgraph');
 var path = require('path');
 var config = require(path.join(process.cwd(), 'config'));
 var fs = require('fs')
+var https = require('https')
 
 var mongoose = require('mongoose');
 
@@ -18,46 +19,56 @@ exports.config = {
 }
 
 function refreshToken(callback){
+	console.log("Setting access token");
 	FBUser.find(function(err, users){
 		if (err){
 			console.log('Error while changing access token:\n' + err);
 			return;
 		}
-		
 		function pickUser (){
 			var numUsers = users.length;
-			var chosenUserIndex = Math.round(Math.random()) * numUsers;
+			if (users.length == 0) {console.log("We ran out of tokens"); process.exit(0)};
+			var chosenUserIndex = Math.round(Math.random()) * (numUsers - 1);
 			var selectedUser = users[chosenUserIndex];
 
+			console.log("Selected User: " + selectedUser);
 			// Let's try if that token works
 
 			var options = {
 			  hostname: 'graph.facebook.com',
 			  port: 443,
-			  path: '/debug_token',
+			  path: '/debug_token'+"?input_token="+selectedUser.accessToken+"&access_token="+config.fbGraphAccessToken,
 			  method: 'GET'
 			};
 
-			var req = http.request(options, function(res) {
-			  console.log('STATUS: ' + res.statusCode);
-			  console.log('HEADERS: ' + JSON.stringify(res.headers));
+			var req = https.request(options, function(res) {
+			  if(res.statusCode != 200){pickUser(); return}
 			  res.setEncoding('utf8');
-			  res.on('data', function (chunk) {
+			  res.on('data', function (string) {
+			  	var chunk = JSON.parse(string)
 			    if (chunk) {
 			    	if (chunk.data) {
-			    		if (chunk.data.isValid) {
+			    		console.log(chunk.data)
+			    		if (chunk.data.is_valid) {
 			    			console.log("We set a valid token");
 			    			fbgraph.setAccessToken(selectedUser.accessToken);
 			    			if (callback && typeof callback == 'function') callback();
+			    			return;
 			    		}
 			    		else{
+			    			console.log("The token we tried to use has been revoked. Deleting from database")
+			    			selectedUser.remove(function(err){});
+			    			users = users.splice(chosenUserIndex, 1);
 			    			pickUser();
+			    			return;
 			    		}
 			    	} else{
 			    		pickUser();
+			    		return;
 			    	}
 			    } else{
 			    	pickUser();
+			    	return;
 			    }
 			  });
 			});
@@ -68,6 +79,7 @@ function refreshToken(callback){
 
 			req.end();
 		}
+		pickUser();
 	});
 }
 refreshToken();
