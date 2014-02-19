@@ -38,6 +38,8 @@ var throttle = new Throttle(incrementKey, {
   accuracy: 1000       // margin of error = span / accuracy
 });
 
+console.log(throttle);
+
 //Creating the media folder, if it doesn't exist
 var mediaPath = path.join(process.cwd(), config.mediafolder);
 if (!fs.existsSync(config.mediafolder)) fs.mkdirSync(mediaPath);
@@ -58,6 +60,7 @@ function refreshMetadata(){
 		if (!(feeds && feeds.length > 0)) return;
 		for (var i = 0; i < feeds.length; i++){
 			fbgraph.get(feeds.id, {fields: 'id,name,link,picture'}, function(err, fbRes){
+				if (err) {job.log("Error retreiving metadata : " + JSON.stringify(err))};
 				FBFeed.update({id: feeds.id}, {name: fbRes.name, picture: fbRes.picture.data.url}).exec();
 			});
 		}
@@ -77,6 +80,7 @@ function navigatePage(pageId, until, since, cb, job, done){
 		var options = {};
 		if (until) options.until = until.getTime() / 1000; //Number of seconds, and not milliseconds
 		if (since) options.since = since.getTime() / 1000;
+		
 		throttle.increment(1, function(err, count) {
 			function wait (waittime){
 				sleep(waittime);
@@ -91,14 +95,15 @@ function navigatePage(pageId, until, since, cb, job, done){
 			fbgraph.get(path, options, function(err, fbRes){
 				if (err) {
 					if (err.code == 1 || err.code == 2){ //Internal FB errors
-						done(JSON.stringify(err)); //Waiting for 2 seconds before retrying
+						job.log(JSON.stringify(err)); //Waiting for 2 seconds before retrying
 					} else if (err.code == 17){
+						job.log("Hitting the maximum rate limit " + JSON.stringify(err));
 						console.log("Hitting the maximum rate limit " + JSON.stringify(err));
 					} else {
 						job.log('Error while getting updates from : ' + pageId + '\n' + JSON.stringify(err));
 					}
-					done (err)
-					return;
+					done (JSON.stringify(err));
+					process.exit(0);
 				}
 				if (!fbRes.data){ //If no error and no data was returned, then end of feed (or whatever)
 					if (cb) cb();
