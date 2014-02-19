@@ -84,7 +84,7 @@ function navigatePage(pageId, until, since, cb, job, done){
 		if (since) options.since = since.getTime() / 1000;
 		
 		throttle.increment(1, function(err, count) {
-			if (err) {console.log(">>>>>>>> Error " + err)};
+			if (err) {console.log("We had an error with rate limiting : " + err); process.exit(1)};
 
 			function wait (waittime){
 				sleep(waittime);
