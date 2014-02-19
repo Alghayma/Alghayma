@@ -43,13 +43,12 @@ var throttle = new Throttle(incrementKey, {
 var mediaPath = path.join(process.cwd(), config.mediafolder);
 if (!fs.existsSync(config.mediafolder)) fs.mkdirSync(mediaPath);
 
-function refreshToken () {
-	fbUtil.refreshToken(fbgraph, mongoose);
+function refreshToken (callback) {
+	fbUtil.refreshToken(fbgraph, mongoose, callback);
 }
 
-exports.setToken() = function (callback) {
+exports.setToken = function (callback) {
 	refreshToken();
-	callback()
 }
 
 //Refreshing feeds' metadata

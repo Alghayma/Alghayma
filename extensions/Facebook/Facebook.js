@@ -2,10 +2,11 @@ var fbgraph = require('fbgraph');
 var path = require('path');
 var config = require(path.join(process.cwd(), 'config'));
 var fs = require('fs');
-var fbUtil = require('./fbUtils');
 var https = require('https');
 
 var mongoose = require('mongoose');
+
+var fbUtil = require('./fbUtils');
 
 var FBUser  = mongoose.model('FBUser', require('./models').FBUser)
 var FBPost  = mongoose.model('FBPost', require('./models').FBPost)
