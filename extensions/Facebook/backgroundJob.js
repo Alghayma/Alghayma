@@ -65,7 +65,7 @@ function refreshMetadata(){
 }
 
 //Getting all the posts, with an optional interval (since or until parameter)
-function navigatePage(pageId, until, since, cb, job){
+function navigatePage(pageId, until, since, cb, job, done){
 	if (typeof pageId != 'string') throw new TypeError('pageId must be a string');
 	if (cb && typeof cb != 'function') throw new TypeError('When defined, "cb" must be a function');
 	var reqText = pageId + '/posts';
@@ -91,9 +91,13 @@ function navigatePage(pageId, until, since, cb, job){
 			fbgraph.get(path, options, function(err, fbRes){
 				if (err) {
 					if (err.code == 1 || err.code == 2){ //Internal FB errors
-						setTimeout(fbGet(path, until, since), 2000); //Waiting for 2 seconds before retrying
-					} else job.log('Error while getting updates from : ' + pageId + '\n' + JSON.stringify(err));
-					if (cb) cb();
+						done(JSON.stringify(err)); //Waiting for 2 seconds before retrying
+					} else if (err.code == 17){
+						console.log("Hitting the maximum rate limit " + JSON.stringify(err));
+					} else {
+						job.log('Error while getting updates from : ' + pageId + '\n' + JSON.stringify(err));
+					}
+					done (err)
 					return;
 				}
 				if (!fbRes.data){ //If no error and no data was returned, then end of feed (or whatever)
@@ -103,7 +107,7 @@ function navigatePage(pageId, until, since, cb, job){
 				for (var i = 0; i < fbRes.data.length; i++){
 					//Backup a post if it meets the conditions and go to the next one
 					if ((!until || fbRes.data[i].created_time < until.getTime() / 1000) && (!since || fbRes.data[i].created_time > since.getTime() / 1000)){
-						backupFbPost(fbRes.data[i]);
+						backupFbPost(fbRes.data[i], done);
 						continue;
 					}
 					//If we went beyond the "until" clause, stop paging
@@ -128,7 +132,7 @@ function navigatePage(pageId, until, since, cb, job){
 /*
 * BEWARE : IT MIGHT LOOK VERY VERY DIRTY. It could be optimized
 */
-function backupFbPost(postObj){
+function backupFbPost(postObj, done){
 	var isFbUrl = require("./Facebook").validator
 	var getFbPath = require("./Facebook").getFBPath
 	function getSearchKey(path, keyName){
@@ -182,7 +186,8 @@ function backupFbPost(postObj){
 					var pictureLink = postObj.picture;
 					postInDb.picture = pictureLink;
 					saveInDb(postInDb);
-					return;
+					done (err)
+					return
 				}
 				//Getting the URL where the full size image is stored. OMG, gotta do lots of hops in Facebook before getting what you want... And yes, it's getting late in the night..
 				var pictureLink = fbImageRes.source;
@@ -330,7 +335,7 @@ exports.launchFeedBackup = function(job, queue, done){
 				//if (callback) callback();
 				scheduleNextOne(job, queue, done)
 			})
-		}, job);
+		}, job, done);
 
 	} else {
 		// Find last that was added and continue from there.
@@ -350,7 +355,7 @@ exports.launchFeedBackup = function(job, queue, done){
 							//if (callback) callback();
 							scheduleNextOne(job, queue, done)
 						})
-					}, job);
+					}, job, done);
         		}else{
         			job.log("Resuming backup of page : " + feedObj.name + " at date : " + post.postDate)
         			navigatePage(feedObj.id, post.postDate, undefined, function(){
@@ -364,7 +369,7 @@ exports.launchFeedBackup = function(job, queue, done){
 							//if (callback) callback();
 							scheduleNextOne(job, queue, done)
 						})
-					}, job);
+					}, job, done);
         		}
         	}
 		);
