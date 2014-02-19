@@ -48,7 +48,7 @@ function refreshToken (callback) {
 }
 
 exports.setToken = function (callback) {
-	refreshToken();
+	refreshToken(callback);
 }
 
 //Refreshing feeds' metadata

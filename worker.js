@@ -11,6 +11,7 @@ var remakeJobQueue = false;
 
 if (cluster.isMaster) {
   
+
   var clearJobs = function(err, ids){
     ids.forEach(function(id){
       kue.Job.get(id, function(err, aJob){
@@ -94,10 +95,11 @@ if (cluster.isMaster) {
 } else {
     
     fbBgWorker.setToken(function(){
+      console.log("Worker is spawned, token set and ready to process your requests sir");
       jobs.process('facebookJob', function(job, done){
         process.once( 'SIGINT', function ( sig ) {
           fbBgWorker.setKiller();
-          jobs.shutdown()
+          jobs.shutdown();
         });
         console.log("New Job starting : Backupping " + job.data.feed.name);
 
@@ -105,7 +107,7 @@ if (cluster.isMaster) {
 
         domain.on('error', function(er) {
         // If the backup crashes, log the error and return failed.
-          console.log("The Facebook page " + job.data.feed.name + " couldn't be backed up. Because " + er)
+          console.log("The Facebook page " + job.data.feed.name + " couldn't be backed up. Because " + er);
           done(er);
         });
 

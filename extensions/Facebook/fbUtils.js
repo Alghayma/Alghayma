@@ -10,10 +10,9 @@ exports.refreshToken = function refreshToken(graph, mongoose,callback){
 			return;
 		}
 		function pickUser (){
-			console.log("Available tokens are " + users);
 			var numUsers = users.length;
 			if (users.length == 0) {console.log("We ran out of tokens"); process.exit(0)};
-			var chosenUserIndex = Math.round(Math.random() * (numUsers));
+			var chosenUserIndex = Math.round(Math.random()*(numUsers-1));
 			var selectedUser = users[chosenUserIndex];
 
 			var options = {
@@ -32,8 +31,9 @@ exports.refreshToken = function refreshToken(graph, mongoose,callback){
 			    	if (chunk.data) {
 			    		if (chunk.data.is_valid) {
 			    			graph.setAccessToken(selectedUser.accessToken);
-			    			console.log("We sucessfully set a token : "+ selectedUser.accessToken);
-			    			if (callback && typeof callback == 'function') callback();
+			    			if (callback && typeof callback == 'function') {
+			    				callback();
+			    			}
 			    			return;
 			    		}
 			    		else{
