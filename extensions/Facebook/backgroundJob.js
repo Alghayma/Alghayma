@@ -110,13 +110,13 @@ function navigatePage(pageId, until, since, cb, job, done){
 					process.exit(0);
 				}
 
-				console.log("facebook response: " + fbRes);
+				console.log("facebook response: " + fbRes.data);
 				if (!fbRes.data){ //If no error and no data was returned, then end of feed (or whatever)
 					if (cb) cb();
 					return;
 				}
 				for (var i = 0; i < fbRes.data.length; i++){
-
+					console.log("Response : "+ fbRes.data[i]);
 					//Backup a post if it meets the conditions and go to the next one
 					if ((!until || fbRes.data[i].created_time < until.getTime() / 1000) && (!since || fbRes.data[i].created_time > since.getTime() / 1000)){
 						console.log("Backupping post")
