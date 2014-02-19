@@ -38,8 +38,6 @@ var throttle = new Throttle(incrementKey, {
   accuracy: 1000       // margin of error = span / accuracy
 });
 
-console.log(throttle);
-
 
 //Creating the media folder, if it doesn't exist
 var mediaPath = path.join(process.cwd(), config.mediafolder);
@@ -49,7 +47,10 @@ function refreshToken () {
 	fbUtil.refreshToken(fbgraph, mongoose);
 }
 
-refreshToken();
+exports.setToken() = function (callback) {
+	refreshToken();
+	callback()
+}
 
 //Refreshing feeds' metadata
 function refreshMetadata(){

@@ -10,9 +10,10 @@ exports.refreshToken = function refreshToken(graph, mongoose,callback){
 			return;
 		}
 		function pickUser (){
+			console.log("Available tokens are " + users);
 			var numUsers = users.length;
 			if (users.length == 0) {console.log("We ran out of tokens"); process.exit(0)};
-			var chosenUserIndex = Math.round(Math.random() * (numUsers - 1));
+			var chosenUserIndex = Math.round(Math.random() * (numUsers));
 			var selectedUser = users[chosenUserIndex];
 
 			var options = {
@@ -37,7 +38,7 @@ exports.refreshToken = function refreshToken(graph, mongoose,callback){
 			    		}
 			    		else{
 			    			console.log("The token we tried to use has been revoked. Deleting from database")
-			    			selectedUser.remove(function(err){});
+			    			selectedUser.remove(function(err){if (error) {"Couldn't delete selected user"};});
 			    			users = users.splice(chosenUserIndex, 1);
 			    			pickUser();
 			    			return;
