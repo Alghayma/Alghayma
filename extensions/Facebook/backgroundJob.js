@@ -85,7 +85,7 @@ function navigatePage(pageId, until, since, cb, job, done){
 			if (err) {console.log("We had an error with rate limiting : " + err); process.exit(1)};
 
 			function wait (waittime){
-				sleep(waittime);
+				sleep.sleep(waittime);
 			}
 			if (count > 550) {
 				console.log("Hitting Facebook's rate limit, slowing down");
