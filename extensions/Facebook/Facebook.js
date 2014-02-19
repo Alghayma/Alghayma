@@ -23,11 +23,51 @@ function refreshToken(callback){
 			console.log('Error while changing access token:\n' + err);
 			return;
 		}
-		var numUsers = users.length;
-		var chosenUserIndex = Math.floor(Math.random() * numUsers);
-		var selectedUser = users[chosenUserIndex];
-		fbgraph.setAccessToken(selectedUser.accessToken);
-		if (callback && typeof callback == 'function') callback();
+		
+		function pickUser (){
+			var numUsers = users.length;
+			var chosenUserIndex = Math.round(Math.random()) * numUsers;
+			var selectedUser = users[chosenUserIndex];
+
+			// Let's try if that token works
+
+			var options = {
+			  hostname: 'graph.facebook.com',
+			  port: 443,
+			  path: '/debug_token',
+			  method: 'GET'
+			};
+
+			var req = http.request(options, function(res) {
+			  console.log('STATUS: ' + res.statusCode);
+			  console.log('HEADERS: ' + JSON.stringify(res.headers));
+			  res.setEncoding('utf8');
+			  res.on('data', function (chunk) {
+			    if (chunk) {
+			    	if (chunk.data) {
+			    		if (chunk.data.isValid) {
+			    			console.log("We set a valid token");
+			    			fbgraph.setAccessToken(selectedUser.accessToken);
+			    			if (callback && typeof callback == 'function') callback();
+			    		}
+			    		else{
+			    			pickUser();
+			    		}
+			    	} else{
+			    		pickUser();
+			    	}
+			    } else{
+			    	pickUser();
+			    }
+			  });
+			});
+
+			req.on('error', function(e) {
+			  console.log('problem with request: ' + e.message);
+			});
+
+			req.end();
+		}
 	});
 }
 refreshToken();
