@@ -23,28 +23,14 @@ require("./models.js").initializeDBModels(mongoose);
 var FBUser = mongoose.model('FBUser');
 var FBFeed = mongoose.model('FBFeed');
 var FBPost = mongoose.model('FBPost');
-
+var fbUtil = require('./fbUtils');
 var shouldEnd = false;
 
 //Creating the media folder, if it doesn't exist
 var mediaPath = path.join(process.cwd(), config.mediafolder);
 if (!fs.existsSync(config.mediafolder)) fs.mkdirSync(mediaPath);
 
-//Replacing the current accessToken by an other one from the DB
-function refreshToken(callback){
-	FBUser.find(function(err, users){
-		if (err){
-			console.log('Error while changing access token:\n' + err);
-			return;
-		}
-		var numUsers = users.length;
-		var chosenUserIndex = Math.floor(Math.random() * numUsers);
-		var selectedUser = users[chosenUserIndex];
-		fbgraph.setAccessToken(selectedUser.accessToken);
-		if (callback && typeof callback == 'function') callback();
-	});
-}
-refreshToken();
+fbUtil.refreshToken(fbgraph, mongoose);
 
 //Refreshing feeds' metadata
 function refreshMetadata(){

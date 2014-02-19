@@ -1,8 +1,9 @@
 var fbgraph = require('fbgraph');
 var path = require('path');
 var config = require(path.join(process.cwd(), 'config'));
-var fs = require('fs')
-var https = require('https')
+var fs = require('fs');
+var fbUtil = require('./fbUtils');
+var https = require('https');
 
 var mongoose = require('mongoose');
 
@@ -18,71 +19,7 @@ exports.config = {
 	fullname: "Facebook"
 }
 
-function refreshToken(callback){
-	console.log("Setting access token");
-	FBUser.find(function(err, users){
-		if (err){
-			console.log('Error while changing access token:\n' + err);
-			return;
-		}
-		function pickUser (){
-			var numUsers = users.length;
-			if (users.length == 0) {console.log("We ran out of tokens"); process.exit(0)};
-			var chosenUserIndex = Math.round(Math.random()) * (numUsers - 1);
-			var selectedUser = users[chosenUserIndex];
-
-			console.log("Selected User: " + selectedUser);
-			// Let's try if that token works
-
-			var options = {
-			  hostname: 'graph.facebook.com',
-			  port: 443,
-			  path: '/debug_token'+"?input_token="+selectedUser.accessToken+"&access_token="+config.fbGraphAccessToken,
-			  method: 'GET'
-			};
-
-			var req = https.request(options, function(res) {
-			  if(res.statusCode != 200){pickUser(); return}
-			  res.setEncoding('utf8');
-			  res.on('data', function (string) {
-			  	var chunk = JSON.parse(string)
-			    if (chunk) {
-			    	if (chunk.data) {
-			    		console.log(chunk.data)
-			    		if (chunk.data.is_valid) {
-			    			console.log("We set a valid token");
-			    			fbgraph.setAccessToken(selectedUser.accessToken);
-			    			if (callback && typeof callback == 'function') callback();
-			    			return;
-			    		}
-			    		else{
-			    			console.log("The token we tried to use has been revoked. Deleting from database")
-			    			selectedUser.remove(function(err){});
-			    			users = users.splice(chosenUserIndex, 1);
-			    			pickUser();
-			    			return;
-			    		}
-			    	} else{
-			    		pickUser();
-			    		return;
-			    	}
-			    } else{
-			    	pickUser();
-			    	return;
-			    }
-			  });
-			});
-
-			req.on('error', function(e) {
-			  console.log('problem with request: ' + e.message);
-			});
-
-			req.end();
-		}
-		pickUser();
-	});
-}
-refreshToken();
+fbUtil.refreshToken(fbgraph, mongoose);
 
 exports.validator = function isFbUrl(path, andCDN){
 	if (typeof path != "string") {return false};
