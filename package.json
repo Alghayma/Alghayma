@@ -15,7 +15,6 @@
     "fbgraph": "~0.2.8",
     "mime": "~1.2.11",
     "kue": "~0.7.4",
-    "limiter": "1.0.5",
     "redis-throttle": "0.0.1",
     "sleep": "~1.1.3"
   }
