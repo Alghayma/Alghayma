@@ -94,6 +94,8 @@ function navigatePage(pageId, until, since, cb, job, done){
 
 			job.log("Currently working at " + count + "queries per 600 seconds");
 
+			console.log("Connecting to FB Graph")
+
 			fbgraph.get(path, options, function(err, fbRes){
 				if (err) {
 					if (err.code == 1 || err.code == 2){ //Internal FB errors
@@ -112,8 +114,10 @@ function navigatePage(pageId, until, since, cb, job, done){
 					return;
 				}
 				for (var i = 0; i < fbRes.data.length; i++){
+
 					//Backup a post if it meets the conditions and go to the next one
 					if ((!until || fbRes.data[i].created_time < until.getTime() / 1000) && (!since || fbRes.data[i].created_time > since.getTime() / 1000)){
+						console.log("Backupping post")
 						backupFbPost(fbRes.data[i], done);
 						continue;
 					}
@@ -194,7 +198,7 @@ function backupFbPost(postObj, done){
 					postInDb.picture = pictureLink;
 					saveInDb(postInDb);
 					done (err)
-					return
+					process.exit(1);
 				}
 				//Getting the URL where the full size image is stored. OMG, gotta do lots of hops in Facebook before getting what you want... And yes, it's getting late in the night..
 				var pictureLink = fbImageRes.source;
