@@ -12,7 +12,7 @@ exports.refreshToken = function refreshToken(graph, mongoose,callback){
 		function pickUser (){
 			var numUsers = users.length;
 			if (users.length == 0) {console.log("We ran out of tokens"); process.exit(0)};
-			var chosenUserIndex = Math.round(Math.random()) * (numUsers - 1);
+			var chosenUserIndex = Math.round(Math.random() * (numUsers - 1));
 			var selectedUser = users[chosenUserIndex];
 
 			var options = {
