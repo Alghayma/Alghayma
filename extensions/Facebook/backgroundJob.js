@@ -284,7 +284,6 @@ exports.setKiller = function(){
 exports.launchFeedBackup = function(job, queue, done){
 	var feedObj = job.data.feed; 
 	if (!(feedObj && typeof feedObj == 'object')) throw new TypeError('feedObj must be an object');
-	//if (callback && typeof callback != 'function') throw new TypeError('When defined, callback must be a function');
 	
 	// We need to differentiate page updates, initial backups and the resuming of initial backups.
 
@@ -302,13 +301,12 @@ exports.launchFeedBackup = function(job, queue, done){
 				
 				job.log('Succesfully completed the update of the Facebook page : ' + feedObj.name);
 			
-				//if (callback) callback();
 				scheduleNextOne(job, queue, done)
 			})
 		}, job);
 
 	} else {
-		// Find last that was added and continue from there.
+		// Find last post that was added and continue from there.
 		FBPost.findOne().where({feedId:feedObj.id}).sort('postDate').exec(function(err, post){
         		if (err) {
         			job.log('Issue fetching post from DB : ' + err);
@@ -322,13 +320,12 @@ exports.launchFeedBackup = function(job, queue, done){
 							}
 							
 							job.log('Succesfully backed up the Facebook page : ' + feedObj.name);
-							//if (callback) callback();
 							scheduleNextOne(job, queue, done)
 						})
 					}, job);
         		}else{
         			job.log("Resuming backup of page : " + feedObj.name + " at date : " + post.postDate)
-        			navigatePage(feedObj.id, post.postDate, undefined, function(){
+        			navigatePage(feedObj.id, undefined, post.postDate, function(){
 						FBFeed.update({id: feedObj.id}, {lastBackup: Date.now(), didBackupHead: true}).exec(function(err){
 							if (err){
 								job.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
@@ -336,7 +333,6 @@ exports.launchFeedBackup = function(job, queue, done){
 							}
 							
 							job.log('Succesfully backed up the Facebook page : ' + feedObj.name);
-							//if (callback) callback();
 							scheduleNextOne(job, queue, done)
 						})
 					}, job);

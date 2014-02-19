@@ -1,3 +1,6 @@
+/*
+* Common to all pages
+*/
 body {
   padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
@@ -13,6 +16,20 @@ a {
 .logoHeader > img {
   width: 400px;
 }
+button {
+  background-color: #78bfe5;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 3px;
+  height: 32px;
+  margin: 4px;
+  color: #fff;
+  border-color: #000;
+  min-width: 75px;
+}
+/*
+* Specific to the homepage
+*/
 #searchBox {
   width: 600px;
   border-radius: 2px;
@@ -22,6 +39,9 @@ a {
   height: 25px;
   margin-bottom: 10px;
 }
+/*
+* Specific to the feed page
+*/
 #theEndBanner {
   font-size: 32px;
   width: 100%;
@@ -57,14 +77,28 @@ a {
   width: 100%;
   padding-top: 5px;
 }
-button {
-  background-color: #78bfe5;
-  border-width: 1px;
+/*
+* Specific to the search result page
+*/
+#resultsHeader {
+  text-align: center;
+}
+#resultsList {
   border-style: solid;
-  border-radius: 3px;
-  height: 32px;
-  margin: 4px;
-  color: #fff;
+  border-width: 0px;
+  border-top-width: 1px;
   border-color: #000;
-  min-width: 75px;
+}
+.result {
+  border-style: solid;
+  border-width: 0px;
+  border-bottom-width: 0px;
+border-color
+}
+.profileImage {
+  width: 32px;
+}
+.feedPresentation {
+  display: inline-block;
+  overflow: scroll;
 }

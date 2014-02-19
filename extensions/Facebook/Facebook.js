@@ -64,7 +64,8 @@ exports.permalink = function getPermalink(postId){
 exports.setupRoutes = function(express, ext){
 	var path = require('path');
 	var shortname = require(path.join(__dirname, ext)).config.shortname
-	express.get('/'+ shortname +'/p', this.viewpage);
+	express.get('/' + shortname + '/search', this.search);
+	express.get('/' + shortname +'/p', this.viewpage);
 	express.get('/' + shortname +'/chunk', this.chunk);
 	express.get('/' + shortname + '/media/:feedid/:postid', this.media);
 	express.post('/' + shortname + '/backup', this.backup);
@@ -77,6 +78,52 @@ exports.setupRoutes = function(express, ext){
 var isFBURL = this.validator
 var getPath = this.getFBPath
 var permalink = this.permalink;
+
+exports.search = function(req, res){
+	var query = req.param('q');
+	var req = req.param('raw');
+
+	//If the request is a facebook url, redirect to /p/
+	if (isFBURL(query)){
+		res.redirect('/fb/p?sourceUrl=' + encodeURIComponent(query));
+		return;
+	}
+	FBFeed.find(function(err, feeds){
+		if (err){
+			console.log('Error when getting feeds list: ' + err);
+			return;
+		}
+		var keywords = query.split(' ');
+		var results = [];
+
+		function insertSort(result, results){
+			
+		}
+
+		for (var i = 0; i < feeds.length; i++){
+			var resultObj = {score: 0, feed: feeds[i]};
+			//Checking whether the feed name contains the keywords (not exactly). +1 point if yes (per keyword found)
+			for (var j = 0; j < keywords.length; j++){
+				if (feed.name.contains(keywords[j])){
+					resultObj.score++;
+				}
+			}
+			//Checking whether the feed name contains the keywords (exactly). +0.5 point if yes (per keyword found)
+			var feedNameWords = resultObj.feed.name.split(' ');
+			for (var j = 0; j < keywords.length; j++){
+				for (var k = 0; k < feedNameWords.length; k++){
+					if (feedNameWords[k] == keywords[j]){
+						resultObj.score += 0.5;
+						break;
+					}
+				}
+			}
+			//Inserting the feed in results if score > 0
+			if (resultObj.score > 0) insertSort(resultObj, results);
+		}
+
+	});
+};
 
 exports.viewpage = function(req, res){
 

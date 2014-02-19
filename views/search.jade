@@ -1,0 +1,13 @@
+extends layout
+
+block content
+	.logoHeader
+		a(href="/")
+			img(src="/images/alghayma-logo.png", width="400")
+	br
+	div#resultsHeader #{resultMessage}
+	div#resultsList
+		- each feed in feeds
+			.result
+				img.profileImage(src="#{feed.profileImage}")
+				div.feedPresentation #{feed.name}
