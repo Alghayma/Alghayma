@@ -31,8 +31,6 @@ Throttle.configure({
   host: '127.0.0.1'
 });
 
-console.log(Throttle);
-
 var incrementKey = "fbAPI";
 
 var throttle = new Throttle(incrementKey, {
