@@ -87,7 +87,6 @@ if (cluster.isMaster) {
     console.log("SIGINT Received");
     jobs.shutdown(function(err) {
       console.log( 'Kue is shut down.', err||'' );
-  //    process.exit( 0 );
     } , 600000);
   });
 

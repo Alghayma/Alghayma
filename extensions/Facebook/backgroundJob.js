@@ -5,6 +5,7 @@
 var fs = require('fs');
 var os = require('os');
 var path = require('path');
+var sleep = require('sleep');
 
 var fbgraph = require('fbgraph');
 var config = require(path.join(process.cwd(), 'config'));
@@ -26,11 +27,34 @@ var FBPost = mongoose.model('FBPost');
 var fbUtil = require('./fbUtils');
 var shouldEnd = false;
 
+var Throttle = require('redis-throttle');
+
+Throttle.configure({
+  port: 6379,
+  host: 'localhost'
+})
+
+var incrementKey = "facebookAPICalls";
+
+var throttle = new Throttle(incrementKey, {
+  span: 600 * 1000, // 600 seconds
+  accuracy: 1000       // margin of error = span / accuracy
+});
+
+throttle.read(function(err, count) {
+    if (err) throw err
+    console.log('current count:', count)
+})
+
 //Creating the media folder, if it doesn't exist
 var mediaPath = path.join(process.cwd(), config.mediafolder);
 if (!fs.existsSync(config.mediafolder)) fs.mkdirSync(mediaPath);
 
-fbUtil.refreshToken(fbgraph, mongoose);
+function refreshToken () {
+	fbUtil.refreshToken(fbgraph, mongoose);
+}
+
+refreshToken();
 
 //Refreshing feeds' metadata
 function refreshMetadata(){
@@ -61,36 +85,48 @@ function navigatePage(pageId, until, since, cb, job){
 		var options = {};
 		if (until) options.until = until.getTime() / 1000; //Number of seconds, and not milliseconds
 		if (since) options.since = since.getTime() / 1000;
-		fbgraph.get(path, options, function(err, fbRes){
-			if (err) {
-				if (err.code == 1 || err.code == 2){ //Internal FB errors
-					setTimeout(fbGet(path, until, since), 2000); //Waiting for 2 seconds before retrying
-				} else job.log('Error while getting updates from : ' + pageId + '\n' + JSON.stringify(err));
-				if (cb) cb();
-				return;
+		throttle.increment(1, function(err, count) {
+			function wait (waittime){
+				sleep(waittime);
 			}
-			if (!fbRes.data){ //If no error and no data was returned, then end of feed (or whatever)
-				if (cb) cb();
-				return;
+			if (count > 550) {
+				console.log("Hitting Facebook's rate limit, slowing down");
+				wait(15);
 			}
-			for (var i = 0; i < fbRes.data.length; i++){
-				//Backup a post if it meets the conditions and go to the next one
-				if ((!until || fbRes.data[i].created_time < until.getTime() / 1000) && (!since || fbRes.data[i].created_time > since.getTime() / 1000)){
-					backupFbPost(fbRes.data[i]);
-					continue;
-				}
-				//If we went beyond the "until" clause, stop paging
-				if (until && fbRes.data[i].created_time < until.getTime() / 1000){
+
+			job.log("Currently working at " + count + "queries per 600 seconds");
+
+			fbgraph.get(path, options, function(err, fbRes){
+				if (err) {
+					if (err.code == 1 || err.code == 2){ //Internal FB errors
+						setTimeout(fbGet(path, until, since), 2000); //Waiting for 2 seconds before retrying
+					} else job.log('Error while getting updates from : ' + pageId + '\n' + JSON.stringify(err));
 					if (cb) cb();
 					return;
 				}
-			}
-			if (fbRes.paging && fbRes.paging.next){
-				fbGet(fbRes.paging.next, until, since);
-			} else {
-				if (cb) cb();
-			}
-		})
+				if (!fbRes.data){ //If no error and no data was returned, then end of feed (or whatever)
+					if (cb) cb();
+					return;
+				}
+				for (var i = 0; i < fbRes.data.length; i++){
+					//Backup a post if it meets the conditions and go to the next one
+					if ((!until || fbRes.data[i].created_time < until.getTime() / 1000) && (!since || fbRes.data[i].created_time > since.getTime() / 1000)){
+						backupFbPost(fbRes.data[i]);
+						continue;
+					}
+					//If we went beyond the "until" clause, stop paging
+					if (until && fbRes.data[i].created_time < until.getTime() / 1000){
+						if (cb) cb();
+						return;
+					}
+				}
+				if (fbRes.paging && fbRes.paging.next){
+					fbGet(fbRes.paging.next, until, since);
+				} else {
+					if (cb) cb();
+				}
+			});
+		});
 	}
 
 	fbGet(reqText, until, since);
@@ -140,56 +176,65 @@ function backupFbPost(postObj){
 		if (!fs.existsSync(postMediaPath)) fs.mkdirSync(postMediaPath);
 		//Getting the photoID from the story link. Then getting that photoID in the Graph API
 		var photoId = getSearchKey(storyLink, 'fbid');
-		fbgraph.get(photoId, function(err, fbImageRes){
-			if (err){
-				//If an error occurs while trying to get the post picture, give up and save the data you already have
-				var pictureLink = postObj.picture;
-				postInDb.picture = pictureLink;
-				saveInDb(postInDb);
-				return;
+		throttle.increment(1, function(err, count) {
+			function wait (waittime){
+				sleep(waittime);
 			}
-			//Getting the URL where the full size image is stored. OMG, gotta do lots of hops in Facebook before getting what you want... And yes, it's getting late in the night..
-			var pictureLink = fbImageRes.source;
-			var pictureName = pictureLink.split('/'); //Assuming that the url finishes with the image's file name
-			pictureName = pictureName[pictureName.length - 1];
-			var fsWriter = fs.createWriteStream(path.join(postMediaPath, pictureName)); //Creating after the picture name, in the posts media folder
-			if (pictureLink.indexOf('https://') == 0){ //Checking whether the image path is https or not.
-				https.get(pictureLink, function(imgRes){
-					if (imgRes.statusCode >= 200 && imgRes.statusCode < 400) { //image found, then save it
-						imgRes.on('data', function(data){
-							fsWriter.write(data);
-						});
-						imgRes.on('end', function(){
-							fsWriter.end();
-							pictureLink = '/fb/media/' + feedId + "/" + postId;
+			if (count > 550) {
+				console.log("Hitting Facebook's rate limit, slowing down");
+				wait(15);
+			}
+			fbgraph.get(photoId, function(err, fbImageRes){
+				if (err){
+					//If an error occurs while trying to get the post picture, give up and save the data you already have
+					var pictureLink = postObj.picture;
+					postInDb.picture = pictureLink;
+					saveInDb(postInDb);
+					return;
+				}
+				//Getting the URL where the full size image is stored. OMG, gotta do lots of hops in Facebook before getting what you want... And yes, it's getting late in the night..
+				var pictureLink = fbImageRes.source;
+				var pictureName = pictureLink.split('/'); //Assuming that the url finishes with the image's file name
+				pictureName = pictureName[pictureName.length - 1];
+				var fsWriter = fs.createWriteStream(path.join(postMediaPath, pictureName)); //Creating after the picture name, in the posts media folder
+				if (pictureLink.indexOf('https://') == 0){ //Checking whether the image path is https or not.
+					https.get(pictureLink, function(imgRes){
+						if (imgRes.statusCode >= 200 && imgRes.statusCode < 400) { //image found, then save it
+							imgRes.on('data', function(data){
+								fsWriter.write(data);
+							});
+							imgRes.on('end', function(){
+								fsWriter.end();
+								pictureLink = '/fb/media/' + feedId + "/" + postId;
+								postInDb.picture = pictureLink;
+								saveInDb(postInDb);
+							});
+						} else {
+							//Error while getting the picture. Saving the data we have
 							postInDb.picture = pictureLink;
 							saveInDb(postInDb);
-						});
-					} else {
-						//Error while getting the picture. Saving the data we have
-						postInDb.picture = pictureLink;
-						saveInDb(postInDb);
-					}
-				});
-			} else {
-				http.get(pictureLink, function(imgRes){
-					if (imgRes.statusCode >= 200 && imgRes.statusCode < 400){
-						imgRes.on('data', function(data){
-							fsWriter.write(data);
-						});
-						imgRes.on('end', function(){
-							fsWriter.end();
-							pictureLink = '/fb/media/' + feedId + "/" + postId;
+						}
+					});
+				} else {
+					http.get(pictureLink, function(imgRes){
+						if (imgRes.statusCode >= 200 && imgRes.statusCode < 400){
+							imgRes.on('data', function(data){
+								fsWriter.write(data);
+							});
+							imgRes.on('end', function(){
+								fsWriter.end();
+								pictureLink = '/fb/media/' + feedId + "/" + postId;
+								postInDb.picture = pictureLink;
+								saveInDb(postInDb);
+							});
+						} else {
+							//Error while getting the picture. Saving the data we have
 							postInDb.picture = pictureLink;
 							saveInDb(postInDb);
-						});
-					} else {
-						//Error while getting the picture. Saving the data we have
-						postInDb.picture = pictureLink;
-						saveInDb(postInDb);
-					}
-				});
-			}
+						}
+					});
+				}
+			});
 		});
 	} else {
 		var pictureLink = postObj.picture;
@@ -308,7 +353,7 @@ exports.launchFeedBackup = function(job, queue, done){
 								job.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
 								return;
 							}
-							
+							refreshToken ();
 							job.log('Succesfully backed up the Facebook page : ' + feedObj.name);
 							//if (callback) callback();
 							scheduleNextOne(job, queue, done)
@@ -322,7 +367,7 @@ exports.launchFeedBackup = function(job, queue, done){
 								job.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
 								return;
 							}
-							
+							refreshToken ();
 							job.log('Succesfully backed up the Facebook page : ' + feedObj.name);
 							//if (callback) callback();
 							scheduleNextOne(job, queue, done)
@@ -333,8 +378,6 @@ exports.launchFeedBackup = function(job, queue, done){
 		);
 	}
 }
-
-
 
 /*
 	Commented out for now because not used
