@@ -114,12 +114,13 @@ function navigatePage(pageId, until, since, cb, job, done){
 				}
 				for (var i = 0; i < fbRes.data.length; i++){
 					//Backup a post if it meets the conditions and go to the next one
-					if ((!until || fbRes.data[i].created_time < until.getTime() / 1000) && (!since || fbRes.data[i].created_time > since.getTime() / 1000)){
+					var postCreationDate = new Date(fbRes.data[i].created_time);
+					if ((!until || postCreationDate.getTime() < until.getTime()) && (!since || postCreationDate.getTime() > since.getTime())) {
 						backupFbPost(fbRes.data[i], done);
 						continue;
 					}
-					//If we went beyond the "until" clause, stop paging
-					if (until && fbRes.data[i].created_time < until.getTime() / 1000){
+					//If we went beyond the "since" clause, stop paging
+					if (since && postCreationDate.getTime() < since.getTime()){
 						if (cb) cb();
 						return;
 					}
@@ -182,7 +183,7 @@ function backupFbPost(postObj, done){
 		var photoId = getSearchKey(storyLink, 'fbid');
 		throttle.increment(1, function(err, count) {
 			function wait (waittime){
-				sleep(waittime);
+				sleep.sleep(waittime);
 			}
 			if (count > 550) {
 				console.log("Hitting Facebook's rate limit, slowing down");
