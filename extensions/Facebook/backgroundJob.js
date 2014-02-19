@@ -109,6 +109,8 @@ function navigatePage(pageId, until, since, cb, job, done){
 					done (JSON.stringify(err));
 					process.exit(0);
 				}
+
+				console.log("facebook response: " + fbRes);
 				if (!fbRes.data){ //If no error and no data was returned, then end of feed (or whatever)
 					if (cb) cb();
 					return;
