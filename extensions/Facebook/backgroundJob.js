@@ -31,8 +31,6 @@ Throttle.configure({
   host: '127.0.0.1'
 });
 
-console.log(Throttle);
-
 var incrementKey = "fbAPI";
 
 var throttle = new Throttle(incrementKey, {
@@ -84,10 +82,10 @@ function navigatePage(pageId, until, since, cb, job, done){
 		if (since) options.since = since.getTime() / 1000;
 		
 		throttle.increment(1, function(err, count) {
-			if (err) {console.log(">>>>>>>> Error " + err)};
+			if (err) {console.log("We had an error with rate limiting : " + err); process.exit(1)};
 
 			function wait (waittime){
-				sleep(waittime);
+				sleep.sleep(waittime);
 			}
 			if (count > 550) {
 				console.log("Hitting Facebook's rate limit, slowing down");
@@ -109,6 +107,7 @@ function navigatePage(pageId, until, since, cb, job, done){
 					done (JSON.stringify(err));
 					process.exit(0);
 				}
+
 				if (!fbRes.data){ //If no error and no data was returned, then end of feed (or whatever)
 					if (cb) cb();
 					return;
@@ -196,7 +195,7 @@ function backupFbPost(postObj, done){
 					postInDb.picture = pictureLink;
 					saveInDb(postInDb);
 					done (err)
-					return
+					process.exit(1);
 				}
 				//Getting the URL where the full size image is stored. OMG, gotta do lots of hops in Facebook before getting what you want... And yes, it's getting late in the night..
 				var pictureLink = fbImageRes.source;
