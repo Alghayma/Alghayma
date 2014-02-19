@@ -84,6 +84,8 @@ function navigatePage(pageId, until, since, cb, job, done){
 		if (since) options.since = since.getTime() / 1000;
 		
 		throttle.increment(1, function(err, count) {
+			if (err) {console.log(">>>>>>>> Error " + err)};
+
 			function wait (waittime){
 				sleep(waittime);
 			}
