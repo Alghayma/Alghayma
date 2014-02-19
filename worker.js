@@ -7,7 +7,6 @@ var path = require('path');
 var config = require(path.join(process.cwd(), "config"));
 var fbBgWorker = require(path.join(process.cwd(), 'extensions', 'Facebook', 'backgroundJob'));
 var net = require('net');
-var noop = function() {};
 var remakeJobQueue = false;
 
 if (cluster.isMaster) {

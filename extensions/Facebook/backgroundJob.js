@@ -11,9 +11,6 @@ var fbgraph = require('fbgraph');
 var config = require(path.join(process.cwd(), 'config'));
 var http = require('http');
 var https = require('https');
-var rateLimiter = require('limiter').RateLimiter;
-//var limiter = new RateLimiter(150, 'hour');
-
 var mongoose = require('mongoose');
 var connectionString = 'mongodb://';
 if (config.dbuser && config.dbpass) connectionString += config.dbuser + ':' + config.dbpass + '@';
@@ -40,11 +37,6 @@ var throttle = new Throttle(incrementKey, {
   span: 600 * 1000, // 600 seconds
   accuracy: 1000       // margin of error = span / accuracy
 });
-
-throttle.read(function(err, count) {
-    if (err) throw err
-    console.log('current count:', count)
-})
 
 //Creating the media folder, if it doesn't exist
 var mediaPath = path.join(process.cwd(), config.mediafolder);
