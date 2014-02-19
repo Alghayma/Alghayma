@@ -31,6 +31,7 @@ exports.refreshToken = function refreshToken(graph, mongoose,callback){
 			    	if (chunk.data) {
 			    		if (chunk.data.is_valid) {
 			    			graph.setAccessToken(selectedUser.accessToken);
+			    			console.log("We sucessfully set a token : "+ selectedUser.accessToken);
 			    			if (callback && typeof callback == 'function') callback();
 			    			return;
 			    		}
@@ -43,10 +44,12 @@ exports.refreshToken = function refreshToken(graph, mongoose,callback){
 			    		}
 			    	} else{
 			    		pickUser();
+			    		console.log("Facebook didn't answer something we expected");
 			    		return;
 			    	}
 			    } else{
 			    	pickUser();
+			    	console.log("Facebook didn't answer something we expected")
 			    	return;
 			    }
 			  });

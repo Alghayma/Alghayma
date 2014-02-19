@@ -40,6 +40,7 @@ var throttle = new Throttle(incrementKey, {
 
 console.log(throttle);
 
+
 //Creating the media folder, if it doesn't exist
 var mediaPath = path.join(process.cwd(), config.mediafolder);
 if (!fs.existsSync(config.mediafolder)) fs.mkdirSync(mediaPath);
