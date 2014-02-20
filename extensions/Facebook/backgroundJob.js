@@ -80,7 +80,7 @@ function navigatePage(pageId, until, since, cb, job, done){
 	    	function wait (){
 				if (count > 550) {
 		  			console.log("Hitting Facebook's rate limit, slowing down");
-					setTimeout(wait(), 1000);
+					setTimeout(wait, 10000);
 				} else{
 	        		fbGet(path, until, since);
 	        	}
@@ -194,7 +194,7 @@ function backupFbPost(postObj, done){
 	      		function wait (){
 			    	if (count > 550) {
 		  	    		console.log("Hitting Facebook's rate limit, slowing down");
-				    	setTimeout(wait, 1000);
+				    	setTimeout(wait, 10000);
 			    	} else{
 	           			getFBImage(path, until, since);
 	        		}
