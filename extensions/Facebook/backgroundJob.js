@@ -81,6 +81,7 @@ function navigatePage(pageId, until, since, cb, job, done){
 		  			console.log("Hitting Facebook's rate limit, slowing down");
 					setTimeout(wait, 10000);
 				} else{
+					job.log("Making Facebook request : "+ path + " until : " + until + " since: " + since);
 	        		fbGet(path, until, since);
 	        	}
 			}
