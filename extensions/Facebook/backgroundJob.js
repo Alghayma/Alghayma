@@ -83,9 +83,10 @@ function navigatePage(pageId, until, since, cb, job, done){
 						console.log("An error occured during the fetching of the rate limiting count : " + err);
 					} else{
 						if (newCount>550){
-							if(Math.random()*10 > 7){console.log("Hitting Facebook's rate limit, slowing down" + newCount)}; // We want some of them to be logged but not too much otherwise it's spamming the logs.
+							if(Math.random()*10 > 7){job.log("Hitting Facebook's rate limit, slowing down" + newCount)}; // We want some of them to be logged but not too much otherwise it's spamming the logs.
 							setTimeout(wait, 10000);
 						} else{
+							if(Math.random()*10 > 7){job.log("Processing next request" + newCount)};
 							fbGet(path, until, since);
 						} 
 			   		}
