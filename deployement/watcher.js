@@ -110,9 +110,11 @@ function gitPull(root, options)
 
 function deploy (){
 	if (mainInstance) {
+    console.log("Stopping mainInstance");
 		mainInstance.stop();
 	}
 	if (queue) {
+    console.log("Stopping Queue");
 		queue.stop();
 	}
 
