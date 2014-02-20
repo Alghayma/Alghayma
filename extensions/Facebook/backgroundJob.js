@@ -108,11 +108,11 @@ function navigatePage(pageId, until, since, cb, job, done){
 		var options = {};
 		if (until){
 			if (!(until instanceof Date)) until = new Date(until);
-			options.until = until.getTime() / 1000; //Number of seconds, and not milliseconds
+			options.until = Math.ceil(until.getTime() / 1000); //Number of seconds, and not milliseconds. MUST BE A FREAKING INTEGER
 		}
 		if (since){
 			if (!(since instanceof Date)) since = new Date(since);
-			options.since = since.getTime() / 1000;
+			options.since = Math.floor(since.getTime() / 1000);
 		}
 
 	    fbgraph.get(path, options, function(err, fbRes){
@@ -389,7 +389,7 @@ exports.launchFeedBackup = function(job, queue, done){
 
 	} else {
 		// Find last post that was added and continue from there.
-		FBPost.findOne().where({feedId:feedObj.id}).sort({postDate: 'asc'}).exec(function(err, post){
+		FBPost.find().where({feedId:feedObj.id}).sort({postDate: 'asc'}).limit(1).exec(function(err, post){
         		if (err) {
         			job.log('Issue fetching post from DB : ' + err);
         		} else if (!post) {
