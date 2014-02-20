@@ -77,16 +77,29 @@ function navigatePage(pageId, until, since, cb, job, done){
     	throttle.increment(1, function(err, count) {
 	    	if (err) {console.log("We had an error with rate limiting : " + err); process.exit(1)};
 	    	function wait (){
-				if (count > 550) {
-		  			console.log("Hitting Facebook's rate limit, slowing down");
-					setTimeout(wait, 10000);
-				} else{
-					job.log("Making Facebook request : "+ path + " until : " + until + " since: " + since);
-	        		fbGet(path, until, since);
-	        	}
+				throttle.read(function(err, newCount) {
+					if (err){
+						done(err)
+						console.log("An error occured during the fetching of the rate limiting count : " + err);
+					} else{
+						if (newCount>550){
+							console.log("Hitting Facebook's rate limit, slowing down" + newCount);
+							setTimeout(wait, 10000);
+						} else{
+							job.log("Making Facebook request : "+ path + " until : " + until + " since: " + since);
+							fbGet(path, until, since);
+						} 
+			   		}
+			   	});
 			}
+		  			
 
-			wait();
+			if (count>550){
+				setTimeout(wait, 10000);
+			} else{
+				console.log("Making request directly to Facebook");
+				fbGet(path, until, since);
+			} 
     	});
   	}
 
@@ -186,21 +199,34 @@ function backupFbPost(postObj, done){
 		//Getting the photoID from the story link. Then getting that photoID in the Graph API
 		var photoId = getSearchKey(storyLink, 'fbid');
 		
-		function rateLimitedFBGet(path, until, since){
-
-      		throttle.increment(1, function(err, count) {
+	  	function rateLimitedFBGet(path, until, since){
+	    	throttle.increment(1, function(err, count) {
 		    	if (err) {console.log("We had an error with rate limiting : " + err); process.exit(1)};
+		    	function wait (){
+					throttle.read(function(err, newCount) {
+						if (err){
+							done(err)
+							console.log("An error occured during the fetching of the rate limiting count : " + err);
+						} else{
+							if (newCount>550){
+								console.log("Hitting Facebook's rate limit, slowing down" + newCount);
+								setTimeout(wait, 10000);
+							} else{
+								getFBImage();
+							} 
+				   		}
+				   	});
+				}
+			  			
 
-	      		function wait (){
-			    	if (count > 550) {
-		  	    		console.log("Hitting Facebook's rate limit, slowing down");
-				    	setTimeout(wait, 10000);
-			    	} else{
-	           			getFBImage(path, until, since);
-	        		}
-			  	}
-	      	});
-    	}
+				if (count>550){
+					setTimeout(wait, 10000);
+				} else{
+					console.log("Making request directly to Facebook");
+					getFBImage();
+				} 
+	    	});
+	  	}
 
     	function getFBImage () {
 			fbgraph.get(photoId, function(err, fbImageRes){
@@ -253,7 +279,7 @@ function backupFbPost(postObj, done){
 			});
 		}
 
-		rateLimitedFBGet();
+		rateLimitedGetFBImage();
 
 	} else {
 		var pictureLink = postObj.picture;
