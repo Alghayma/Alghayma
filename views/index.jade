@@ -1,10 +1,13 @@
 extends layout
 
 block content
-	.logoHeader
-		img(src="/images/alghayma-logo.png", width="400")
-	br
-	form(action="/fb/search", method="get", role="form", style="text-align: center")
-		input#searchBox(type="url", placeholder="Paste a Facebook page address to back it up or go back in time if it has been deleted", name="q")
+	#container 
+		.logoHeader
+			img(src="/images/alghayma-logo.png", width="400")
 		br
-		button#searchButton(type="submit") Go
+		form(action="/fb/search", method="get", role="form", style="text-align: center")
+			input#searchBox(type="url", placeholder="Paste a Facebook page address to back it up or go back in time if it has been deleted", name="q")
+			br
+			button#searchButton(type="submit") Go
+	footer
+		a(href="http://alghayma.github.io/Alghayma") Learn more about Alghayma

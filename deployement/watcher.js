@@ -56,7 +56,7 @@ var ip2long = function(ip){
 };
 
 var inSubNet = function(ip, subnet)
-{   
+{
     var mask, base_ip, long_ip = ip2long(ip);
     if( (mask = subnet.match(/^(.*?)\/(\d{1,2})$/)) && ((base_ip=ip2long(mask[1])) >= 0) )
     {
@@ -85,7 +85,7 @@ function gitPull(root, options)
             	'logFile': path.join(pathToLogs, "mainDeamon.log"),
             	'outFile': path.join(pathToLogs, "mainOut.log"),
             	'errFile': path.join(pathToLogs, "mainError.log"),
-                'killSignal': 'SIGINT'
+              'killSignal': 'SIGINT'
             });
             queue = new (forever.Monitor)("worker.js", {
             	'silent': true,
@@ -95,7 +95,7 @@ function gitPull(root, options)
             	'logFile': path.join(pathToLogs, "queueDeamon.log"),
             	'outFile': path.join(pathToLogs, "queueOut.log"),
             	'errFile': path.join(pathToLogs, "queueError.log"),
-                'killSignal': 'SIGINT'
+              'killSignal': 'SIGINT'
             });
 
             mainInstance.start();
@@ -105,18 +105,20 @@ function gitPull(root, options)
 
             });
     });
-   
+
 }
 
 function deploy (){
 	if (mainInstance) {
+    console.log("Stopping mainInstance");
 		mainInstance.stop();
 	}
 	if (queue) {
+    console.log("Stopping Queue");
 		queue.stop();
 	}
 
-	// Both instances are stopped. Let's now proceed to the git pull 
+	// Both instances are stopped. Let's now proceed to the git pull
 
 	gitPull(repoRootPath)
 
