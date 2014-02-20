@@ -76,13 +76,11 @@ function navigatePage(pageId, until, since, cb, job, done){
   	function rateLimitedFBGet(path, until, since){
     	throttle.increment(1, function(err, count) {
 	    	if (err) {console.log("We had an error with rate limiting : " + err); process.exit(1)};
-
 	    	function wait (){
 				if (count > 550) {
 		  			console.log("Hitting Facebook's rate limit, slowing down");
 					setTimeout(wait, 10000);
 				} else{
-					console.log("Getting")
 	        		fbGet(path, until, since);
 	        	}
 			}
@@ -100,7 +98,6 @@ function navigatePage(pageId, until, since, cb, job, done){
 		if (since && since instanceof Date) options.since = since.getTime() / 1000;
 
 	    fbgraph.get(path, options, function(err, fbRes){
-	    	console.log("getting posts")
 	      if (err) {
 	        if (err.code == 1 || err.code == 2){ //Internal FB errors
 	          job.log(JSON.stringify(err)); //Waiting for 2 seconds before retrying
