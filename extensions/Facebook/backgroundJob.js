@@ -207,7 +207,7 @@ function backupFbPost(postObj, done){
 							console.log("An error occured during the fetching of the rate limiting count : " + err);
 						} else{
 							if (newCount>550){
-								if(Math.random()*10 > 7){console.log("Hitting Facebook's rate limit, slowing down" + newCount)}; // We want some of them to be logged but not too much otherwise it's spamming the logs.
+								//if(Math.random()*10 > 7){console.log("Hitting Facebook's rate limit, slowing down" + newCount)}; // We want some of them to be logged but not too much otherwise it's spamming the logs.
 								setTimeout(wait, 10000);
 							} else{
 								getFBImage();
@@ -289,7 +289,7 @@ function backupFbPost(postObj, done){
 			var theoricImageUrlParts = theoricImageUrl.split('/');
 			var imageName = theoricImageUrlParts[theoricImageUrlParts.length - 1];
 			var fsWriter = fs.createWriteStream(verifyPathLength(path.join(postMediaPath, imageName)));
-			console.log("Getting from URL " + theoricImageUrl);
+			//console.log("Getting from URL " + theoricImageUrl);
 			if (theoricImageUrl.indexOf('https://') == 0){
 				https.get(theoricImageUrl, function(imgRes){
 					if (imgRes.statusCode >= 200 && imgRes.statusCode < 400){
