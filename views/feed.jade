@@ -6,7 +6,7 @@ block content
 			img(src="/images/alghayma-logo.png", width="400")
 	br
 	- if (posts && feed)
-		h4(style='text-align: center') #{feedDescription}
+		h4#feedDescription(style='text-align: center') #{feedDescription}
 		div#postList.container
 			ol.timeline.clearfix
 				- each post in posts
@@ -36,9 +36,14 @@ block content
 			img#ajaxLoaderGif(src="/images/ajax-loader.gif", style="display: none")
 		script.
 			var feedId = #{feed.id};
+			var dateStr = #{feed.lastBackup.getTime()};
+			if (typeof dateStr != 'undefined'){
+				var feedDescriptionItem = document.getElementById('feedDescription');
+				feedDescriptionItem.textContent = feedDescriptionItem.textContent.replace('{[lastBackupDate]}', formatDate(new Date(dateStr)));
+			}
 			var profileImage = '#{feed.profileImage}';
 			//Reformating dates according to computer's locale
-			function formatDate(date) { return 'On ' + date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear() + ', at ' + date.getHours() + ':' + (date.getMinutes().toString().length == 1 ? '0' + date.getMinutes().toString() : date.getMinutes());} //That last part prevents from getting timestamps such as 15:0
+			function formatDate(date) { return 'on ' + date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear() + ', at ' + date.getHours() + ':' + (date.getMinutes().toString().length == 1 ? '0' + date.getMinutes().toString() : date.getMinutes());} //That last part prevents from getting timestamps such as 15:0
 			var postHeaders = document.getElementsByClassName('imageUnit-content');
 			for (var i = 0; i < postHeaders.length; i++){
 				postHeaders[i].children[0].children[0].textContent = formatDate(new Date(postHeaders[i].textContent));

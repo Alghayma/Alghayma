@@ -150,7 +150,7 @@ exports.viewpage = function(req, res){
 						postCopy.permalink = permalink(postCopy.postId);
 						postsCopy.push(postCopy);
 					}
-					var description = "We " + ((feed.didBackupHead) ? " did sucesfully complete a full backup of " + feed.name + ". The last backup was performed " + formatDate(feed.lastBackup) + "." : " do not have yet a full backup of " + feed.name +". Here is what we have so far")
+					var description = "We " + ((feed.didBackupHead) ? " did sucesfully complete a full backup of " + feed.name + ". The last backup was performed {[lastBackupDate]}." : " do not have yet a full backup of " + feed.name +". Here is what we have so far")
 					// Improvement: add the date of the next scheduled backup.
 					res.render('feed', {title: feed.name + ' - Alghayma', feed: feed, posts: postsCopy, feedDescription:description});
 				} else {
