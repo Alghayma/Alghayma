@@ -38,7 +38,7 @@ block content
 			var feedId = #{feed.id};
 			var profileImage = '#{feed.profileImage}';
 			//Reformating dates according to computer's locale
-			function formatDate(date) { return 'On ' + date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear() + ', at ' + date.getHours() + ':' + (date.getMinutes().toString().length == 1 ? date.getMinutes().toString() + '0' : date.getMinutes());} //That last part prevents from getting timestamps such as 15:0
+			function formatDate(date) { return 'On ' + date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear() + ', at ' + date.getHours() + ':' + (date.getMinutes().toString().length == 1 ? '0' + date.getMinutes().toString() : date.getMinutes());} //That last part prevents from getting timestamps such as 15:0
 			var postHeaders = document.getElementsByClassName('imageUnit-content');
 			for (var i = 0; i < postHeaders.length; i++){
 				postHeaders[i].children[0].children[0].textContent = formatDate(new Date(postHeaders[i].textContent));
