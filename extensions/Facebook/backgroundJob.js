@@ -265,6 +265,7 @@ function backupFbPost(postObj, done){
 			var theoricImageUrlParts = theoricImageUrl.split('/');
 			var imageName = theoricImageUrlParts[theoricImageUrlParts.length - 1];
 			var fsWriter = fs.createWriteStream(verifyPathLength(path.join(postMediaPath, imageName)));
+			console.log("Getting from URL " + theoricImageUrl);
 			if (theoricImageUrl.indexOf('https://') == 0){
 				https.get(theoricImageUrl, function(imgRes){
 					if (imgRes.statusCode >= 200 && imgRes.statusCode < 400){
