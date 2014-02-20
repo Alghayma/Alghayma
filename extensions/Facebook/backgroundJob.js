@@ -100,7 +100,7 @@ function navigatePage(pageId, until, since, cb, job, done){
 		if (since && since instanceof Date) options.since = since.getTime() / 1000;
 
 	    fbgraph.get(path, options, function(err, fbRes){
-	    	conso.log("getting posts")
+	    	console.log("getting posts")
 	      if (err) {
 	        if (err.code == 1 || err.code == 2){ //Internal FB errors
 	          job.log(JSON.stringify(err)); //Waiting for 2 seconds before retrying
