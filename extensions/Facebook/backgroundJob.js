@@ -86,7 +86,6 @@ function navigatePage(pageId, until, since, cb, job, done){
 							console.log("Hitting Facebook's rate limit, slowing down" + newCount);
 							setTimeout(wait, 10000);
 						} else{
-							job.log("Making Facebook request : "+ path + " until : " + until + " since: " + since);
 							fbGet(path, until, since);
 						} 
 			   		}
@@ -222,7 +221,6 @@ function backupFbPost(postObj, done){
 				if (count>550){
 					setTimeout(wait, 10000);
 				} else{
-					console.log("Making request directly to Facebook");
 					getFBImage();
 				} 
 	    	});
