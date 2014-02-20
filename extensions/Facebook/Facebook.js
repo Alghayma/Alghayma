@@ -94,7 +94,7 @@ exports.search = function(req, res){
 			var resultObj = {score: 0, feed: feeds[i]};
 			//Checking whether the feed name contains the keywords (not exactly). +1 point if yes (per keyword found)
 			for (var j = 0; j < keywords.length; j++){
-				if (feed.name.contains(keywords[j])){
+				if (feeds[i].name.contains(keywords[j])){
 					resultObj.score++;
 				}
 			}
