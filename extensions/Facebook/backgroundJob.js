@@ -199,7 +199,7 @@ function backupFbPost(postObj, done){
 		//Getting the photoID from the story link. Then getting that photoID in the Graph API
 		var photoId = getSearchKey(storyLink, 'fbid');
 		
-	  	function rateLimitedFBGet(path, until, since){
+	  	function rateLimitedFBGetImage(path, until, since){
 	    	throttle.increment(1, function(err, count) {
 		    	if (err) {console.log("We had an error with rate limiting : " + err); process.exit(1)};
 		    	function wait (){
@@ -209,7 +209,7 @@ function backupFbPost(postObj, done){
 							console.log("An error occured during the fetching of the rate limiting count : " + err);
 						} else{
 							if (newCount>550){
-								console.log("Hitting Facebook's rate limit, slowing down" + newCount);
+								console.log("Hitting Facebook's rate limit, slowing down " + newCount);
 								setTimeout(wait, 10000);
 							} else{
 								getFBImage();
@@ -279,7 +279,7 @@ function backupFbPost(postObj, done){
 			});
 		}
 
-		rateLimitedGetFBImage();
+		rateLimitedFBGetImage();
 
 	} else {
 		var pictureLink = postObj.picture;
