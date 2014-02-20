@@ -6,6 +6,7 @@ var fs = require('fs');
 var os = require('os');
 var path = require('path');
 var sleep = require('sleep');
+var SHA3 = require('sha3');
 
 var fbgraph = require('fbgraph');
 var config = require(path.join(process.cwd(), 'config'));
@@ -191,10 +192,6 @@ function backupFbPost(postObj, done){
 			}
 			fbgraph.get(photoId, function(err, fbImageRes){
 				if (err){
-					//If an error occurs while trying to get the post picture, give up and save the data you already have
-					var pictureLink = postObj.picture;
-					postInDb.picture = pictureLink;
-					saveInDb(postInDb);
 					done (err)
 					process.exit(1);
 				}
@@ -202,7 +199,7 @@ function backupFbPost(postObj, done){
 				var pictureLink = fbImageRes.source;
 				var pictureName = pictureLink.split('/'); //Assuming that the url finishes with the image's file name
 				pictureName = pictureName[pictureName.length - 1];
-				var fsWriter = fs.createWriteStream(path.join(postMediaPath, pictureName)); //Creating after the picture name, in the posts media folder
+				var fsWriter = fs.createWriteStream(verifyPathLength(path.join(postMediaPath, pictureName))); //Creating after the picture name, in the posts media folder
 				if (pictureLink.indexOf('https://') == 0){ //Checking whether the image path is https or not.
 					https.get(pictureLink, function(imgRes){
 						if (imgRes.statusCode >= 200 && imgRes.statusCode < 400) { //image found, then save it
@@ -252,7 +249,7 @@ function backupFbPost(postObj, done){
 			var theoricImageUrl = decodeURIComponent(getSearchKey(pictureLink, "url"));
 			var theoricImageUrlParts = theoricImageUrl.split('/');
 			var imageName = theoricImageUrlParts[theoricImageUrlParts.length - 1];
-			var fsWriter = fs.createWriteStream(path.join(postMediaPath, imageName));
+			var fsWriter = fs.createWriteStream(verifyPathLength(path.join(postMediaPath, imageName)));
 			if (theoricImageUrl.indexOf('https://') == 0){
 				https.get(theoricImageUrl, function(imgRes){
 					if (imgRes.statusCode >= 200 && imgRes.statusCode < 400){
@@ -378,6 +375,28 @@ exports.launchFeedBackup = function(job, queue, done){
         		}
         	}
 		);
+	}
+}
+
+function verifyPathLength(path){
+	var lengthOfFileSystemMax = 256;
+	if (path.length > lengthOfFileSystemMax){
+		var extension = path.split('.').pop();
+		var folders = path.split('/');
+		var filenameWithExt = folders.pop();
+		var filename = filenameWithExt.substring(0, filenameWithExt.length - extension.length-1);
+
+		var truncationLength = lengthOfFileSystemMax - folders.join("/").length - extension.length - 1;
+		var sha3 = new SHA3.SHA3Hash();
+		sha3.update(filename ,"utf8");
+		var truncatedHash = sha3.digest('hex').substring(0, truncationLength);
+
+		var shorterPath = folders.join("/")+"/"+truncatedHash+"."+extension;
+
+		if (shorterPath.length > lengthOfFileSystemMax) {console.log("Truncated string is too long");process.exit(1)};
+		return shorterPath;
+	} else {
+		return path;
 	}
 }
 
