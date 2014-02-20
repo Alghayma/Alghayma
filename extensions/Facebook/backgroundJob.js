@@ -82,6 +82,7 @@ function navigatePage(pageId, until, since, cb, job, done){
 		  			console.log("Hitting Facebook's rate limit, slowing down");
 					setTimeout(wait, 10000);
 				} else{
+					console.log("Getting")
 	        		fbGet(path, until, since);
 	        	}
 			}
@@ -98,46 +99,47 @@ function navigatePage(pageId, until, since, cb, job, done){
 		if (until && until instanceof Date) options.until = until.getTime() / 1000; //Number of seconds, and not milliseconds
 		if (since && since instanceof Date) options.since = since.getTime() / 1000;
 
-    fbgraph.get(path, options, function(err, fbRes){
-      if (err) {
-        if (err.code == 1 || err.code == 2){ //Internal FB errors
-          job.log(JSON.stringify(err)); //Waiting for 2 seconds before retrying
-        } else if (err.code == 17){
-          job.log("Hitting the maximum rate limit " + JSON.stringify(err));
-          console.log("Hitting the maximum rate limit " + JSON.stringify(err));
-        } else {
-          job.log('Error while getting updates from : ' + pageId + '\n' + JSON.stringify(err));
-        }
-        done (JSON.stringify(err));
-        process.exit(0);
-      }
+	    fbgraph.get(path, options, function(err, fbRes){
+	    	conso.log("getting posts")
+	      if (err) {
+	        if (err.code == 1 || err.code == 2){ //Internal FB errors
+	          job.log(JSON.stringify(err)); //Waiting for 2 seconds before retrying
+	        } else if (err.code == 17){
+	          job.log("Hitting the maximum rate limit " + JSON.stringify(err));
+	          console.log("Hitting the maximum rate limit " + JSON.stringify(err));
+	        } else {
+	          job.log('Error while getting updates from : ' + pageId + '\n' + JSON.stringify(err));
+	        }
+	        done (JSON.stringify(err));
+	        process.exit(0);
+	      }
 
-      if (!fbRes.data){ //If no error and no data was returned, then end of feed (or whatever)
-        if (cb) cb();
-        return;
-      }
-      for (var i = 0; i < fbRes.data.length; i++){
-        //Backup a post if it meets the conditions and go to the next one
-        var postCreationDate = new Date(fbRes.data[i].created_time);
-        if ((!until || postCreationDate.getTime() < until.getTime()) && (!since || postCreationDate.getTime() > since.getTime())) {
-          backupFbPost(fbRes.data[i], done);
-          continue;
-        }
-        //If we went beyond the "since" clause, stop paging
-        if (since && postCreationDate.getTime() < since.getTime()){
-          if (cb) cb();
-          return;
-        }
-      }
-      if (fbRes.paging && fbRes.paging.next){
-        rateLimitedFBGet(fbRes.paging.next, until, since);
-      } else {
-        if (cb) cb();
-      }
-    });
-  }
+	      if (!fbRes.data){ //If no error and no data was returned, then end of feed (or whatever)
+	        if (cb) cb();
+	        return;
+	      }
+	      for (var i = 0; i < fbRes.data.length; i++){
+	        //Backup a post if it meets the conditions and go to the next one
+	        var postCreationDate = new Date(fbRes.data[i].created_time);
+	        if ((!until || postCreationDate.getTime() < until.getTime()) && (!since || postCreationDate.getTime() > since.getTime())) {
+	          backupFbPost(fbRes.data[i], done);
+	          continue;
+	        }
+	        //If we went beyond the "since" clause, stop paging
+	        if (since && postCreationDate.getTime() < since.getTime()){
+	          if (cb) cb();
+	          return;
+	        }
+	      }
+	      if (fbRes.paging && fbRes.paging.next){
+	        rateLimitedFBGet(fbRes.paging.next, until, since);
+	      } else {
+	        if (cb) cb();
+	      }
+	    });
+  	}
 
-  rateLimitedFBGet(reqText, until, since);
+	rateLimitedFBGet(reqText, until, since);
 
 }
 
