@@ -4,6 +4,8 @@ var config = require(path.join(process.cwd(), 'config'));
 var fs = require('fs');
 var https = require('https');
 
+var XRegExp = require('xregexp').XRegExp
+
 var mongoose = require('mongoose');
 
 var fbUtil = require('./fbUtils');
@@ -25,9 +27,11 @@ fbUtil.refreshToken(fbgraph, mongoose);
 exports.validator = function isFbUrl(path, andCDN){
 	if (typeof path != "string") {return false};
 	var apiRoute = path.split("?")[0];
-	// non-escaped Facebook regex ^(https|http)://(www\.|m\.)?facebook\.com/(pages/)?(([0-9a-zA-Z._-]*)(/)?$|([0-9a-zA-Z_-]*)/[0-9]*(/)?$)
-	// non-escaped Facebook and CDN regex (^(https|http)://[0-9a-z-A-Z._-]*\.akamaihd\.net/.*$|^(https|http)://(www\.|m\.)?facebook\.com/(pages/)?(([0-9a-zA-Z._-]*)(/)?$|([0-9a-zA-Z_-]*)/[0-9]*(/)?$))
-	var matches = andCDN?apiRoute.match(/(^(https|http):\/\/[0-9a-z-A-Z._-]*\.akamaihd\.net\/.*$|^(https|http):\/\/(www\.|m\.)?facebook\.com\/(pages\/)?(([0-9a-zA-Z._-]*)(\/)?$|([0-9a-zA-Z_-]*)\/[0-9]*(\/)?$))/):(apiRoute.match(/^(https|http):\/\/(www\.|m\.)?facebook\.com\/(pages\/)?(([0-9a-zA-Z._-]*)(\/)?$|([0-9a-zA-Z_-]*)\/[0-9]*(\/)?$)/));	
+	// non-escaped Facebook regex ^(https|http)://(www\.|m\.)?facebook\.com/(pages/)?((([0-9a-zA-Z]|%|-|\.|\p{L})*)(/)?$|(([0-9a-zA-Z]|%|-|\.|\p{L})*)/[0-9]*(/)?$)
+	// non-escaped Facebook and CDN regex (^(https|http)://[0-9a-z-A-Z._-]*\.akamaihd\.net/.*$|^(https|http)://(www\.|m\.)?facebook\.com/(pages/)?((([0-9a-zA-Z]|%|-|\.||\p{L})*)(/)?$|(([0-9a-zA-Z]|%|-|\.|\p{L})*)/[0-9]*(/)?$))
+	
+	var matches = andCDN?XRegExp.exec(apiRoute,  XRegExp("(^(https|http):\/\/[0-9a-z-A-Z._-]*\.akamaihd\.net\/.*$|^(https|http):\/\/(www\.|m\.)?facebook\.com\/(pages\/)?((([0-9a-zA-Z]|%|-|\.||\p{L})*)(\/)?$|(([0-9a-zA-Z]|%|-|\.|\p{L})*)\/[0-9]*(\/)?$))")):XRegExp.exec(apiRoute,  XRegExp('^(https|http):\/\/(www\.|m\.)?facebook\.com\/(pages\/)?((([0-9a-zA-Z]|%|-|\.|\p{L})*)(\/)?$|(([0-9a-zA-Z]|%|-|\.|\p{L})*)\/[0-9]*(\/)?$)'));
+
 	if (matches) {
 		var match = matches[0]
 		if (match === apiRoute) {
@@ -40,8 +44,8 @@ exports.validator = function isFbUrl(path, andCDN){
 
 exports.getFBPath = function getFbPath(path, removeEdges){
 	var apiRoute = path.split("?")[0];
-	// non-escaped regex (?!(https|http)://(www|m)?\.facebook\.com/(pages/)?)(([0-9a-zA-Z-.]*)$|(?!([0-9a-zA-Z_\.-]*)/)[0-9]*$)
-	var path = (apiRoute.match(/(?!(https|http):\/\/(www|m)?\.facebook\.com\/(pages\/)?)(([0-9a-zA-Z-.]*)$|(?!([0-9a-zA-Z_\.-]*)\/)[0-9]*$)/))[0]
+	// non-escaped regex (?!(https|http)://(www|m)?\.facebook\.com/(pages/)?)((([0-9a-zA-Z]|%|-|\.)*)$|(?!(([0-9a-zA-Z]|%|-|\.)*)/)[0-9]*$)
+	var path = (apiRoute.match(/(?!(https|http):\/\/(www|m)?\.facebook\.com\/(pages\/)?)((([0-9a-zA-Z]|%|-|\.)*)$|(?!(([0-9a-zA-Z]|%|-|\.)*)\/)[0-9]*$)/))[0]
 	return path
 }
 
@@ -212,12 +216,13 @@ exports.media = function(req, res){
 };
 
 exports.backup = function(req, res){
-	console.log(req.body)
+
 	if (!req.body.sourceUrl){
 		res.send(400, 'You didn\'t give us an address to backup');
 		return;
 	}
 	var sourceUrl = decodeURIComponent(req.body.sourceUrl);
+
 	if (!isFBURL(sourceUrl)){
 		res.send(400, 'The address you gave isn\'t from Facebook');
 		return;
