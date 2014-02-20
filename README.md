@@ -24,6 +24,10 @@ We are currently working on allowing users to download a full local copy of thei
 
 Alghayma is *free and open-source* software. You can find us on GitHub to report bugs or help us improve the system. You might even get some Alghayma *swag* :)
 
+## Contact
+
+Want to reach out to us? Shoot us a [Tweet](https://www.twitter.com/@Alghayma) or an email at `contact@alghayma.com`.
+
 ## Why is Facebook page deletion an issue?
 
 - http://brown-moses.blogspot.co.uk/2014/02/how-facebook-is-destroying-history.html
