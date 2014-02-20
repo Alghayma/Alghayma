@@ -36,7 +36,7 @@ block content
 			img#ajaxLoaderGif(src="/images/ajax-loader.gif", style="display: none")
 		script.
 			var feedId = #{feed.id};
-			var dateStr = #{feed.lastBackup.getTime()};
+			var dateStr = '#{feed.lastBackup}';
 			if (typeof dateStr != 'undefined'){
 				var feedDescriptionItem = document.getElementById('feedDescription');
 				feedDescriptionItem.textContent = feedDescriptionItem.textContent.replace('{[lastBackupDate]}', formatDate(new Date(dateStr)));

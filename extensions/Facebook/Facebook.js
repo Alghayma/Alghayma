@@ -75,7 +75,6 @@ var permalink = this.permalink;
 
 exports.search = function(req, res){
 	var query = req.param('q');
-	var req = req.param('raw');
 
 	//If the request is a facebook url, redirect to /p/
 	if (isFBURL(query)){

@@ -78,8 +78,8 @@ function navigatePage(pageId, until, since, cb, job, done){
 			process.exit(0)
 		}
 		var options = {};
-		if (until) options.until = until.getTime() / 1000; //Number of seconds, and not milliseconds
-		if (since) options.since = since.getTime() / 1000;
+		if (until && until instanceof Date) options.until = until.getTime() / 1000; //Number of seconds, and not milliseconds
+		if (since && since instanceof Date) options.since = since.getTime() / 1000;
 		
 		throttle.increment(1, function(err, count) {
 			if (err) {console.log("We had an error with rate limiting : " + err); process.exit(1)};
@@ -346,7 +346,7 @@ exports.launchFeedBackup = function(job, queue, done){
 
 	} else {
 		// Find last post that was added and continue from there.
-		FBPost.findOne().where({feedId:feedObj.id}).sort('postDate').exec(function(err, post){
+		FBPost.findOne().where({feedId:feedObj.id}).sort({postDate: 'asc'}).exec(function(err, post){
         		if (err) {
         			job.log('Issue fetching post from DB : ' + err);
         		} else if (!post) {
@@ -364,7 +364,7 @@ exports.launchFeedBackup = function(job, queue, done){
 					}, job, done);
         		}else{
         			job.log("Resuming backup of page : " + feedObj.name + " at date : " + post.postDate)
-        			navigatePage(feedObj.id, undefined, post.postDate, function(){
+        			navigatePage(feedObj.id, post.postDate, undefined, function(){
 						FBFeed.update({id: feedObj.id}, {lastBackup: Date.now(), didBackupHead: true}).exec(function(err){
 							if (err){
 								job.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
