@@ -106,8 +106,14 @@ function navigatePage(pageId, until, since, cb, job, done){
 			process.exit(0)
 		}
 		var options = {};
-		if (until && until instanceof Date) options.until = until.getTime() / 1000; //Number of seconds, and not milliseconds
-		if (since && since instanceof Date) options.since = since.getTime() / 1000;
+		if (until){
+			if (!(until instanceof Date)) until = new Date(until);
+			options.until = until.getTime() / 1000; //Number of seconds, and not milliseconds
+		}
+		if (since){
+			if (!(since instanceof Date)) since = new Date(since);
+			options.since = since.getTime() / 1000;
+		}
 
 	    fbgraph.get(path, options, function(err, fbRes){
 	      if (err) {
