@@ -83,7 +83,7 @@ function navigatePage(pageId, until, since, cb, job, done){
 						console.log("An error occured during the fetching of the rate limiting count : " + err);
 					} else{
 						if (newCount>550){
-							console.log("Hitting Facebook's rate limit, slowing down" + newCount);
+							if(Math.random()*10 > 7){console.log("Hitting Facebook's rate limit, slowing down" + newCount)}; // We want some of them to be logged but not too much otherwise it's spamming the logs.
 							setTimeout(wait, 10000);
 						} else{
 							fbGet(path, until, since);
@@ -91,12 +91,10 @@ function navigatePage(pageId, until, since, cb, job, done){
 			   		}
 			   	});
 			}
-		  			
 
 			if (count>550){
 				setTimeout(wait, 10000);
 			} else{
-				console.log("Making request directly to Facebook");
 				fbGet(path, until, since);
 			} 
     	});
@@ -208,7 +206,7 @@ function backupFbPost(postObj, done){
 							console.log("An error occured during the fetching of the rate limiting count : " + err);
 						} else{
 							if (newCount>550){
-								console.log("Hitting Facebook's rate limit, slowing down " + newCount);
+								if(Math.random()*10 > 7){console.log("Hitting Facebook's rate limit, slowing down" + newCount)}; // We want some of them to be logged but not too much otherwise it's spamming the logs.
 								setTimeout(wait, 10000);
 							} else{
 								getFBImage();
