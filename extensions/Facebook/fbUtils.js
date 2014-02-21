@@ -1,5 +1,5 @@
 var path = require('path')
-var config = require(path.join(process.cwd(), 'config'));
+var config = require(path.join(__dirname, "..", "..", 'config'));
 var https = require('https')
 
 exports.refreshToken = function refreshToken(graph, mongoose,callback){

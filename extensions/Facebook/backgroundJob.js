@@ -9,7 +9,7 @@ var SHA3 = require('sha3');
 var domain = require('domain');
 
 var fbgraph = require('fbgraph');
-var config = require(path.join(process.cwd(), 'config'));
+var config = require(path.join(__dirname, "..", "..", 'config'));
 var http = require('http');
 var https = require('https');
 var mongoose = require('mongoose');
@@ -391,7 +391,7 @@ exports.launchFeedBackup = function(job, queue, done){
 	if (feedObj.didBackupHead) {
 		// Just proceed to an update to fetch newest post since the most recent one.
 		job.log('Updating Facebook page : ' + feedObj.name);
-		
+
 		// Navigate page from undefined to the last backup we had
 		navigatePage(feedObj.id, undefined, feedObj.lastBackup, function(){
 			FBFeed.update({id: feedObj.id}, {lastBackup: Date.now()}).exec(function(err){

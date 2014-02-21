@@ -1,6 +1,6 @@
 var fbgraph = require('fbgraph');
 var path = require('path');
-var config = require(path.join(process.cwd(), 'config'));
+var config = require(path.join(__dirname, "..", "..", 'config'));
 var fs = require('fs');
 var https = require('https');
 
