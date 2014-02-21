@@ -204,7 +204,7 @@ function backupFbPost(postObj, done){
 		//Getting the photoID from the story link. Then getting that photoID in the Graph API
 		var photoId = getSearchKey(storyLink, 'fbid');
 		
-	  	function rateLimitedFBGetImage(path, until, since){
+	  	function rateLimitedFBGetImage(){
 	    	throttle.increment(1, function(err, count) {
 		    	if (err) {console.log("We had an error with rate limiting : " + err); process.exit(1)};
 		    	function wait (){
@@ -237,7 +237,7 @@ function backupFbPost(postObj, done){
 				if (fbImageRes.error) {
 					if (fbImageRes.error.code == 100) {
 
-						console.log("Unsupported get request " + postMediaPath + " photoId " + photoId);
+						console.log("Missing Media: Unsupported get request: " + photoId);
 						postInDb.picture = pictureLink;
 						saveInDb(postInDb);
 						return;
@@ -309,55 +309,52 @@ function backupFbPost(postObj, done){
 
 			var networkDomain = domain.create();
 
-			networkDomain.add(https);
-			networkDomain.add(http);
-
 			networkDomain.on('error', function(er) {
-				console.log("The networking stack crashed on retreiving a picture from " + theoricImageUrl);
-				postInDb.picture = pictureLink;
+ 				console.log("We had issues retreiving " + theoricImageUrl);
+ 				postInDb.picture = pictureLink;
 				saveInDb(postInDb);
 			});
 
-			if (theoricImageUrl.indexOf('https://') == 0){
-				https.get(theoricImageUrl, function(imgRes){
-					if (imgRes.statusCode >= 200 && imgRes.statusCode < 400){
-						imgRes.on('data', function(data){
-							fsWriter.write(data);
-						});
-						imgRes.on('end', function(){
-							fsWriter.end();
-							pictureLink = '/fb/media/' + feedId + "/" + postId;
+			networkDomain.run(function() {
+
+				if (theoricImageUrl.indexOf('https://') == 0){
+					https.get(theoricImageUrl, function(imgRes){
+						if (imgRes.statusCode >= 200 && imgRes.statusCode < 400){
+							imgRes.on('data', function(data){
+								fsWriter.write(data);
+							});
+							imgRes.on('end', function(){
+								fsWriter.end();
+								pictureLink = '/fb/media/' + feedId + "/" + postId;
+								postInDb.picture = pictureLink;
+								saveInDb(postInDb);
+							});
+						} else {
+							//Error while getting the picture. Saving what we have
 							postInDb.picture = pictureLink;
 							saveInDb(postInDb);
-						});
-					} else {
-						//Error while getting the picture. Saving what we have
-						postInDb.picture = pictureLink;
-						saveInDb(postInDb);
-					}
-				});
-			} else {
-				http.get(theoricImageUrl, function(imgRes){
-					if (imgRes.statusCode >= 200 && imgRes.statusCode < 400){
-						imgRes.on('data', function(data){
-							fsWriter.write(data);
-						});
-						imgRes.on('end', function(){
-							fsWriter.end();
-							pictureLink = '/fb/media/' + feedId + "/" + postId;
+						}
+					});
+				} else {
+					http.get(theoricImageUrl, function(imgRes){
+						if (imgRes.statusCode >= 200 && imgRes.statusCode < 400){
+							imgRes.on('data', function(data){
+								fsWriter.write(data);
+							});
+							imgRes.on('end', function(){
+								fsWriter.end();
+								pictureLink = '/fb/media/' + feedId + "/" + postId;
+								postInDb.picture = pictureLink;
+								saveInDb(postInDb);
+							});
+						} else {
+							//Error while getting the picture. Saving what we have
 							postInDb.picture = pictureLink;
 							saveInDb(postInDb);
-						});
-					} else {
-						//Error while getting the picture. Saving what we have
-						postInDb.picture = pictureLink;
-						saveInDb(postInDb);
-					}
-				});
-			}
-		} else {
-			postInDb.picture = pictureLink;
-			saveInDb(postInDb);
+						}
+					});
+				}
+			});
 		}
 	}
 }
