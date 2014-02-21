@@ -124,20 +124,20 @@ function navigatePage(pageId, until, since, cb, job, done){
 		}
 
 	    fbgraph.get(path, options, function(err, fbRes){
-	      if (err) {
-	        if (err.code == 1 || err.code == 2){ //Internal FB errors
-	        	job.log(JSON.stringify(err));
-	        } else if (err.code == 17){
-	        	job.log("Hitting the maximum rate limit " + JSON.stringify(err));
-	        	console.log("Hitting the maximum rate limit " + JSON.stringify(err));
-	        } else if (err.code == 100) {
-	        	console.log("Feed "+ path + " couldn't be retreived (100), crashing");
-	        }	else {
-	          job.log('Error while getting updates from : ' + pageId + '\n' + JSON.stringify(err));
-	        }
-	        done ("Couldn't fetch from graph" + JSON.stringify(err) + " path : " + path + " since : " + since + " until " + until);
-	        process.exit(0);
-	      }
+	      	if (err) {
+		        if (err.code == 1 || err.code == 2){ //Internal FB errors
+		        	job.log(JSON.stringify(err));
+		        } else if (err.code == 17){
+		        	job.log("Hitting the maximum rate limit " + JSON.stringify(err));
+		        	console.log("Hitting the maximum rate limit " + JSON.stringify(err));
+		        } else if (err.code == 100) {
+		        	console.log("Feed "+ path + " couldn't be retreived (100), crashing");
+		        }	else {
+		          job.log('Error while getting updates from : ' + pageId + '\n' + JSON.stringify(err));
+		        }
+		        done ("Couldn't fetch from graph" + JSON.stringify(err) + " path : " + path + " since : " + since + " until " + until);
+		        process.exit(0);
+	      	}
 
 	      if (!fbRes.data){ //If no error and no data was returned, then end of feed (or whatever)
 	      	console.log("The Facebook feed stopped responding with data !")
@@ -145,7 +145,27 @@ function navigatePage(pageId, until, since, cb, job, done){
 	        return;
 	      }
 	      
-	      var tasksToExecute = [];
+	      	var tasksToExecute = [];
+
+	      	function deepObjCopy (dupeObj) {
+				var retObj = new Object();
+				if (typeof(dupeObj) == 'object') {
+					if (typeof(dupeObj.length) != 'undefined')
+						var retObj = new Array();
+					for (var objInd in dupeObj) {	
+						if (typeof(dupeObj[objInd]) == 'object') {
+							retObj[objInd] = deepObjCopy(dupeObj[objInd]);
+						} else if (typeof(dupeObj[objInd]) == 'string') {
+							retObj[objInd] = dupeObj[objInd];
+						} else if (typeof(dupeObj[objInd]) == 'number') {
+							retObj[objInd] = dupeObj[objInd];
+						} else if (typeof(dupeObj[objInd]) == 'boolean') {
+							((dupeObj[objInd] == true) ? retObj[objInd] = true : retObj[objInd] = false);
+						}
+					}
+				}
+				return retObj;
+			}
 
 	      for (var i = 0; i < fbRes.data.length; i++){
 	        //Backup a post if it meets the conditions and go to the next one
@@ -153,13 +173,14 @@ function navigatePage(pageId, until, since, cb, job, done){
 	        var postCreationDate = new Date(fbRes.data[i].created_time);
 	        if ((!until || postCreationDate.getTime() < until.getTime()) && (!since || postCreationDate.getTime() > since.getTime())) {
 	          	
-	          	var datawwwww = fbRes.data[i];
+	          	var postData = fbRes.data[i];
+	          	function closure (apostData){
+	          		tasksToExecute.unshift(function (callback){
+	          			backupFbPost(apostData, callback);
+	          		})
+	          	};
+	          	closure(postData);
 
-	        	tasksToExecute.unshift(function (callback){
-	          		console.log("Making new request");
-	          		backupFbPost(datawwwww, callback);
-	          	});
-	          	continue;
 	        } else if (since && postCreationDate.getTime() < since.getTime()){
 	        	console.log("The date of the post is older than what we asked!");
 	        	if (cb) cb();
@@ -169,21 +190,21 @@ function navigatePage(pageId, until, since, cb, job, done){
 	        }
 	      }
 
-	      async.parallelLimit(tasksToExecute, 8,function (err, results){
-	      	if (err) {
-	      		console.log("Error occured while backup a post : " + err);
-	      		process.exit(1);
-	      	} else {
-		      	if (fbRes.paging && fbRes.paging.next){
-		      		console.log("Let's get the next posts !");
-		        	rateLimitedFBGet(fbRes.paging.next, until, since);
-		      	} else {
-		      		console.log("We are done with this post, skipping to callback");
-		        if (cb) cb();
-		    }
-	      }
-	    });
-	  });
+	      	async.parallelLimit(tasksToExecute, 8, function (err, results){
+	      		if (err) {
+	      			console.log("Error occured while backup a post : " + err);
+	      			process.exit(1);
+	      		} else {
+		      		if (fbRes.paging && fbRes.paging.next){
+		      			job.log("Finished processing batch, requesting next one.")
+		        		rateLimitedFBGet(fbRes.paging.next, until, since);
+		      		} else {
+		      			console.log("We are done with this post, skipping to callback");
+		        		if (cb) cb();
+		    		}
+	      		}
+	    	});
+	  	});
   	}
 
 	rateLimitedFBGet(reqText, until, since);
@@ -396,6 +417,10 @@ function backupFbPost(postObj, callback){
 					});
 				}
 			});
+		} else {
+			console.log("The following kinds of posts are not supported");
+			console.log(postObj);
+			callback();
 		}
 	}
 }
