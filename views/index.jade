@@ -1,13 +1,21 @@
 extends layout
 
 block content
-	#container 
+	.container
 		.logoHeader
 			img(src="/images/alghayma-logo.png", width="400")
 		br
+		.instruction
+			| Paste a Facebook page address to back it up
+			br
+			| Go back in time if it has been deleted
+		p.example
+			a(href="https://www.alghayma.com/fb/p?sourceUrl=https%3A%2F%2Fwww.facebook.com%2Fkafrev") See a live example
 		form(action="/fb/p", method="get", role="form", style="text-align: center")
-			input#searchBox(type="url", placeholder="Paste a Facebook page address to back it up or go back in time if it has been deleted", name="sourceUrl")
+			input#searchBox(type="url", placeholder="www.facebook.com/kafrev", name="sourceUrl")
 			br
 			button#searchButton(type="submit") Go
+
+
 	footer
 		a(href="http://alghayma.github.io/Alghayma") Learn more about Alghayma
