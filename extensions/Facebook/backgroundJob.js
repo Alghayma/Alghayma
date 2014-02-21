@@ -6,6 +6,7 @@ var fs = require('fs');
 var os = require('os');
 var path = require('path');
 var SHA3 = require('sha3');
+var domain = require('domain');
 
 var fbgraph = require('fbgraph');
 var config = require(path.join(process.cwd(), 'config'));
@@ -125,7 +126,7 @@ function navigatePage(pageId, until, since, cb, job, done){
 	        } else {
 	          job.log('Error while getting updates from : ' + pageId + '\n' + JSON.stringify(err));
 	        }
-	        done (JSON.stringify(err));
+	        done (JSON.stringify(err) + " path : " + path + " since : " + since + " until " + until);
 	        process.exit(0);
 	      }
 
@@ -233,8 +234,17 @@ function backupFbPost(postObj, done){
 
     	function getFBImage () {
 			fbgraph.get(photoId, function(err, fbImageRes){
+				if (fbImageRes.error) {
+					if (fbImageRes.error.code == 100) {
+
+						console.log("Unsupported get request " + postMediaPath + " photoId " + photoId);
+						postInDb.picture = pictureLink;
+						saveInDb(postInDb);
+						return;
+					}
+				}
 				if (err){
-					done (err)
+					done (err + " couldn't get photoID " + photoId);
 					process.exit(1);
 				}
 				//Getting the URL where the full size image is stored. OMG, gotta do lots of hops in Facebook before getting what you want... And yes, it's getting late in the night..
@@ -296,6 +306,18 @@ function backupFbPost(postObj, done){
 			var imageName = theoricImageUrlParts[theoricImageUrlParts.length - 1];
 			var fsWriter = fs.createWriteStream(verifyPathLength(path.join(postMediaPath, imageName)));
 			//console.log("Getting from URL " + theoricImageUrl);
+
+			var networkDomain = domain.create();
+
+			networkDomain.add(https);
+			networkDomain.add(http);
+
+			networkDomain.on('error', function(er) {
+				console.log("The networking stack crashed on retreiving a picture from " + theoricImageUrl);
+				postInDb.picture = pictureLink;
+				saveInDb(postInDb);
+			});
+
 			if (theoricImageUrl.indexOf('https://') == 0){
 				https.get(theoricImageUrl, function(imgRes){
 					if (imgRes.statusCode >= 200 && imgRes.statusCode < 400){
@@ -406,7 +428,7 @@ exports.launchFeedBackup = function(job, queue, done){
 						})
 					}, job, done);
         		}else{
-        			job.log("Resuming backup of page : " + feedObj.name + " at date : " + post[0].postDate)
+        			job.log("Resuming backup of page : " + feedObj.name + " at date : " + post[0].postDate + ' for post ' + post[0]);
         			navigatePage(feedObj.id, post[0].postDate, undefined, function(){
 						FBFeed.update({id: feedObj.id}, {lastBackup: Date.now(), didBackupHead: true}).exec(function(err){
 							if (err){
