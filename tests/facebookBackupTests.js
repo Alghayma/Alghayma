@@ -5,7 +5,6 @@ var path = require('path');
 var assert = require('assert');
 var fbBgWorker = require(path.join(__dirname, ".." , 'extensions', 'Facebook', 'backgroundJob'));
 fbBgWorker.setTesting();
-fbBgWorker.mongoConnect();
 var config = require(path.join(__dirname, "..", 'config'));
 // For the test page we use a small page because it's more convenient.
 
@@ -15,7 +14,7 @@ var mongoose = require('mongoose');
 var connectionString = 'mongodb://';
 if (config.dbuser && config.dbpass) connectionString += config.dbuser + ':' + config.dbpass + '@';
 
-connectionString += config.dbhost + ':' + config.dbport + '/' + "alghaymaTests";
+connectionString += config.dbhost + ':' + config.dbport + '/' + "alghayma";
 
 mongoose.createConnection(connectionString, function(err){ 
 	if (err){
@@ -29,7 +28,7 @@ function dropPostTable(callback){
 	mongoose.connection.collections['fbposts'].drop( function(err) {
 		if (err) {throw err};
 		callback();
-	}
+	});
 }
 
 require(path.join(__dirname, "..", "extensions", "Facebook", "models.js")).initializeDBModels(mongoose);

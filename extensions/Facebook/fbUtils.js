@@ -4,6 +4,7 @@ var https = require('https')
 
 exports.refreshToken = function refreshToken(graph, mongoose,callback){
 	var FBUser = mongoose.model('FBUser');
+	console.log("FB users")
 	FBUser.find(function(err, users){
 		if (err){
 			console.log('Error while changing access token:\n' + err);

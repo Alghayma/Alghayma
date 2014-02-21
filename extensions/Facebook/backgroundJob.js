@@ -20,17 +20,16 @@ var http = require('http');
 var https = require('https');
 var mongoose = require('mongoose');
 var FBUser, FBFeed, FBPost;
-exports.mongoConnect = function(){
-	var connectionString = 'mongodb://';
-	if (config.dbuser && config.dbpass) connectionString += config.dbuser + ':' + config.dbpass + '@';
-	connectionString += config.dbhost + ':' + config.dbport + '/';
-	connectionString += (testing)?config.testDBName:config.dbname;
-	mongoose.connect(connectionString, function(err){ if (err) throw err; });
-	require("./models.js").initializeDBModels(mongoose);
-	FBUser = mongoose.model('FBUser');
-	FBFeed = mongoose.model('FBFeed');
-	FBPost = mongoose.model('FBPost');
-}
+var connectionString = 'mongodb://';
+if (config.dbuser && config.dbpass) connectionString += config.dbuser + ':' + config.dbpass + '@';
+connectionString += config.dbhost + ':' + config.dbport + '/';
+connectionString += (testing)?config.testDBName:config.dbname;
+mongoose.connect(connectionString, function(err){ if (err) throw err; });
+require("./models.js").initializeDBModels(mongoose);
+FBUser = mongoose.model('FBUser');
+FBFeed = mongoose.model('FBFeed');
+FBPost = mongoose.model('FBPost');
+
 
 var fbUtil = require('./fbUtils');
 var shouldEnd = false;
