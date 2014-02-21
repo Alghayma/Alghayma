@@ -32,7 +32,7 @@ block content
 										a(href="#{post.storyLink}") Story link
 		div#theEndBanner The Start
 		div#infiniteScrollTrigger
-			span#downIcon &#8595;
+			span#downIcon &#8595; More
 			img#ajaxLoaderGif(src="/images/ajax-loader.gif", style="display: none")
 		script.
 			var feedId = #{feed.id};
@@ -220,11 +220,15 @@ block content
 			};
 			$(infiniteScrollTrigger).mouseenter(triggerHandler);
 			infiniteScrollTrigger.onmouseclick = triggerHandler;
-			window.onscroll = function(){
-				/*var atBottom = document.body.offsetHeight + document.body.scrollTop == document.body.scrollHeight;
-				console.log('At bottom? : ' + atBottom + '. Difference : ' + (document.body.scrollTop + document.body.offsetHeight) + '. clientHeight: ' + document.body.scrollHeight);
-				if (atBottom) triggerHandler();*/
-			};
+
+			var $window = $(window);
+
+			// Triggers the infinite scroll if at the bottom of the page
+			$window.scroll(function(e){
+				if(($window.height() + $window.scrollTop()) === $(document).height()){
+					triggerHandler();
+				}
+			});
 	- else
 		div.message-box
 			h4#header This feed isn't backed up by Alghayma
