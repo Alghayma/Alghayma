@@ -7,6 +7,12 @@ var os = require('os');
 var path = require('path');
 var SHA3 = require('sha3');
 var domain = require('domain');
+var async = require('async');
+var testing = false;
+
+exports.setTesting = function(){
+	testing = true;
+}
 
 var fbgraph = require('fbgraph');
 var config = require(path.join(__dirname, "..", "..", 'config'));
@@ -15,7 +21,8 @@ var https = require('https');
 var mongoose = require('mongoose');
 var connectionString = 'mongodb://';
 if (config.dbuser && config.dbpass) connectionString += config.dbuser + ':' + config.dbpass + '@';
-connectionString += config.dbhost + ':' + config.dbport + '/' + config.dbname;
+connectionString += config.dbhost + ':' + config.dbport + '/';
+connectionString += (testing)?config.testDBName:config.dbname;
 mongoose.connect(connectionString, function(err){ if (err) throw err; });
 require("./models.js").initializeDBModels(mongoose);
 
@@ -93,7 +100,6 @@ function navigatePage(pageId, until, since, cb, job, done){
 			   		}
 			   	});
 			}
-
 			if (count>550){
 				setTimeout(wait, 10000);
 			} else{
@@ -103,6 +109,7 @@ function navigatePage(pageId, until, since, cb, job, done){
   	}
 
 	function fbGet(path, until, since){
+	
 		if (shouldEnd) {
 			process.exit(0)
 		}
@@ -119,40 +126,64 @@ function navigatePage(pageId, until, since, cb, job, done){
 	    fbgraph.get(path, options, function(err, fbRes){
 	      if (err) {
 	        if (err.code == 1 || err.code == 2){ //Internal FB errors
-	          job.log(JSON.stringify(err)); //Waiting for 2 seconds before retrying
+	        	job.log(JSON.stringify(err));
 	        } else if (err.code == 17){
-	          job.log("Hitting the maximum rate limit " + JSON.stringify(err));
-	          console.log("Hitting the maximum rate limit " + JSON.stringify(err));
-	        } else {
+	        	job.log("Hitting the maximum rate limit " + JSON.stringify(err));
+	        	console.log("Hitting the maximum rate limit " + JSON.stringify(err));
+	        } else if (err.code == 100) {
+	        	console.log("Feed "+ path + " couldn't be retreived (100), crashing");
+	        }	else {
 	          job.log('Error while getting updates from : ' + pageId + '\n' + JSON.stringify(err));
 	        }
-	        done (JSON.stringify(err) + " path : " + path + " since : " + since + " until " + until);
+	        done ("Couldn't fetch from graph" + JSON.stringify(err) + " path : " + path + " since : " + since + " until " + until);
 	        process.exit(0);
 	      }
 
 	      if (!fbRes.data){ //If no error and no data was returned, then end of feed (or whatever)
+	      	console.log("The Facebook feed stopped responding with data !")
 	        if (cb) cb();
 	        return;
 	      }
+	      
+	      var tasksToExecute = [];
+
 	      for (var i = 0; i < fbRes.data.length; i++){
 	        //Backup a post if it meets the conditions and go to the next one
+
 	        var postCreationDate = new Date(fbRes.data[i].created_time);
 	        if ((!until || postCreationDate.getTime() < until.getTime()) && (!since || postCreationDate.getTime() > since.getTime())) {
-	          backupFbPost(fbRes.data[i], done);
-	          continue;
-	        }
-	        //If we went beyond the "since" clause, stop paging
-	        if (since && postCreationDate.getTime() < since.getTime()){
-	          if (cb) cb();
-	          return;
+	          	
+	          	var datawwwww = fbRes.data[i];
+
+	        	tasksToExecute.unshift(function (callback){
+	          		console.log("Making new request");
+	          		backupFbPost(datawwwww, callback);
+	          	});
+	          	continue;
+	        } else if (since && postCreationDate.getTime() < since.getTime()){
+	        	console.log("The date of the post is older than what we asked!");
+	        	if (cb) cb();
+	          	return;
+	        } else{
+	        	console.log(">>>>> This case is unhandled: " + fbRes);
 	        }
 	      }
-	      if (fbRes.paging && fbRes.paging.next){
-	        rateLimitedFBGet(fbRes.paging.next, until, since);
-	      } else {
-	        if (cb) cb();
+
+	      async.parallelLimit(tasksToExecute, 8,function (err, results){
+	      	if (err) {
+	      		console.log("Error occured while backup a post : " + err);
+	      		process.exit(1);
+	      	} else {
+		      	if (fbRes.paging && fbRes.paging.next){
+		      		console.log("Let's get the next posts !");
+		        	rateLimitedFBGet(fbRes.paging.next, until, since);
+		      	} else {
+		      		console.log("We are done with this post, skipping to callback");
+		        if (cb) cb();
+		    }
 	      }
 	    });
+	  });
   	}
 
 	rateLimitedFBGet(reqText, until, since);
@@ -163,7 +194,7 @@ function navigatePage(pageId, until, since, cb, job, done){
 /*
 * BEWARE : IT MIGHT LOOK VERY VERY DIRTY. It could be optimized
 */
-function backupFbPost(postObj, done){
+function backupFbPost(postObj, callback){
 	var isFbUrl = require("./Facebook").validator
 	var getFbPath = require("./Facebook").getFBPath
 	function getSearchKey(path, keyName){
@@ -210,7 +241,7 @@ function backupFbPost(postObj, done){
 		    	function wait (){
 					throttle.read(function(err, newCount) {
 						if (err){
-							done(err)
+							callback(err)
 							console.log("An error occured during the fetching of the rate limiting count : " + err);
 						} else{
 							if (newCount>550){
@@ -221,8 +252,7 @@ function backupFbPost(postObj, done){
 							} 
 				   		}
 				   	});
-				}
-			  			
+				}		
 
 				if (count>550){
 					setTimeout(wait, 10000);
@@ -234,18 +264,20 @@ function backupFbPost(postObj, done){
 
     	function getFBImage () {
 			fbgraph.get(photoId, function(err, fbImageRes){
-				if (fbImageRes.error) {
-					if (fbImageRes.error.code == 100) {
-
-						console.log("Missing Media: Unsupported get request: " + photoId);
+				if (err){
+					if (err.code == 100) {
+						//That image couldn't be retreived.
+						console.log("Image "+ photoId + " couldn't be retreived (100), continuing archiving");
 						postInDb.picture = pictureLink;
 						saveInDb(postInDb);
+						callback();
+						return;
+
+					} else {
+						console.log("An unknown error happened while getting photo " + photoId + ". Error " + err);
+						callback();
 						return;
 					}
-				}
-				if (err){
-					done (err + " couldn't get photoID " + photoId);
-					process.exit(1);
 				}
 				//Getting the URL where the full size image is stored. OMG, gotta do lots of hops in Facebook before getting what you want... And yes, it's getting late in the night..
 				var pictureLink = fbImageRes.source;
@@ -263,11 +295,13 @@ function backupFbPost(postObj, done){
 								pictureLink = '/fb/media/' + feedId + "/" + postId;
 								postInDb.picture = pictureLink;
 								saveInDb(postInDb);
+								callback();
 							});
 						} else {
 							//Error while getting the picture. Saving the data we have
 							postInDb.picture = pictureLink;
 							saveInDb(postInDb);
+							callback();
 						}
 					});
 				} else {
@@ -281,11 +315,13 @@ function backupFbPost(postObj, done){
 								pictureLink = '/fb/media/' + feedId + "/" + postId;
 								postInDb.picture = pictureLink;
 								saveInDb(postInDb);
+								callback();
 							});
 						} else {
 							//Error while getting the picture. Saving the data we have
 							postInDb.picture = pictureLink;
 							saveInDb(postInDb);
+							callback();
 						}
 					});
 				}
@@ -313,6 +349,7 @@ function backupFbPost(postObj, done){
  				console.log("We had issues retreiving " + theoricImageUrl);
  				postInDb.picture = pictureLink;
 				saveInDb(postInDb);
+				callback();
 			});
 
 			networkDomain.run(function() {
@@ -328,11 +365,13 @@ function backupFbPost(postObj, done){
 								pictureLink = '/fb/media/' + feedId + "/" + postId;
 								postInDb.picture = pictureLink;
 								saveInDb(postInDb);
+								callback();
 							});
 						} else {
 							//Error while getting the picture. Saving what we have
 							postInDb.picture = pictureLink;
 							saveInDb(postInDb);
+							callback();
 						}
 					});
 				} else {
@@ -346,11 +385,13 @@ function backupFbPost(postObj, done){
 								pictureLink = '/fb/media/' + feedId + "/" + postId;
 								postInDb.picture = pictureLink;
 								saveInDb(postInDb);
+								callback();
 							});
 						} else {
 							//Error while getting the picture. Saving what we have
 							postInDb.picture = pictureLink;
 							saveInDb(postInDb);
+							callback();
 						}
 					});
 				}
@@ -361,8 +402,12 @@ function backupFbPost(postObj, done){
 
 function scheduleNextOne(job, queue, done){
 	job.log("Scheduling next backup of " + job.data.feed.name + " in " + config.postsBackupInterval + " milliseconds." )
-	queue.create('facebookJob', {title: "Backup of " + job.data.feed.name, feed: job.data.feed}).delay(config.postsBackupInterval).save()
-	done();
+	if (testing) {
+		console.log("In principle a job should be rescheduled here. ");
+	} else{
+		queue.create('facebookJob', {title: "Backup of " + job.data.feed.name, feed: job.data.feed}).delay(config.postsBackupInterval).save()
+		done();
+	}
 }
 
 exports.scheduleAllFeeds = function(queue){
@@ -464,35 +509,4 @@ function verifyPathLength(path){
 		return path;
 	}
 }
-
-/*
-	Commented out for now because not used
-
-function backupAllFeeds(){
-	refreshToken(function(){
-		FBFeed.find(function(err, feeds){
-			if (err){
-				console.log('Can\'t update feeds metadata:\n' + err);
-				return;
-			}
-			if (!(feeds && feeds.length > 0)) return;
-			//Magical queuing. Hopefully it works and doesn't ever reach the maxCallStack
-			var feedsIndex = 0;
-			var backupAFeed = function(callback){
-				exports.launchFeedBackup(feeds[feedsIndex], callback);
-			};
-			var feedBackupCallback = function(){
-				feedsIndex++;
-				if (feedsIndex < feeds.length) backupAFeed(feedBackupCallback);
-			};
-			backupAFeed(feedBackupCallback);
-		});
-	});
-}
-
-*/
-
-
-
-
 

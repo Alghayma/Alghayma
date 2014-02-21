@@ -1,9 +1,9 @@
 
 
 // IMPORTANT - FOR TESTS TO BE ABLE TO RUN MAKE SURE YOU HAVE A VALID fbuser with a token in your test database.
-
 var path = require('path');
 var fbBgWorker = require(path.join(__dirname, ".." , 'extensions', 'Facebook', 'backgroundJob'));
+fbBgWorker.setTesting();
 var config = require(path.join(__dirname, "..", 'config'));
 // For the test page we use a small page because it's more convenient.
 
@@ -20,21 +20,28 @@ mongoose.createConnection(connectionString, function(err){
 		throw err; 
 	}
 	else{
-		initializations();
-		feed = {}
+
+		mongoose.connection.collections['fbposts'].drop( function(err) {
+    		initializeFetchAll();
+			feed = {};
+		});
 	}
 });
+
+require(path.join(__dirname, "..", "extensions", "Facebook", "models.js")).initializeDBModels(mongoose);
+
+var FBUser = mongoose.model('FBUser');
+var FBFeed = mongoose.model('FBFeed');
+var FBPost = mongoose.model('FBPost');
 
 var feed;
 var job = {};
 job.log = console.log;  // We want to log the queuing functions as well
-var done = function (err){
-	console.log("Done: " + err);
-}
-var queue = {};
-queue.create = console.log;
 
-function initializations(){
+var queue = {};
+
+
+function initializeFetchAll(){
 	
 	feed = {                                                                                                                                                                                                        
         "__v" : 0,
@@ -56,10 +63,25 @@ function initializations(){
 }
 
 function fetchAll (){
-	fbBgWorker.launchFeedBackup(job, queue, done);
+	fbBgWorker.launchFeedBackup(job, queue, assertAll);
+}
+
+function assertAll (err){
+	if (err) {
+		console.log("We failed to backup all posts. Failed with error: " +  err);
+	} else {
+		console.log("Task completed without error messages");
+		FBPost.count({feedId:feed.id}).exec(function (err, count){
+			console.log("We backed up a total of " + count + " posts.");
+		});
+	}
 }
 
 function fetchTail (){
+
+}
+
+function verifyHeadFlagSet(){
 
 }
 
@@ -71,5 +93,5 @@ function startTests(){
 
 	console.log("Testing initial Facebook backup");
 
-	fetchAll()
+	fetchAll();
 }
