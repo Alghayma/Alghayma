@@ -391,7 +391,7 @@ exports.launchFeedBackup = function(job, queue, done){
 	if (feedObj.didBackupHead) {
 		// Just proceed to an update to fetch newest post since the most recent one.
 		job.log('Updating Facebook page : ' + feedObj.name);
-
+		
 		// Navigate page from undefined to the last backup we had
 		navigatePage(feedObj.id, undefined, feedObj.lastBackup, function(){
 			FBFeed.update({id: feedObj.id}, {lastBackup: Date.now()}).exec(function(err){
