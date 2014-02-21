@@ -29,7 +29,7 @@ exports.validator = function isFbUrl(path, andCDN){
 	var apiRoute = path.split("?")[0];
 	// non-escaped Facebook regex ^(https|http)://(www\.|m\.)?facebook\.com/(pages/)?((([0-9a-zA-Z]|%|-|\.|\p{L})*)(/)?$|(([0-9a-zA-Z]|%|-|\.|\p{L})*)/[0-9]*(/)?$)
 	// non-escaped Facebook and CDN regex (^(https|http)://[0-9a-z-A-Z._-]*\.akamaihd\.net/.*$|^(https|http)://(www\.|m\.)?facebook\.com/(pages/)?((([0-9a-zA-Z]|%|-|\.||\p{L})*)(/)?$|(([0-9a-zA-Z]|%|-|\.|\p{L})*)/[0-9]*(/)?$))
-	
+
 	var matches = andCDN?XRegExp.exec(apiRoute,  XRegExp("(^(https|http):\/\/[0-9a-z-A-Z._-]*\.akamaihd\.net\/.*$|^(https|http):\/\/(www\.|m\.)?facebook\.com\/(pages\/)?((([0-9a-zA-Z]|%|-|\.||\p{L})*)(\/)?$|(([0-9a-zA-Z]|%|-|\.|\p{L})*)\/[0-9]*(\/)?$))")):XRegExp.exec(apiRoute,  XRegExp('^(https|http):\/\/(www\.|m\.)?facebook\.com\/(pages\/)?((([0-9a-zA-Z]|%|-|\.|\p{L})*)(\/)?$|(([0-9a-zA-Z]|%|-|\.|\p{L})*)\/[0-9]*(\/)?$)'));
 
 	if (matches) {
@@ -52,7 +52,7 @@ exports.getFBPath = function getFbPath(path, removeEdges){
 exports.permalink = function getPermalink(postId){
 	if (typeof postId != 'string') return '#';
 	var postIdParts = postId.split('_');
-	return 'https://facebook.com/' + postIdParts[0] + '/posts/' + postIdParts[1]; 
+	return 'https://facebook.com/' + postIdParts[0] + '/posts/' + postIdParts[1];
 }
 
 exports.setupRoutes = function(express, ext){
@@ -90,7 +90,7 @@ exports.search = function(req, res){
 		var results = [];
 
 		function insertSort(result, results){
-			
+
 		}
 
 		for (var i = 0; i < feeds.length; i++){
@@ -153,7 +153,7 @@ exports.viewpage = function(req, res){
 						postCopy.permalink = permalink(postCopy.postId);
 						postsCopy.push(postCopy);
 					}
-					var description = "We " + ((feed.didBackupHead) ? " sucesfully completed a full backup of " + feed.name + ". The last backup was performed {[lastBackupDate]}." : " do not have yet a full backup of " + feed.name +". Here is what we have so far")
+					var description = "We have " + ((feed.didBackupHead) ? " successfully completed a full backup of " + feed.name + ". The last backup was performed {[lastBackupDate]}." : " do not have yet a full backup of " + feed.name +". Here is what we have so far");
 					// Improvement: add the date of the next scheduled backup.
 					res.render('feed', {title: feed.name + ' - Alghayma', feed: feed, posts: postsCopy, feedDescription:description});
 				} else {
@@ -323,7 +323,7 @@ exports.addFeed = function(feedUrl, callback){
 				});
 				console.log("A new feed was added : " + res.name);
 				newFeed.save();
-				
+
 				// Start Queuing this feed
 				jobs.create('facebookJob', {title: "Backup of " + newFeed.name, feed: newFeed}).save();
 			}

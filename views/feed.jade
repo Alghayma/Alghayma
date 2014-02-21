@@ -6,8 +6,8 @@ block content
 			img(src="/images/alghayma-logo.png", width="400")
 	br
 	- if (posts && feed)
-		h4#feedDescription(style='text-align: center') #{feedDescription}
-		div#postList.container
+		h4#feedDescription #{feedDescription}
+		div#postList.timeline-container
 			ol.timeline.clearfix
 				- each post in posts
 					li.post
@@ -129,7 +129,7 @@ block content
 							var newPostElement = document.createElement('li');
 							newPostElement.className = 'post'
 							//Pointer (little arrow) directing to the "timeline"
-							var pointer = document.createElement('i'); 
+							var pointer = document.createElement('i');
 							pointer.className = 'pointer';
 							newPostElement.appendChild(pointer);
 							//Unit
@@ -226,10 +226,10 @@ block content
 				if (atBottom) triggerHandler();*/
 			};
 	- else
-		div(style='text-align: center')
+		div.message-box
 			h4#header This feed isn't backed up by Alghayma
 			br
-			button#backItUp.btn.btn-primary Back it up !
+			button.button-blue#backItUp Back it up !
 			br
 			br
 			div#messagePanel

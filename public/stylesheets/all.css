@@ -2,14 +2,9 @@
 
 body{
     background:#E7EBF2;
-    font-size:12px; 
+    font-size:12px;
     line-height:1.4;
     font-family:'lucida grande',tahoma,verdana,arial,sans-serif;
-}
-
-.container{
-    width:901px;
-    margin:20px auto;
 }
 
 a, a:visited{
