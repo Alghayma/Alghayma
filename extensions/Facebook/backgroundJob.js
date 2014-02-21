@@ -19,16 +19,19 @@ var config = require(path.join(__dirname, "..", "..", 'config'));
 var http = require('http');
 var https = require('https');
 var mongoose = require('mongoose');
-var connectionString = 'mongodb://';
-if (config.dbuser && config.dbpass) connectionString += config.dbuser + ':' + config.dbpass + '@';
-connectionString += config.dbhost + ':' + config.dbport + '/';
-connectionString += (testing)?config.testDBName:config.dbname;
-mongoose.connect(connectionString, function(err){ if (err) throw err; });
-require("./models.js").initializeDBModels(mongoose);
+var FBUser, FBFeed, FBPost;
+exports.mongoConnect = function(){
+	var connectionString = 'mongodb://';
+	if (config.dbuser && config.dbpass) connectionString += config.dbuser + ':' + config.dbpass + '@';
+	connectionString += config.dbhost + ':' + config.dbport + '/';
+	connectionString += (testing)?config.testDBName:config.dbname;
+	mongoose.connect(connectionString, function(err){ if (err) throw err; });
+	require("./models.js").initializeDBModels(mongoose);
+	FBUser = mongoose.model('FBUser');
+	FBFeed = mongoose.model('FBFeed');
+	FBPost = mongoose.model('FBPost');
+}
 
-var FBUser = mongoose.model('FBUser');
-var FBFeed = mongoose.model('FBFeed');
-var FBPost = mongoose.model('FBPost');
 var fbUtil = require('./fbUtils');
 var shouldEnd = false;
 
@@ -139,35 +142,14 @@ function navigatePage(pageId, until, since, cb, job, done){
 		        process.exit(0);
 	      	}
 
-	      if (!fbRes.data){ //If no error and no data was returned, then end of feed (or whatever)
-	      	console.log("The Facebook feed stopped responding with data !")
-	        if (cb) cb();
-	        return;
-	      }
-	      
+	     	 if (!fbRes.data){ //If no error and no data was returned, then end of feed (or whatever)
+	      		console.log("The Facebook feed stopped responding with data !")
+	        	if (cb) cb();
+	        		return;
+	      	}
+
 	      	var tasksToExecute = [];
-
-	      	function deepObjCopy (dupeObj) {
-				var retObj = new Object();
-				if (typeof(dupeObj) == 'object') {
-					if (typeof(dupeObj.length) != 'undefined')
-						var retObj = new Array();
-					for (var objInd in dupeObj) {	
-						if (typeof(dupeObj[objInd]) == 'object') {
-							retObj[objInd] = deepObjCopy(dupeObj[objInd]);
-						} else if (typeof(dupeObj[objInd]) == 'string') {
-							retObj[objInd] = dupeObj[objInd];
-						} else if (typeof(dupeObj[objInd]) == 'number') {
-							retObj[objInd] = dupeObj[objInd];
-						} else if (typeof(dupeObj[objInd]) == 'boolean') {
-							((dupeObj[objInd] == true) ? retObj[objInd] = true : retObj[objInd] = false);
-						}
-					}
-				}
-				return retObj;
-			}
-
-	      for (var i = 0; i < fbRes.data.length; i++){
+	     	 for (var i = 0; i < fbRes.data.length; i++){
 	        //Backup a post if it meets the conditions and go to the next one
 
 	        var postCreationDate = new Date(fbRes.data[i].created_time);
@@ -176,7 +158,7 @@ function navigatePage(pageId, until, since, cb, job, done){
 	          	var postData = fbRes.data[i];
 	          	function closure (apostData){
 	          		tasksToExecute.unshift(function (callback){
-	          			backupFbPost(apostData, callback);
+	          			backupFbPost(apostData, callback, job);
 	          		})
 	          	};
 	          	closure(postData);
@@ -189,7 +171,7 @@ function navigatePage(pageId, until, since, cb, job, done){
 	        	console.log(">>>>> This case is unhandled: " + fbRes);
 	        }
 	      }
-
+	      	// debug -> //async.series(tasksToExecute, function (err, results){
 	      	async.parallelLimit(tasksToExecute, 8, function (err, results){
 	      		if (err) {
 	      			console.log("Error occured while backup a post : " + err);
@@ -215,7 +197,7 @@ function navigatePage(pageId, until, since, cb, job, done){
 /*
 * BEWARE : IT MIGHT LOOK VERY VERY DIRTY. It could be optimized
 */
-function backupFbPost(postObj, callback){
+function backupFbPost(postObj, callback, job){
 	var isFbUrl = require("./Facebook").validator
 	var getFbPath = require("./Facebook").getFBPath
 	function getSearchKey(path, keyName){
@@ -418,8 +400,8 @@ function backupFbPost(postObj, callback){
 				}
 			});
 		} else {
-			console.log("The following kinds of posts are not supported");
-			console.log(postObj);
+			job.log("The following kinds of posts are not supported");
+			job.log(postObj);
 			callback();
 		}
 	}
@@ -429,6 +411,7 @@ function scheduleNextOne(job, queue, done){
 	job.log("Scheduling next backup of " + job.data.feed.name + " in " + config.postsBackupInterval + " milliseconds." )
 	if (testing) {
 		console.log("In principle a job should be rescheduled here. ");
+		done();
 	} else{
 		queue.create('facebookJob', {title: "Backup of " + job.data.feed.name, feed: job.data.feed}).delay(config.postsBackupInterval).save()
 		done();
@@ -472,7 +455,7 @@ exports.launchFeedBackup = function(job, queue, done){
 
 				job.log('Succesfully completed the update of the Facebook page : ' + feedObj.name);
 
-				scheduleNextOne(job, queue, done)
+				scheduleNextOne(job, queue, done, callback)
 			})
 		}, job, done);
 
