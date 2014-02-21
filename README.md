@@ -24,6 +24,12 @@ We are currently working on allowing users to download a full local copy of thei
 
 Alghayma is *free and open-source* software. You can find us on GitHub to report bugs or help us improve the system. You might even get some Alghayma *swag* :)
 
+## Contributors
+
+We would like to thank:
+
+- [Arnaud Benard](https://twitter.com/arnaudbenard) ([`arnaudbenard`](https://github.com/arnaudbenard/)) for substantial contributions improving your Alghayma experience.
+
 ## Contact
 
 Want to reach out to us? Shoot us a [Tweet](https://www.twitter.com/@Alghayma) or an email at `contact@alghayma.com`.
