@@ -428,7 +428,7 @@ exports.launchFeedBackup = function(job, queue, done){
 						})
 					}, job, done);
         		}else{
-        			job.log("Resuming backup of page : " + feedObj.name + " at date : " + post.postDate)
+        			job.log("Resuming backup of page : " + feedObj.name + " at date : " + post.postDate + " for post " + post );
         			navigatePage(feedObj.id, post.postDate, undefined, function(){
 						FBFeed.update({id: feedObj.id}, {lastBackup: Date.now(), didBackupHead: true}).exec(function(err){
 							if (err){
