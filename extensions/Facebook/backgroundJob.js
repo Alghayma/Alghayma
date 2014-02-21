@@ -389,10 +389,10 @@ exports.launchFeedBackup = function(job, queue, done){
 
 	} else {
 		// Find last post that was added and continue from there.
-		FBPost.find().where({feedId:feedObj.id}).sort({postDate: 'asc'}).limit(1).exec(function(err, post){
+		FBPost.find({feedId:feedObj.id}).sort({postDate: 'asc'}).limit(1).exec(function(err, post){
         		if (err) {
         			job.log('Issue fetching post from DB : ' + err);
-        		} else if (!post) {
+        		} else if (!(post && post.length > 0)) {
         			job.log("Page " + feedObj.name + " has no post yet. Let's start backing up");
         			navigatePage(feedObj.id, undefined, undefined, function(){
 						FBFeed.update({id: feedObj.id}, {lastBackup: Date.now(), didBackupHead: true}).exec(function(err){
@@ -406,8 +406,8 @@ exports.launchFeedBackup = function(job, queue, done){
 						})
 					}, job, done);
         		}else{
-        			job.log("Resuming backup of page : " + feedObj.name + " at date : " + post.postDate)
-        			navigatePage(feedObj.id, post.postDate, undefined, function(){
+        			job.log("Resuming backup of page : " + feedObj.name + " at date : " + post[0].postDate)
+        			navigatePage(feedObj.id, post[0].postDate, undefined, function(){
 						FBFeed.update({id: feedObj.id}, {lastBackup: Date.now(), didBackupHead: true}).exec(function(err){
 							if (err){
 								job.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
