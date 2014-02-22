@@ -148,29 +148,30 @@ function navigatePage(pageId, until, since, cb, job, done){
 	      	}
 
 	      	var tasksToExecute = [];
-	     	 for (var i = 0; i < fbRes.data.length; i++){
+	     	for (var i = 0; i < fbRes.data.length; i++){
 	        //Backup a post if it meets the conditions and go to the next one
 
 	        var postCreationDate = new Date(fbRes.data[i].created_time);
-	        if ((!until || postCreationDate.getTime() < until.getTime()) && (!since || postCreationDate.getTime() > since.getTime())) {
-	          	
-	          	var postData = fbRes.data[i];
-	          	function closure (apostData){
-	          		tasksToExecute.unshift(function (callback){
-	          			backupFbPost(apostData, callback, job);
-	          		})
-	          	};
-	          	closure(postData);
+		        if ((!until || postCreationDate.getTime() < until.getTime()) && (!since || postCreationDate.getTime() > since.getTime())) {
+		          	
+		          	var postData = fbRes.data[i];
+		          	function closure (apostData){
+		          		tasksToExecute.unshift(function (callback){
+		          			backupFbPost(apostData, callback, job);
+		          		})
+		          	};
+		          	closure(postData);
 
-	        } else if (since && postCreationDate.getTime() < since.getTime()){
-	        	console.log("The date of the post is older than what we asked!");
-	        	if (cb) cb();
-	          	return;
-	        } else{
-	        	console.log(">>>>> This case is unhandled: " + fbRes);
-	        }
-	      }
-	      	// debug -> //async.series(tasksToExecute, function (err, results){
+		        } else if (since && postCreationDate.getTime() < since.getTime()){
+		        	console.log("The date of the post is older than what we asked!");
+		        	if (cb) cb();
+		          	return;
+		        } else{
+		        	console.log(">>>>> This case is unhandled: ")
+		        	console.log(fbRes);
+		        }
+	      	}
+	      	//async.series(tasksToExecute, function (err, results){
 	      	async.parallelLimit(tasksToExecute, 8, function (err, results){
 	      		if (err) {
 	      			console.log("Error occured while backup a post : " + err);
@@ -179,6 +180,9 @@ function navigatePage(pageId, until, since, cb, job, done){
 		      		if (fbRes.paging && fbRes.paging.next){
 		      			job.log("Finished processing batch, requesting next one.")
 		        		rateLimitedFBGet(fbRes.paging.next, until, since);
+		        		console.log(fbRes);
+		 				console.log(until);
+		 				console.log(since);
 		      		} else {
 		      			console.log("We are done with this post, skipping to callback");
 		        		if (cb) cb();
@@ -197,6 +201,7 @@ function navigatePage(pageId, until, since, cb, job, done){
 * BEWARE : IT MIGHT LOOK VERY VERY DIRTY. It could be optimized
 */
 function backupFbPost(postObj, callback, job){
+	console.log(postObj);
 	var isFbUrl = require("./Facebook").validator
 	var getFbPath = require("./Facebook").getFBPath
 	function getSearchKey(path, keyName){
@@ -245,6 +250,7 @@ function backupFbPost(postObj, callback, job){
 						if (err){
 							callback(err)
 							console.log("An error occured during the fetching of the rate limiting count : " + err);
+							return;
 						} else{
 							if (newCount>550){
 								//if(Math.random()*10 > 7){console.log("Hitting Facebook's rate limit, slowing down" + newCount)}; // We want some of them to be logged but not too much otherwise it's spamming the logs.
@@ -270,7 +276,7 @@ function backupFbPost(postObj, callback, job){
 					if (err.code == 100) {
 						//That image couldn't be retreived.
 						console.log("Image "+ photoId + " couldn't be retreived (100), continuing archiving");
-						postInDb.picture = pictureLink;
+						//postInDb.picture = pictureLink;
 						saveInDb(postInDb);
 						callback();
 						return;
@@ -298,12 +304,14 @@ function backupFbPost(postObj, callback, job){
 								postInDb.picture = pictureLink;
 								saveInDb(postInDb);
 								callback();
+								return;
 							});
 						} else {
 							//Error while getting the picture. Saving the data we have
-							postInDb.picture = pictureLink;
+							//postInDb.picture = pictureLink;
 							saveInDb(postInDb);
 							callback();
+							return;
 						}
 					});
 				} else {
@@ -318,12 +326,14 @@ function backupFbPost(postObj, callback, job){
 								postInDb.picture = pictureLink;
 								saveInDb(postInDb);
 								callback();
+								return;
 							});
 						} else {
 							//Error while getting the picture. Saving the data we have
-							postInDb.picture = pictureLink;
+							//postInDb.picture = pictureLink;
 							saveInDb(postInDb);
 							callback();
+							return;
 						}
 					});
 				}
@@ -343,15 +353,17 @@ function backupFbPost(postObj, callback, job){
 			var theoricImageUrlParts = theoricImageUrl.split('/');
 			var imageName = theoricImageUrlParts[theoricImageUrlParts.length - 1];
 			var fsWriter = fs.createWriteStream(verifyPathLength(path.join(postMediaPath, imageName)));
-			//console.log("Getting from URL " + theoricImageUrl);
+			console.log("Getting from URL " + theoricImageUrl);
 
 			var networkDomain = domain.create();
 
 			networkDomain.on('error', function(er) {
  				console.log("We had issues retreiving " + theoricImageUrl);
- 				postInDb.picture = pictureLink;
+ 				//postInDb.picture = pictureLink;
 				saveInDb(postInDb);
+				networkDomain.dispose();
 				callback();
+				return;
 			});
 
 			networkDomain.run(function() {
@@ -368,12 +380,14 @@ function backupFbPost(postObj, callback, job){
 								postInDb.picture = pictureLink;
 								saveInDb(postInDb);
 								callback();
+								return;
 							});
 						} else {
 							//Error while getting the picture. Saving what we have
-							postInDb.picture = pictureLink;
+							//postInDb.picture = pictureLink;
 							saveInDb(postInDb);
 							callback();
+							return;
 						}
 					});
 				} else {
@@ -388,20 +402,22 @@ function backupFbPost(postObj, callback, job){
 								postInDb.picture = pictureLink;
 								saveInDb(postInDb);
 								callback();
+								return;
 							});
 						} else {
 							//Error while getting the picture. Saving what we have
-							postInDb.picture = pictureLink;
+							//postInDb.picture = pictureLink;
 							saveInDb(postInDb);
 							callback();
+							return;
 						}
 					});
 				}
 			});
 		} else {
-			job.log("The following kinds of posts are not supported");
-			job.log(postObj);
+			saveInDb(postInDb);
 			callback();
+			return;
 		}
 	}
 }
@@ -449,7 +465,7 @@ exports.launchFeedBackup = function(job, queue, done){
 			FBFeed.update({id: feedObj.id}, {lastBackup: Date.now()}).exec(function(err){
 				if (err){
 					job.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
-					return;
+					process.exit(1);
 				}
 
 				job.log('Succesfully completed the update of the Facebook page : ' + feedObj.name);
@@ -463,6 +479,7 @@ exports.launchFeedBackup = function(job, queue, done){
 		FBPost.find({feedId:feedObj.id}).sort({postDate: 'asc'}).limit(1).exec(function(err, post){
         		if (err) {
         			job.log('Issue fetching post from DB : ' + err);
+        			process.exit(1);
         		} else if (!(post && post.length > 0)) {
         			job.log("Page " + feedObj.name + " has no post yet. Let's start backing up");
         			navigatePage(feedObj.id, undefined, undefined, function(){
