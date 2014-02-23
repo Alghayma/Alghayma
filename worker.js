@@ -57,6 +57,7 @@ if (cluster.isMaster) {
   jobs.complete(clearJobs);
 
   for (var i = 0; i < numCPUs; i++) {
+    console.log("Forking a new worker");
     cluster.fork();
   }
 
@@ -81,7 +82,6 @@ if (cluster.isMaster) {
     }
   });
 
-
   process.once( 'SIGINT', function ( sig ) {
     console.log("SIGINT Received");
     jobs.shutdown(function(err) {
@@ -91,29 +91,18 @@ if (cluster.isMaster) {
 
   jobs.promote();
 
-} else {
-    fbBgWorker.setToken(function(){
-      console.log("Worker is spawned, token set and ready to process your requests sir");
-      jobs.process('facebookJob', function(job, done){
-        process.once( 'SIGINT', function ( sig ) {
-          domain.dispose();
-          fbBgWorker.setKiller();
-          jobs.shutdown();
-        });
-        
-        console.log("New Job starting : Backupping " + job.data.feedname);
+} else if(cluster.isWorker){
+  process.once( 'SIGINT', function ( sig ) {
+    domain.dispose();
+    fbBgWorker.setKiller();
+  });
+  
+  fbBgWorker.setToken(function(){
 
-        var domain = require('domain').create();
+    jobs.process('facebookJob', function(job, done){
+    console.log("New Job starting : Backupping " + job.data.feedname);
+    fbBgWorker.launchFeedBackup(job, jobs, done);
 
-        domain.on('error', function(er) {
-        // If the backup crashes, log the error and return failed.
-          console.log("The Facebook page " + job.data.feedname + " couldn't be backed up. Because " + er);
-          done(er);
-        });
-
-        domain.run(function() {
-          fbBgWorker.launchFeedBackup(job, jobs, done);
-        });
-      });
     });
+  });
 }
