@@ -455,7 +455,10 @@ exports.launchFeedBackup = function(job, queue, done){
         // Just proceed to an update to fetch newest post since the most recent one.
         FBPost.find({feedId:feedID}).sort({postDate:'desc'}).limit(1).exec(function(err, posts) {
           if (err) {throw err};
-          if (!posts[0]){job.log("There is no post for that feed in the database!"); process.exit(1);}
+          if (!posts[0]){
+            console.log("There is no post for that feed in the database!"); 
+            process.exit(1);
+          }
           if (!posts[0].postDate) {
             console.log("Head is backed but no posts");
             process.exit(1);
@@ -466,10 +469,10 @@ exports.launchFeedBackup = function(job, queue, done){
           navigatePage(feedObj.id, posts[0].postDate, undefined, function(){
             FBFeed.update({id: feedObj.id}, {lastBackup: Date.now()}).exec(function(err){
               if (err){
-                job.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
+                console.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
                 process.exit(1);
               }
-              job.log('Succesfully completed the update of the Facebook page : ' + feedObj.name);
+              console.log('Succesfully completed the update of the Facebook page : ' + feedObj.name);
 
               scheduleNextOne(job, queue, done);
             })

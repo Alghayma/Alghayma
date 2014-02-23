@@ -92,15 +92,15 @@ if (cluster.isMaster) {
   jobs.promote();
 
 } else if(cluster.isWorker){
+
   process.once( 'SIGINT', function ( sig ) {
-    domain.dispose();
     fbBgWorker.setKiller();
   });
   
   fbBgWorker.setToken(function(){
     jobs.process('facebookJob', function(job, done){
-    console.log("New Job starting : Backupping " + job.data.feedname);
-    fbBgWorker.launchFeedBackup(job, jobs, done);
+      console.log("New Job starting : Backupping " + job.data.feedname);
+      fbBgWorker.launchFeedBackup(job, jobs, done);
     });
   });
 }
