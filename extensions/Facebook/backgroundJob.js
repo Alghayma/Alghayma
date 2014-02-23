@@ -54,7 +54,7 @@ function refreshToken (callback) {
       span: 600 * 1000, // 600 seconds
       accuracy: 1000    // margin of error = span / accuracy
     });
-    callback();
+    if (callback) {callback();};
   });
 }
 
@@ -485,7 +485,7 @@ function scheduleNextOne(job, queue, done){
     console.log("In principle a job should be rescheduled here. ");
     done();
   } else{
-    queue.create('facebookJob', {title: "Backup of " + job.data.feedname, feed: job.data.feedID}).delay(config.postsBackupInterval).save()
+    queue.create('facebookJob', {title: "Backup of " + job.data.feedname, feedID: job.data.feedID, feedname: job.data.feedname}).delay(config.postsBackupInterval).save()
     done();
   }
 }
