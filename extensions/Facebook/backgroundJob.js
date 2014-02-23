@@ -244,7 +244,9 @@ function backupFbPost(postObj, callback, job){
     if (typeof obj != 'object') throw new TypeError('obj must be an object');
     var newPost = new FBPost(obj);
     newPost.save(function(err){
-      console.log("We had an issue saving " + err);
+      if (err) {
+        console.log("We had an issue saving " + err);
+      }
       //console.log("There was an issue saving the object, maybe a duplicate");
     });
   }
