@@ -56,8 +56,8 @@ function refreshToken (callback) {
       span: 600 * 1000, // 600 seconds
       accuracy: 1000    // margin of error = span / accuracy
     });
-    if (callback)
-      {callback();
+    if (callback){
+      callback();
     };
   });
 }
@@ -98,14 +98,13 @@ function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
           if (err){
             done(err)
             console.log("An error occured during the fetching of the rate limiting count : " + err);
+            process.exit(0);
           } else{
             if (newCount>550){
               if(Math.random()*10 > 7){job.log("Hitting Facebook's rate limit, slowing down" + newCount)}; // We want some of them to be logged but not too much otherwise it's spamming the logs.
-
               setTimeout(wait, 10000);
             } else{
               if(Math.random()*10 > 7){job.log("Processing next request" + newCount)};
-
               fbGet(path, until, since);
             }
           }
@@ -121,6 +120,7 @@ function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
 
   function fbGet(path, until, since){
     if (shouldEnd) {
+      console.log("Goodbye, committing suicide");
       process.exit(0);
     }
     var options = {};
@@ -144,7 +144,7 @@ function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
         }	else {
           job.log('Error while getting updates from : ' + pageId + '\n' + JSON.stringify(err));
         }
-        done ("Couldn't fetch from graph" + JSON.stringify(err) + " path : " + path + " since : " + since + " until " + until);
+        done("Couldn't fetch from graph" + JSON.stringify(err) + " path : " + path + " since : " + since + " until " + until);
         process.exit(0);
       }
 
@@ -156,7 +156,7 @@ function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
 
       if (trollCall){
         trollCall = false;
-        rateLimitedFBGet(fbRes.paging.previous, undefined, undefined);
+        rateLimitedFBGet(fbRes.paging.previous);
         return;
       }
 
@@ -171,13 +171,12 @@ function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
           function closure (apostData){
             tasksToExecute.unshift(function (callback){
               backupFbPost(apostData, callback, job);
-            })
+            });
           };
           closure(postData);
 
         } else if ((Since && postCreationDate.getTime() < Since.getTime()) || (Until && postCreationDate.getTime() > Until.getTime()) ){
           console.log("The date of the post is older than what we asked!");
-
           process.exit(1);
         } else if ((Until && (postCreationDate.getTime() == Until.getTime()))||(Since && (postCreationDate.getTime() == Since.getTime()))){
           job.log("We requested the last post we had too");
@@ -187,10 +186,8 @@ function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
             job.log(fbRes.data[i]);
           }
       }
-
-
       //async.series(tasksToExecute, function (err){
-      async.parallelLimit(tasksToExecute,13, function (err, results){
+      async.parallelLimit(tasksToExecute,7, function (err, results){
         if (err) {
           console.log("Error occured while backup a post : " + err);
           process.exit(1);
@@ -198,22 +195,25 @@ function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
           if (fbRes.paging && fbRes.paging.next && fbRes.paging.previous){
             if (!Until && !Since) {
               job.log("Finished processing batch, requesting next one.");
-              rateLimitedFBGet(fbRes.paging.next, undefined, undefined);
+              rateLimitedFBGet(fbRes.paging.next);
               return;
             } else if (Until){
               if (didMakeUselessCall) {
-                rateLimitedFBGet(fbRes.paging.previous, undefined, undefined);
+                rateLimitedFBGet(fbRes.paging.previous);
                 return;
               }
               job.log("Finished processing batch (Until checked), requesting next one.");
-              rateLimitedFBGet(fbRes.paging.next, undefined, undefined);
+              rateLimitedFBGet(fbRes.paging.next);
+              return;
             } else {
               console.log("Shouldn't happen");
               process.exit(1);
             }
           } else {
             job.log("We are done with this page, skipping to callback");
-            if (cb) cb();
+            if (cb){
+              cb();
+            }
           }
         }
       });
@@ -225,9 +225,7 @@ function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
 }
 
 //Saving a single fb post on the server
-/*
-* BEWARE : IT MIGHT LOOK VERY VERY DIRTY. It could be optimized
-*/
+
 function backupFbPost(postObj, callback, job){
   var isFbUrl = require("./Facebook").validator
   var getFbPath = require("./Facebook").getFBPath
@@ -235,6 +233,7 @@ function backupFbPost(postObj, callback, job){
     var search = path.substring(path.indexOf('?'));
     return decodeURI(search.replace(new RegExp("^(?:.*[&\\?]" + encodeURI(keyName).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
   }
+
   if (typeof postObj !== 'object') throw new TypeError('postObj must be an object');
 
   function saveInDb(obj){
@@ -311,6 +310,7 @@ function backupFbPost(postObj, callback, job){
 
           } else {
             console.log("An unknown error happened while getting photo " + photoId + ". Error " + err);
+            saveInDb(postInDb);
             callback();
             return;
           }
@@ -320,69 +320,10 @@ function backupFbPost(postObj, callback, job){
         var pictureName = pictureLink.split('/'); //Assuming that the url finishes with the image's file name
         pictureName = pictureName[pictureName.length - 1];
         var fsWriter = fs.createWriteStream(verifyPathLength(path.join(postMediaPath, pictureName))); //Creating after the picture name, in the posts media folder
-        if (pictureLink.indexOf('https://') == 0){ //Checking whether the image path is https or not.
-          https.get(pictureLink, function(imgRes){
-            if (imgRes.statusCode >= 200 && imgRes.statusCode < 400) { //image found, then save it
-              imgRes.on('data', function(data){
-                fsWriter.write(data);
-              });
-              imgRes.on('end', function(){
-                fsWriter.end();
-                pictureLink = '/fb/media/' + feedId + "/" + postId;
-                postInDb.picture = pictureLink;
-                saveInDb(postInDb);
-                callback();
-                return;
-              });
-            } else {
-              //Error while getting the picture. Saving the data we have
-              //postInDb.picture = pictureLink;
-              saveInDb(postInDb);
-              callback();
-              return;
-            }
-          }).on('error', function(e) {
-            console.log("Got error: " + e.message);
-            saveInDb(postInDb);
-            callback();
-            return;
-          }).setTimeout( 10000, function( ) {
-            saveInDb(postInDb);
-            callback();
-            return;
-          });
-        } else {
-          http.get(pictureLink, function(imgRes){
-            if (imgRes.statusCode >= 200 && imgRes.statusCode < 400){
-              imgRes.on('data', function(data){
-                fsWriter.write(data);
-              });
-              imgRes.on('end', function(){
-                fsWriter.end();
-                pictureLink = '/fb/media/' + feedId + "/" + postId;
-                postInDb.picture = pictureLink;
-                saveInDb(postInDb);
-                callback();
-                return;
-              });
-            } else {
-              //Error while getting the picture. Saving the data we have
-              //postInDb.picture = pictureLink;
-              saveInDb(postInDb);
-              callback();
-              return;
-            }
-          }).on('error', function(e) {
-            console.log("Got error: " + e.message);
-            saveInDb(postInDb);
-            callback();
-            return;
-          }).setTimeout( 10000, function( ) {
-            saveInDb(postInDb);
-            callback();
-            return;
-          });
-        }
+        
+        requestGetter (pictureLink, postInDb, saveInDb, fsWriter, callback);
+        
+        return;
       });
     }
 
@@ -401,85 +342,71 @@ function backupFbPost(postObj, callback, job){
       var fsWriter = fs.createWriteStream(verifyPathLength(path.join(postMediaPath, imageName)));
       //console.log("Getting from URL " + theoricImageUrl);
 
-      if (theoricImageUrl.indexOf('https://') == 0){
-        https.get(theoricImageUrl, function(imgRes){
-          if (imgRes.statusCode >= 200 && imgRes.statusCode < 400){
-            imgRes.on('data', function(data){
-              fsWriter.write(data);
-            });
-            imgRes.on('end', function(){
-              fsWriter.end();
-              pictureLink = '/fb/media/' + feedId + "/" + postId;
-              postInDb.picture = pictureLink;
-              saveInDb(postInDb);
-              callback();
-              return;
-            });
-          } else {
-            //Error while getting the picture. Saving what we have
-            //postInDb.picture = pictureLink;
-            saveInDb(postInDb);
-            callback();
-            return;
-          }
-        }).on('error', function(e) {
-          console.log("Got error: " + e.message);
-          saveInDb(postInDb);
-          callback();
-          return;
-        }).setTimeout( 10000, function( ) {
-          job.log("Get timed out")
-          saveInDb(postInDb);
-          callback();
-          return;
-        });
-      } else if (theoricImageUrl.indexOf('http://') == 0) {
-        http.get(theoricImageUrl, function(imgRes){
-          if (imgRes.statusCode >= 200 && imgRes.statusCode < 400){
-            imgRes.on('data', function(data){
-              fsWriter.write(data);
-            });
-            imgRes.on('end', function(){
-              fsWriter.end();
-              pictureLink = '/fb/media/' + feedId + "/" + postId;
-              postInDb.picture = pictureLink;
-              saveInDb(postInDb);
-              callback();
-              return;
-            });
-          } else {
-            //Error while getting the picture. Saving what we have
-            //postInDb.picture = pictureLink;
-            saveInDb(postInDb);
-            callback();
-            return;
-          }
-        }).on('error', function(e) {
-          console.log("Got error: " + e.message);
-          saveInDb(postInDb);
-          callback();
-          return;
-        }).setTimeout( 10000, function( ) {
-          job.log("Get timed out")
-          saveInDb(postInDb);
-          callback();
-          return;
-        });
-      } else {
-        console.log("How the hell am I supposed to treat : "+ theoricImageUrl + " ?");
+      requestGetter (theoricImageUrl, postInDb, saveInDb, fsWriter, callback);
+    
+    } else {
+      saveInDb(postInDb);
+      callback()
+      return;
+    }
+  } else {
+      saveInDb(postInDb);
+      callback()
+      return;
+  }
+}
+
+function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
+
+  var requestProcessing = function(imgRes){
+    if (imgRes.statusCode >= 200 && imgRes.statusCode < 400) { //image found, then save it
+      imgRes.on('data', function(data){
+        fsWriter.write(data);
+      });
+      
+      imgRes.on('end', function(){
+        fsWriter.end();
+        postInDb.picture = '/fb/media/' + postInDb.feedId + "/" + postInDb.postId;
+        saveInDb(postInDb);
         callback();
         return;
-      }
+      });
     } else {
+      reqClient.abort();
+      fsWriter.end();
       saveInDb(postInDb);
       callback();
       return;
     }
-  } else {
-    saveInDb(postInDb);
-    callback()
-    return;
+  };
+  
+  var reqClient;
+  
+  if (url.indexOf('https://') == 0){
+    reqClient = https.get(url, requestProcessing);
+  } else if (url.indexOf('http://') == 0){
+    reqClient = http.get(url, requestProcessing);
+  } else{
+    console.log("How should we process " + url);
+    process.exit(1);
   }
+
+  reqClient.on('error', function(e) {
+    console.log("Got error: " + e.message);
+    fsWriter.end();
+    saveInDb(postInDb);
+    callback();
+    return;
+  });
+
+  reqClient.setTimeout( 10000, function() {
+    console.log("time out");
+    saveInDb(postInDb);
+    fsWriter.end();
+    reqClient.abort();
+    callback();
+    return;
+  });
 }
 
 function scheduleNextOne(job, queue, done){
@@ -504,8 +431,6 @@ exports.scheduleAllFeeds = function(queue){
     };
   });
 }
-
-
 
 //Launching a feed backup process
 exports.launchFeedBackup = function(job, queue, done){
