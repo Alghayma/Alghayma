@@ -40,7 +40,7 @@ if (cluster.isMaster) {
               if (err) {
                 console.log("An error occured while removing a failed job : "+ err);
               } else{
-                jobs.create('facebookJob', {title: "Backup of " + failedJob.data.feed.name, feed: failedJob.data.feed}).priority('high').save();
+                jobs.create('facebookJob', {title: "Backup of " + failedJob.data.feedname, feedname: failedJob.data.feedname, feedID: failedJob.data.feedID}).priority('high').save();
               }
             });
           }
@@ -92,21 +92,22 @@ if (cluster.isMaster) {
   jobs.promote();
 
 } else {
-    
     fbBgWorker.setToken(function(){
       console.log("Worker is spawned, token set and ready to process your requests sir");
       jobs.process('facebookJob', function(job, done){
         process.once( 'SIGINT', function ( sig ) {
+          domain.dispose();
           fbBgWorker.setKiller();
           jobs.shutdown();
         });
-        console.log("New Job starting : Backupping " + job.data.feed.name);
+        
+        console.log("New Job starting : Backupping " + job.data.feedname);
 
         var domain = require('domain').create();
 
         domain.on('error', function(er) {
         // If the backup crashes, log the error and return failed.
-          console.log("The Facebook page " + job.data.feed.name + " couldn't be backed up. Because " + er);
+          console.log("The Facebook page " + job.data.feedname + " couldn't be backed up. Because " + er);
           done(er);
         });
 
@@ -115,5 +116,4 @@ if (cluster.isMaster) {
         });
       });
     });
-
 }

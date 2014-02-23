@@ -3,9 +3,11 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node app.js"
+    "start": "node app.js",
+	"test": "node tests/facebookBackupTests.js" 
   },
   "dependencies": {
+    "test": ">=0.0.5",
     "express": "3.4.8",
     "jade": "*",
     "stylus": "*",

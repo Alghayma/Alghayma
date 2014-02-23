@@ -4,7 +4,6 @@ var https = require('https')
 
 exports.refreshToken = function refreshToken(graph, mongoose,callback){
 	var FBUser = mongoose.model('FBUser');
-	console.log("FB users")
 	FBUser.find(function(err, users){
 		if (err){
 			console.log('Error while changing access token:\n' + err);
@@ -33,7 +32,9 @@ exports.refreshToken = function refreshToken(graph, mongoose,callback){
 			    		if (chunk.data.is_valid) {
 			    			graph.setAccessToken(selectedUser.accessToken);
 			    			if (callback && typeof callback == 'function') {
-			    				callback();
+			    				callback(selectedUser.accessToken);
+			    			} else{
+			    				console.log("No callback set!")
 			    			}
 			    			return;
 			    		}
