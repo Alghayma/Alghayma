@@ -132,7 +132,7 @@ function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
       if (!(since instanceof Date)) since = new Date(since);
       options.since = Math.floor(since.getTime() / 1000) - 1 ;
     }
-
+    
     fbgraph.get(path, options, function(err, fbRes){
       if (err) {
         if (err.code == 1 || err.code == 2){ //Internal FB errors
@@ -144,7 +144,7 @@ function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
         }	else {
           job.log('Error while getting updates from : ' + pageId + '\n' + JSON.stringify(err));
         }
-        done("Couldn't fetch from graph" + JSON.stringify(err) + " path : " + path + " since : " + since + " until " + until);
+        done("Couldn't fetch from graph" + JSON.stringify(err) + " path : " + path + " since : " + since + " until: " + until);
         process.exit(0);
       }
 
@@ -240,7 +240,8 @@ function backupFbPost(postObj, callback, job){
     if (typeof obj != 'object') throw new TypeError('obj must be an object');
     var newPost = new FBPost(obj);
     newPost.save(function(err){
-      console.log("There was an issue saving the object, maybe a duplicate");
+      console.log("We had an issue saving " + err);
+      //console.log("There was an issue saving the object, maybe a duplicate");
     });
   }
 
