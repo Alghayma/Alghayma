@@ -498,7 +498,7 @@ exports.scheduleAllFeeds = function(queue){
       return;
     }
     for (var i = feeds.length - 1; i >= 0; i--) {
-      queue.create('facebookJob', {title: "Backup of " + feeds[i].name, feedname: feeds[i].name, feedID:feed[i].id}).save()
+      queue.create('facebookJob', {title: "Backup of " + feeds[i].name, feedname: feeds[i].name, feedID:feeds[i].id}).save()
     };
   });
 }
