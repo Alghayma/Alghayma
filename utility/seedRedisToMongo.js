@@ -29,7 +29,10 @@ var seedJob = function(err, ids){
         if (err) {console.log("Couldn't get completed job because : " + err)}
        	console.log(aJob)
         fbgraph.get(aJob.data.feedID + '?fields=id,name,link,picture', function(err, res){
-       		var newFeed = new FBFeed({
+        	if (err) { 
+        		throw err;
+        	}else {
+       			var newFeed = new FBFeed({
 					id: res.id,
 					name: res.name,
 					type: 'fbpage',
@@ -37,7 +40,7 @@ var seedJob = function(err, ids){
 					profileImage: res.picture.data.url,
 					didBackupHead: false
 				});
-			newFeed.save();
+				newFeed.save();
         });
       });
    });
