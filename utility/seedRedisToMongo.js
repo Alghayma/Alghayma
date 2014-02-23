@@ -41,6 +41,7 @@ var seedJob = function(err, ids){
 					didBackupHead: false
 				});
 				newFeed.save();
+			}
         });
       });
    });
