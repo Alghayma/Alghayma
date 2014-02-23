@@ -92,15 +92,15 @@ if (cluster.isMaster) {
   jobs.promote();
 
 } else {
-    
     fbBgWorker.setToken(function(){
       console.log("Worker is spawned, token set and ready to process your requests sir");
       jobs.process('facebookJob', function(job, done){
         process.once( 'SIGINT', function ( sig ) {
+          domain.dispose();
           fbBgWorker.setKiller();
           jobs.shutdown();
-          domain.dispose();
         });
+        
         console.log("New Job starting : Backupping " + job.data.feedname);
 
         var domain = require('domain').create();

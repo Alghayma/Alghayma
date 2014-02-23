@@ -425,7 +425,7 @@ function backupFbPost(postObj, callback, job){
           callback();
           return;
         }).setTimeout( 10000, function( ) {
-          console.log("Get timed out")
+          job.log("Get timed out")
           saveInDb(postInDb);
           callback();
           return;
@@ -457,7 +457,7 @@ function backupFbPost(postObj, callback, job){
           callback();
           return;
         }).setTimeout( 10000, function( ) {
-          console.log("Get timed out")
+          job.log("Get timed out")
           saveInDb(postInDb);
           callback();
           return;
@@ -520,10 +520,9 @@ exports.launchFeedBackup = function(job, queue, done){
 
       if (feedObj.didBackupHead) {
         // Just proceed to an update to fetch newest post since the most recent one.
-
         FBPost.find({feedId:feedID}).sort({postDate:'desc'}).limit(1).exec(function(err, posts) {
           if (err) {throw err};
-
+          if (!posts[0]){job.log("There is no post for that feed in the database!"); process.exit(1);}
           if (!posts[0].postDate) {
             console.log("Head is backed but no posts");
             process.exit(1);

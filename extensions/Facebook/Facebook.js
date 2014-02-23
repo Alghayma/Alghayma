@@ -307,7 +307,7 @@ exports.addFeed = function(feedUrl, callback){
 			return;
 		}
 		//Check that the feed doesn't exist yet
-		FBFeed.find({id: res.id}, function(err, feed){
+		FBFeed.findOne({id: res.id}, function(err, feed){
 			if (err){
 				console.log('Error when checking whether ' + res.name + ' is already being backed up or not');
 				return;
