@@ -54,6 +54,7 @@ function refreshToken (callback) {
       span: 600 * 1000, // 600 seconds
       accuracy: 1000    // margin of error = span / accuracy
     });
+    callback();
   });
 }
 
