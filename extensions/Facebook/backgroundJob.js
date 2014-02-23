@@ -92,7 +92,10 @@ function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
 
   function rateLimitedFBGet(path, until, since){
     throttle.increment(1, function(err, count) {
-      if (err) {console.log("We had an error with rate limiting : " + err); process.exit(1)};
+      if (err) {
+        console.log("We had an error with rate limiting : " + err); 
+        process.exit(1)
+      };
       function wait (){
         throttle.read(function(err, newCount) {
           if (err){
@@ -144,8 +147,9 @@ function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
         }	else {
           job.log('Error while getting updates from : ' + pageId + '\n' + JSON.stringify(err));
         }
+        console.log("The Facebook graph API is not playing nice. Let's wait and reschedule that request");
         done("Couldn't fetch from graph" + JSON.stringify(err) + " path : " + path + " since : " + since + " until: " + until);
-        process.exit(0);
+        return;
       }
 
       if (!fbRes.data){ //If no error and no data was returned, then end of feed (or whatever)
