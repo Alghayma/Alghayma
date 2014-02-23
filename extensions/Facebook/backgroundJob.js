@@ -41,19 +41,20 @@ Throttle.configure({
   host: '127.0.0.1'
 });
 
-var incrementKey = "fbAPI";
-
-var throttle = new Throttle(incrementKey, {
-  span: 600 * 1000, // 600 seconds
-  accuracy: 1000       // margin of error = span / accuracy
-});
+var throttle;
 
 //Creating the media folder, if it doesn't exist
 var mediaPath = path.join(process.cwd(), config.mediafolder);
 if (!fs.existsSync(config.mediafolder)) fs.mkdirSync(mediaPath);
 
 function refreshToken (callback) {
-  fbUtil.refreshToken(fbgraph, mongoose, callback);
+  fbUtil.refreshToken(fbgraph, mongoose, function(token){
+    var incrementKey = "fbAPI" + token;
+    throttle = new Throttle(incrementKey, {
+      span: 600 * 1000, // 600 seconds
+      accuracy: 1000    // margin of error = span / accuracy
+    });
+  });
 }
 
 exports.setToken = function (callback) {
@@ -384,9 +385,6 @@ function backupFbPost(postObj, callback, job){
     rateLimitedFBGetImage();
 
   } else if (postObj.picture){
-    saveInDb(postObj);
-    callback();
-    return;
     var pictureLink = postObj.picture;
     if (isFbUrl(pictureLink, true) && pictureLink.indexOf('safe_image.php') > 0 && getSearchKey(pictureLink, 'url')){
       //Creating a media folder for the post

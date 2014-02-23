@@ -32,7 +32,9 @@ exports.refreshToken = function refreshToken(graph, mongoose,callback){
 			    		if (chunk.data.is_valid) {
 			    			graph.setAccessToken(selectedUser.accessToken);
 			    			if (callback && typeof callback == 'function') {
-			    				callback();
+			    				callback(selectedUser.accessToken);
+			    			} else{
+			    				console.log("No callback set!")
 			    			}
 			    			return;
 			    		}
