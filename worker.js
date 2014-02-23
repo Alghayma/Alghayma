@@ -40,7 +40,7 @@ if (cluster.isMaster) {
               if (err) {
                 console.log("An error occured while removing a failed job : "+ err);
               } else{
-                jobs.create('facebookJob', {title: "Backup of " + failedJob.data.feedname, feedID: failedJob.data.feedID}).priority('high').save();
+                jobs.create('facebookJob', {title: "Backup of " + failedJob.data.feedname, feedname: failedJob.data.feedname, feedID: failedJob.data.feedID}).priority('high').save();
               }
             });
           }

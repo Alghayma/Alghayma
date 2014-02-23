@@ -30,9 +30,11 @@ FBUser = mongoose.model('FBUser');
 FBFeed = mongoose.model('FBFeed');
 FBPost = mongoose.model('FBPost');
 
-
 var fbUtil = require('./fbUtils');
-var shouldEnd = false;
+var shouldEnd = false; // variable used to stop the worker at the desired moment
+exports.setKiller = function(){
+  shouldEnd = true;
+}
 
 var Throttle = require('redis-throttle');
 
@@ -54,7 +56,9 @@ function refreshToken (callback) {
       span: 600 * 1000, // 600 seconds
       accuracy: 1000    // margin of error = span / accuracy
     });
-    if (callback) {callback();};
+    if (callback)
+      {callback();
+    };
   });
 }
 
@@ -85,7 +89,6 @@ function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
   if (cb && typeof cb != 'function') throw new TypeError('When defined, "cb" must be a function');
   var reqText = pageId + '/posts';
   var didMakeUselessCall = trollCall?true:false;
-  console.log("Navigating Page!");
 
   function rateLimitedFBGet(path, until, since){
     throttle.increment(1, function(err, count) {
@@ -502,9 +505,7 @@ exports.scheduleAllFeeds = function(queue){
   });
 }
 
-exports.setKiller = function(){
-  shouldEnd = true;
-}
+
 
 //Launching a feed backup process
 exports.launchFeedBackup = function(job, queue, done){

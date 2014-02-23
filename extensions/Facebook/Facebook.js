@@ -312,7 +312,7 @@ exports.addFeed = function(feedUrl, callback){
 				console.log('Error when checking whether ' + res.name + ' is already being backed up or not');
 				return;
 			}
-			if (!feed.id){
+			if (!feed){
 				var newFeed = new FBFeed({
 					id: res.id,
 					name: res.name,
