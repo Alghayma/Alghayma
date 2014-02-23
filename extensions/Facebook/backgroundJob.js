@@ -96,11 +96,11 @@ function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
           } else{
             if (newCount>550){
               if(Math.random()*10 > 7){job.log("Hitting Facebook's rate limit, slowing down" + newCount)}; // We want some of them to be logged but not too much otherwise it's spamming the logs.
-              
+
               setTimeout(wait, 10000);
             } else{
               if(Math.random()*10 > 7){job.log("Processing next request" + newCount)};
-              
+
               fbGet(path, until, since);
             }
           }
@@ -265,7 +265,7 @@ function backupFbPost(postObj, callback, job){
     //Getting the photoID from the story link. Then getting that photoID in the Graph API
     var photoId = getSearchKey(storyLink, 'fbid');
 
-    function rateLimitedFBGetImage(){ 
+    function rateLimitedFBGetImage(){
       throttle.increment(1, function(err, count) {
         if (err) {console.log("We had an error with rate limiting : " + err); process.exit(1)};
         function wait (){
@@ -498,7 +498,7 @@ exports.scheduleAllFeeds = function(queue){
       return;
     }
     for (var i = feeds.length - 1; i >= 0; i--) {
-      queue.create('facebookJob', {title: "Backup of " + feeds[i].name, feed: feeds[i]}).save()
+      queue.create('facebookJob', {title: "Backup of " + feeds[i].name, feedname: feeds[i].name, feedID:feed[i].id}).save()
     };
   });
 }
