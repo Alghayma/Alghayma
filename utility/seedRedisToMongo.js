@@ -23,11 +23,9 @@ fbUtil.refreshToken(fbgraph, mongoose, function(){
 });
 
 var seedJob = function(err, ids){
-    console.log(ids)
     ids.forEach(function(id){
       kue.Job.get(id, function(err, aJob){
         if (err) {console.log("Couldn't get completed job because : " + err)}
-       	console.log(aJob)
         fbgraph.get(aJob.data.feedID + '?fields=id,name,link,picture', function(err, res){
         	if (err) { 
         		throw err;
