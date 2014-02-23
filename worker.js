@@ -98,11 +98,9 @@ if (cluster.isMaster) {
   });
   
   fbBgWorker.setToken(function(){
-
     jobs.process('facebookJob', function(job, done){
     console.log("New Job starting : Backupping " + job.data.feedname);
     fbBgWorker.launchFeedBackup(job, jobs, done);
-
     });
   });
 }
