@@ -40,7 +40,7 @@ if (cluster.isMaster) {
               if (err) {
                 console.log("An error occured while removing a failed job : "+ err);
               } else{
-                jobs.create('facebookJob', {title: "Backup of " + failedJob.data.feedname, feedname: failedJob.data.feedname, feedID: failedJob.data.feedID}).priority('high').save();
+                jobs.create('facebookJob', {title: "Backup of " + failedJob.data.feed.name, feed: failedJob.data.feed}).priority('high').save();
               }
             });
           }
@@ -57,7 +57,6 @@ if (cluster.isMaster) {
   jobs.complete(clearJobs);
 
   for (var i = 0; i < numCPUs; i++) {
-    console.log("Forking a new worker");
     cluster.fork();
   }
 
@@ -82,6 +81,7 @@ if (cluster.isMaster) {
     }
   });
 
+
   process.once( 'SIGINT', function ( sig ) {
     console.log("SIGINT Received");
     jobs.shutdown(function(err) {
@@ -91,16 +91,29 @@ if (cluster.isMaster) {
 
   jobs.promote();
 
-} else if(cluster.isWorker){
+} else {
+    
+    fbBgWorker.setToken(function(){
+      console.log("Worker is spawned, token set and ready to process your requests sir");
+      jobs.process('facebookJob', function(job, done){
+        process.once( 'SIGINT', function ( sig ) {
+          fbBgWorker.setKiller();
+          jobs.shutdown();
+        });
+        console.log("New Job starting : Backupping " + job.data.feed.name);
 
-  process.once( 'SIGINT', function ( sig ) {
-    fbBgWorker.setKiller();
-  });
-  
-  fbBgWorker.setToken(function(){
-    jobs.process('facebookJob', function(job, done){
-      console.log("New Job starting : Backupping " + job.data.feedname);
-      fbBgWorker.launchFeedBackup(job, jobs, done);
+        var domain = require('domain').create();
+
+        domain.on('error', function(er) {
+        // If the backup crashes, log the error and return failed.
+          console.log("The Facebook page " + job.data.feed.name + " couldn't be backed up. Because " + er);
+          done(er);
+        });
+
+        domain.run(function() {
+          fbBgWorker.launchFeedBackup(job, jobs, done);
+        });
+      });
     });
-  });
+
 }
