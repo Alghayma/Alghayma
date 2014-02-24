@@ -40,7 +40,7 @@ if (cluster.isMaster) {
               if (err) {
                 console.log("An error occured while removing a failed job : "+ err);
               } else{
-                jobs.create('facebookJob', {title: "Backup of " + failedJob.data.feed.name, feed: failedJob.data.feed}).priority('high').save();
+                jobs.create('facebookJob', {title: "Backup of " + failedJob.data.feedname, feed: failedJob.data.feedID}).priority('high').save();
               }
             });
           }
@@ -106,7 +106,7 @@ if (cluster.isMaster) {
 
         domain.on('error', function(er) {
         // If the backup crashes, log the error and return failed.
-          console.log("The Facebook page " + job.data.feed.name + " couldn't be backed up. Because " + er);
+          console.log("The Facebook page " + job.data.feedname + " couldn't be backed up. Because " + er);
           done(er);
         });
 
