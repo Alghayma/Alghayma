@@ -395,8 +395,8 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
   }
 
   var options = { 
-    url: url;
-    timeout: 15000;
+    url: url,
+    timeout: 15000
   }
 
   function callback(error, response, body) {
