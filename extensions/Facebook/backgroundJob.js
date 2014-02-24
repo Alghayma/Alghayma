@@ -241,7 +241,7 @@ function backupFbPost(postObj, callback, job){
       callback();
       didSendCallback = true
     } else {
-      job.log("We are having duplicates callbacks :/");
+      console.log("We are having duplicates callbacks :/");
     }
   }
 

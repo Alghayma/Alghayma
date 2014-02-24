@@ -31,12 +31,13 @@ exports.refreshToken = function refreshToken(graph, mongoose,callback){
 			    	if (chunk.data) {
 			    		if (chunk.data.is_valid) {
 			    			graph.setAccessToken(selectedUser.accessToken);
+			    			
 			    			if (callback && typeof callback == 'function') {
 			    				callback(selectedUser.accessToken);
-			    			} else{
-			    				console.log("No callback set!")
 			    			}
+			    			
 			    			return;
+			    		
 			    		}
 			    		else{
 			    			console.log("The token we tried to use has been revoked. Deleting from database")
