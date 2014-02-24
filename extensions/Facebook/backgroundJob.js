@@ -400,7 +400,12 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
   }
 
   function callback(error, response, body) {
-    if (!error && response.statusCode >= 200 && response.statusCode < 300) {
+    if (!response) {
+      fsWriter.end();
+      saveInDb(postInDb);
+      sendCallback();
+      return; 
+    } else if (!error && response.statusCode >= 200 && response.statusCode < 300) {
         fsWriter.write(body);
         postInDb.picture = '/fb/media/' + postInDb.feedId + "/" + postInDb.postId;
     }
