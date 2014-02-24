@@ -81,6 +81,11 @@ footer {
 /*
 * Specific to the feed page
 */
+.feed {
+  background-color: #eee;
+  padding-top: 40px;
+  border-top: 1px solid #dadada;
+}
 .feed-container {
   width: 901px;
   margin: 0 auto;
@@ -88,7 +93,7 @@ footer {
 }
 .feed-more {
   clear: both;
-  border: 3px solid #c0c0c0;
+  border: 1px solid #dadada;
   border-radius: 10px;
   background: #f1f1f1;
   left: 20%;
@@ -129,8 +134,8 @@ footer {
 }
 #feedDescription {
   padding: 10px 0px;
-  border: 3px solid #646464;
-  width: 901px;
+  border: 1px solid #dadada;
+  width: 881px;
   margin: 0 auto;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
@@ -139,6 +144,7 @@ footer {
   text-align: center;
   color: #646464;
   background: #fff;
+  font-weight: 400;
 }
 #theEndBanner {
   font-size: 32px;
@@ -194,6 +200,10 @@ footer {
 .post-container .post-title h4 {
   display: inline-block;
 }
+.post-container .post-title span {
+  color: #a0a0a0;
+  font-weight: 200;
+}
 .post-container .post-picture {
   margin-top: 20px;
   width: 400px;
@@ -203,8 +213,13 @@ footer {
 }
 .post-container .post-link {
   padding-top: 10px;
-  font-size: 16px;
+  font-size: 14px;
   text-align: center;
+  font-family: 'Helvetica';
+  border-top: 1px solid #c4cde0;
+}
+.post-container .post-link a {
+  color: #3b5998;
 }
 .message-box {
   max-width: 500px;
@@ -216,6 +231,20 @@ footer {
   -moz-border-radius: 8px;
   border-radius: 8px;
   font-size: 16px;
+}
+.message-success {
+  padding: 10px;
+  border-radius: 5px;
+  background: #87db87;
+  margin-bottom: 30px;
+  color: #008000;
+}
+.message-error {
+  padding: 10px;
+  border-radius: 5px;
+  background: #f17373;
+  margin-bottom: 30px;
+  color: #9b3b3b;
 }
 /*
 * Specific to the search result page

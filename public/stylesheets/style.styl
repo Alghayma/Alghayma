@@ -78,6 +78,12 @@ footer
 /*
 * Specific to the feed page
 */
+
+.feed
+	background-color: rgb(238,238,238)
+	padding-top: 40px
+	border-top: 1px solid rgb(218,218,218)
+
 .feed-container
 	width: 901px
 	margin: 0 auto
@@ -85,7 +91,7 @@ footer
 
 .feed-more
 	clear: both
-	border: 3px solid silver
+	border: 1px solid rgb(218,218,218)
 	border-radius: 10px
 	background: #f1f1f1
 	left: 20%
@@ -126,8 +132,8 @@ footer
 
 #feedDescription
 	padding: 10px 0px
-	border: 3px solid #646464
-	width: 901px
+	border: 1px solid rgb(218,218,218)
+	width: 881px
 	margin: 0 auto
 	-webkit-border-radius: 5px
 	-moz-border-radius: 5px
@@ -136,6 +142,7 @@ footer
 	text-align: center
 	color: #646464
 	background: white
+	font-weight: 400
 
 #theEndBanner
 	font-size: 32px
@@ -189,6 +196,9 @@ footer
 
 		img, h4
 			display: inline-block
+		span
+			color: rgb(160, 160, 160)
+			font-weight: 200
 
 	.post-picture
 		margin-top: 20px;
@@ -198,9 +208,12 @@ footer
 
 	.post-link
 		padding-top: 10px
-		font-size: 16px;
+		font-size: 14px;
 		text-align: center;
-
+		font-family: 'Helvetica'
+		border-top: 1px solid #c4cde0
+		a
+			color: #3B5998
 
 .message-box
 	max-width: 500px
@@ -212,6 +225,20 @@ footer
 	-moz-border-radius: 8px
 	border-radius: 8px
 	font-size: 16px
+
+.message-success
+	padding: 10px
+	border-radius: 5px
+	background: rgb(135, 219, 135)
+	margin-bottom: 30px
+	color: green
+
+.message-error
+	padding: 10px
+	border-radius: 5px
+	background: #F17373
+	margin-bottom: 30px
+	color: #9B3B3B
 
 /*
 * Specific to the search result page

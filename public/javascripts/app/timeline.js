@@ -42,6 +42,37 @@ angular.module('timeline',[])
 
 }])
 
+.controller('MessageCtrl', ['$scope', 'BackupService', '$window', '$timeout', function($scope, BackupService, $window, $timeout){
+
+	var getSearchKey = function(keyName){
+		return decodeURI($window.location.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURI(keyName).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
+	};
+
+	var redirectAfterRequest = function(){
+		$timeout(function(){
+			for (var i = 5; i >= 0; i--) {
+				$scope.message = 'Redirecting to Alghayma homepage in ' +
+				(i).toString() +
+				' seconds. If it doesn\'t, click <a href="/">here</a>.';
+			}
+			if(i === 0) {$window.history.back();}
+		}, 1000);
+	};
+
+	$scope.backUpRequest = function(){
+
+		BackupService.post(getSearchKey('sourceUrl')).
+		success(function(){
+			$scope.response = { "type": "success", "message": "Your request was saved in Alghayma and will be backed up soon"};
+		}).
+		error(function(data, status){
+			$scope.response = { "type": "error", "message": "Sorry, an error occured"};
+		});
+
+		redirectAfterRequest();
+	};
+}])
+
 .directive('infinityScroll', ['$rootScope', function($rootScope){
 
 	return {
@@ -133,6 +164,24 @@ angular.module('timeline',[])
 
 	};
 
+}])
+
+.service('BackupService', ['$http', function($http){
+
+	return{
+		post: function(sourceUrl){
+			return $http({
+				method: 'POST',
+				url: '/fb/backup/',
+				header:{
+					'enctype': 'application/x-www-form-urlencoded'
+				},
+				data:{
+					'sourceUrl': sourceUrl
+				}
+			});
+		}
+	};
 }])
 
 .service('PostService', ['$http', function($http){
