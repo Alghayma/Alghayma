@@ -390,6 +390,7 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
   }
 
   if (url.indexOf('fbstaging://' == 0)){
+    fsWriter.end();
     console.log("FBStaging link. Facepalm");
     sendCallback();
     return;
