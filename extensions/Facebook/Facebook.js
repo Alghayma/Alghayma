@@ -334,10 +334,9 @@ exports.addFeed = function(feedUrl, callback){
 				console.log("A new feed was added : " + res.name);
 				newFeed.save();
 
-				// Start Queuing this feed
-				console.log(newFeed.id);
 				jobs.create('facebookJob', {title: "Backup of " + newFeed.name, feedID: newFeed.id, feedname:newFeed.name}).save();
 				if (callback) callback(true, res.name);
+				
 			} else {
 				if (callback) callback(false, res.name);
 			}
