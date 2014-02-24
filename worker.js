@@ -10,7 +10,7 @@ var net = require('net');
 var remakeJobQueue = false;
 
 if (cluster.isMaster) {
-  
+
   var clearJobs = function(err, ids){
     ids.forEach(function(id){
       kue.Job.get(id, function(err, aJob){
@@ -40,7 +40,7 @@ if (cluster.isMaster) {
               if (err) {
                 console.log("An error occured while removing a failed job : "+ err);
               } else{
-                jobs.create('facebookJob', {title: "Backup of " + failedJob.data.feedname, feed: failedJob.data.feedID}).priority('high').save();
+                jobs.create('facebookJob', {title: "Backup of " + failedJob.data.feedname, feedID: failedJob.data.feedID}).priority('high').save();
               }
             });
           }
@@ -52,7 +52,7 @@ if (cluster.isMaster) {
     jobs.failed(reschedule);
   }
 
-  // Clean completed job queue 
+  // Clean completed job queue
 
   jobs.complete(clearJobs);
 
@@ -92,7 +92,7 @@ if (cluster.isMaster) {
   jobs.promote();
 
 } else {
-    
+
     fbBgWorker.setToken(function(){
       console.log("Worker is spawned, token set and ready to process your requests sir");
       jobs.process('facebookJob', function(job, done){

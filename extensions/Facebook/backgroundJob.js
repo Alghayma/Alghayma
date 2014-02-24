@@ -371,6 +371,7 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
 
   var requestProcessing = function(imgRes){
     if (imgRes.statusCode >= 200 && imgRes.statusCode < 300) { //image found, then save it
+      
       imgRes.on('data', function(data){
         fsWriter.write(data);
       });
@@ -435,9 +436,9 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
 
   reqClient.setTimeout( 10000, function() {
     console.log("time out : " + url);
+    reqClient.abort();
     saveInDb(postInDb);
     fsWriter.end();
-    reqClient.abort();
     callback();
     return;
   });
