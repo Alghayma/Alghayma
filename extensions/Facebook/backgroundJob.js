@@ -365,21 +365,46 @@ function backupFbPost(postObj, callback, job){
   }
 }
 
+var redirectsCounters = {};
+
 function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
 
   var requestProcessing = function(imgRes){
-    if (imgRes.statusCode >= 200 && imgRes.statusCode < 400) { //image found, then save it
+    if (imgRes.statusCode >= 200 && imgRes.statusCode < 300) { //image found, then save it
       imgRes.on('data', function(data){
         fsWriter.write(data);
       });
       
       imgRes.on('end', function(){
+      	redirectsCounters[postInDb.postId] = undefined;
         fsWriter.end();
         postInDb.picture = '/fb/media/' + postInDb.feedId + "/" + postInDb.postId;
         saveInDb(postInDb);
         callback();
         return;
       });
+    } else if (imgRes.statusCode >= 300 && imgRes.statusCode < 400) {
+    	//Getting next url
+    	var nextUrl = imgRes.headers.location;
+    	//If it doesn't find it, save the post with the original image path
+    	if (!nextUrl){
+    		reqClient.abort();
+    		fsWriter.end();
+    		saveInDb(postInDb);
+    		callback();
+    		return;
+    	}
+    	//Update the redirects counters for the post
+    	if (redirectsCounters[postInDb.postId]) redirectsCounters[nextUrl]++;
+    	else redirectsCounters[postInDb.postId] = 1;
+    	//If more than 5 redirects have been done for this post, save the initial post data
+    	if (redirectsCounters[postInDb.postId] > 5){
+    		console.log('More than 5 redirects for post ' + postInDb.postId + '. Saving post with initial image url');
+    		reqClient.abort();
+    		fsWriter.end();
+    		saveInDb(postInDb);
+    		callback();
+    	} else requestGetter(nextUrl, postInDb, saveInDb, fsWriter, callback); //Otherwise, try the new url
     } else {
       reqClient.abort();
       fsWriter.end();
@@ -409,7 +434,7 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
   });
 
   reqClient.setTimeout( 10000, function() {
-    console.log("time out");
+    console.log("time out : " + url);
     saveInDb(postInDb);
     fsWriter.end();
     reqClient.abort();

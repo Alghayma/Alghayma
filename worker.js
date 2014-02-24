@@ -7,7 +7,7 @@ var path = require('path');
 var config = require(path.join(__dirname, "config"));
 var fbBgWorker = require(path.join(process.cwd(), 'extensions', 'Facebook', 'backgroundJob'));
 var net = require('net');
-var remakeJobQueue = false;
+var remakeJobQueue = true;
 
 if (cluster.isMaster) {
   
@@ -100,7 +100,7 @@ if (cluster.isMaster) {
           fbBgWorker.setKiller();
           jobs.shutdown();
         });
-        console.log("New Job starting : Backupping " + job.data.feed.name);
+        console.log("New Job starting : Backupping " + job.data.feedname);
 
         var domain = require('domain').create();
 
