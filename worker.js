@@ -100,20 +100,11 @@ if (cluster.isMaster) {
           fbBgWorker.setKiller();
           jobs.shutdown();
         });
+        
         console.log("New Job starting : Backupping " + job.data.feedname);
 
-        var domain = require('domain').create();
+        fbBgWorker.launchFeedBackup(job, jobs, done);
 
-        domain.on('error', function(er) {
-        // If the backup crashes, log the error and return failed.
-          console.log("The Facebook page " + job.data.feedname + " couldn't be backed up. Because " + er);
-          done(er);
-        });
-
-        domain.run(function() {
-          fbBgWorker.launchFeedBackup(job, jobs, done);
-        });
       });
     });
-
 }

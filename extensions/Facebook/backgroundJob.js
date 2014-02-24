@@ -203,6 +203,7 @@ function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
               return;
             } else if (Until){
               if (didMakeUselessCall) {
+                job.log("Requesting next batched updates")
                 rateLimitedFBGet(fbRes.paging.previous);
                 return;
               }
@@ -231,6 +232,19 @@ function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
 //Saving a single fb post on the server
 
 function backupFbPost(postObj, callback, job){
+
+  // It turns out the callbacks are called more than once causing a variety of issues.
+  // This is a temporary hack to fix it.
+  var didSendCallback = false;
+  function sendCallback() {
+    if (!didSendCallback){
+      callback();
+      didSendCallback = true
+    } else {
+      job.log("We are having duplicates callbacks :/");
+    }
+  }
+
   var isFbUrl = require("./Facebook").validator
   var getFbPath = require("./Facebook").getFBPath
   function getSearchKey(path, keyName){
@@ -247,7 +261,6 @@ function backupFbPost(postObj, callback, job){
       if (err) {
         console.log("We had an issue saving " + err);
       }
-      //console.log("There was an issue saving the object, maybe a duplicate");
     });
   }
 
@@ -284,8 +297,8 @@ function backupFbPost(postObj, callback, job){
         function wait (){
           throttle.read(function(err, newCount) {
             if (err){
-              callback(err)
               console.log("An error occured during the fetching of the rate limiting count : " + err);
+              sendCallback();
               return;
             } else{
               if (newCount>550){
@@ -314,13 +327,13 @@ function backupFbPost(postObj, callback, job){
             console.log("Image "+ photoId + " couldn't be retreived (100), continuing archiving");
             //postInDb.picture = pictureLink;
             saveInDb(postInDb);
-            callback();
+            sendCallback();
             return;
 
           } else {
             console.log("An unknown error happened while getting photo " + photoId + ". Error " + err);
             saveInDb(postInDb);
-            callback();
+            sendCallback();
             return;
           }
         }
@@ -355,12 +368,12 @@ function backupFbPost(postObj, callback, job){
     
     } else {
       saveInDb(postInDb);
-      callback()
+      sendCallback();
       return;
     }
   } else {
       saveInDb(postInDb);
-      callback()
+      sendCallback();
       return;
   }
 }
@@ -381,7 +394,7 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
         fsWriter.end();
         postInDb.picture = '/fb/media/' + postInDb.feedId + "/" + postInDb.postId;
         saveInDb(postInDb);
-        callback();
+        sendCallback();
         return;
       });
     } else if (imgRes.statusCode >= 300 && imgRes.statusCode < 400) {
@@ -392,7 +405,7 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
     		reqClient.abort();
     		fsWriter.end();
     		saveInDb(postInDb);
-    		callback();
+    		sendCallback();
     		return;
     	}
     	//Update the redirects counters for the post
@@ -404,13 +417,14 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
     		reqClient.abort();
     		fsWriter.end();
     		saveInDb(postInDb);
-    		callback();
+    		sendCallback();
+        return;
     	} else requestGetter(nextUrl, postInDb, saveInDb, fsWriter, callback); //Otherwise, try the new url
     } else {
       reqClient.abort();
       fsWriter.end();
       saveInDb(postInDb);
-      callback();
+      sendCallback();
       return;
     }
   };
@@ -421,6 +435,8 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
     reqClient = https.get(url, requestProcessing);
   } else if (url.indexOf('http://') == 0){
     reqClient = http.get(url, requestProcessing);
+  } else if (url.indexOf('fbstaging://' == 0)){
+    console.log("FBStaging link. Facepalm");
   } else{
     console.log("How should we process " + url);
     process.exit(1);
@@ -430,7 +446,7 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
     console.log("Got error: " + e.message);
     fsWriter.end();
     saveInDb(postInDb);
-    callback();
+    sendCallback();
     return;
   });
 
@@ -439,7 +455,7 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
     reqClient.abort();
     saveInDb(postInDb);
     fsWriter.end();
-    callback();
+    sendCallback();
     return;
   });
 }
