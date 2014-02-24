@@ -379,10 +379,11 @@ function backupFbPost(postObj, callback, job){
 
 function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
   var didSendCallback = false;
+  
   function sendCallback() {
     if (!didSendCallback){
       callback();
-      didSendCallback = true
+      didSendCallback = true;
     } else {
       console.log("We are having duplicates callbacks :/");
     }
@@ -399,7 +400,7 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
     timeout: 15000
   }
 
-  function callback(error, response, body) {
+  function query(error, response, body) {
     if (!response) {
       fsWriter.end();
       saveInDb(postInDb);
@@ -408,14 +409,15 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
     } else if (!error && response.statusCode >= 200 && response.statusCode < 300) {
         fsWriter.write(body);
         postInDb.picture = '/fb/media/' + postInDb.feedId + "/" + postInDb.postId;
-    }
+  }
+    
     fsWriter.end();
     saveInDb(postInDb);
     sendCallback();
     return;
   }
 
-request(options, callback);
+request(options, query);
 
 }
 
