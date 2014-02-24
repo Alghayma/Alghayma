@@ -1,17 +1,62 @@
 angular.module('timeline',[])
 
-.controller('TimelineCtrl', ['$scope', 'PostService', '$timeout', function($scope, PostService, $timeout) {
+.controller('TimelineCtrl', ['$scope', 'PostService', '$timeout', '$rootScope','$filter', function($scope, PostService, $timeout, $rootScope, $filter) {
 
 	var feedId = angular.copy(window.feedId),
-	offset = 0;
+	dateStr = angular.copy(window.dateStr),
+	formattedDateStr = $filter('formatDate')(dateStr);
 
-	$scope.posts = {};
+	$scope.posts = [];
+	$scope.offset = 0;
 
-	PostService.get(feedId, offset).
-	success(function(res){
-		$scope.posts = res;
+	// TODO refactor this part, jquery logic in angular -> BAD
+	angular.element('#feedDescription')[0].textContent = angular.element('#feedDescription')[0].textContent.replace('{[lastBackupDate]}', formattedDateStr);
+
+	var getPost = function(id , offset, callback){
+		PostService.get(feedId, offset).
+		success(function(res){
+
+			// The server returns an array of object
+			for(var i=0; i < res.length; i++){
+				$scope.posts.push(res[i]);
+			}
+
+			if (callback && typeof callback == 'function'){callback();}
+		});
+	};
+
+	// Initial load of the data
+	getPost(feedId, $scope.offset, function(){
+		$scope.offset = 1;
 	});
 
+	$rootScope.$on('fetchMorePosts', function(e){
+		getPost(feedId, $scope.offset, function(){
+			$scope.offset += 1;
+		});
+	});
+
+}])
+
+.directive('infinityScroll', ['$rootScope', function($rootScope){
+
+	return {
+		link: function(scope, el, attrs) {
+
+			el.bind('mouseenter onmouseclick', function(){
+				$rootScope.$emit('fetchMorePosts');
+			});
+
+			var windowEl = $(window); // Can't call $window to avoid conflict with angularjs
+
+			// Triggers the infinite scroll if at the bottom of the page
+			windowEl.scroll(function(e){
+				if((windowEl.height() + windowEl.scrollTop()) === $(document).height()){
+					$rootScope.$emit('fetchMorePosts');
+				}
+			});
+		}
+	};
 }])
 
 .directive('post', ['$timeout', 'TimelineService', function($timeout, TimelineService){

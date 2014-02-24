@@ -6,56 +6,24 @@ block content
 			a(href="/")
 				img(src="/images/alghayma-logo.png", width="400")
 		br
-		.post-container(ng-repeat="post in posts", post, post-index="{{$index}}" id="post-{{$index}}" post-last="{{$last}}")
+		h4#feedDescription #{feedDescription}
+		.post-container(ng-repeat="post in posts track by $index", post, post-index="{{$index}}" id="post-{{$index}}" post-last="{{$last}}")
 			.post-title
 				img(ng-src="{{ post.picture }}")
 				h4 {{ post.postText }} ({{ post.postDate | formatDate}})
 			.post-picture
-				img(ng-src="{{ post.picture }}")
+				//- img(ng-src="{{ post.picture }}")
 			.post-link
 				a(href="javascript:;", ng-href="{{post.permalink}}") Link to post
 
+		.timeline-more(infinity-scroll)
+			| &#8595; More
+
 	script.
 		var feedId = #{feed.id};
-
-//- 			feedId: "537011102992127"
-//- permalink: "https://facebook.com/537011102992127/posts/10152356026170579"
-//- picture: "/fb/media/537011102992127/537011102992127_10152356026170579"
-//- postDate: "2014-02-20T23:58:09.000Z"
-//- postId: "537011102992127_10152356026170579"
-//- postText: "In Loving Memory of the Brave Marie Colvin #Syria"
-//- storyLink: "http://www.youtube.com/watch?v=OC3PqbRZFPI&feature=youtu.be"
-		//- - if (posts && feed)
-		//- 	h4#feedDescription #{feedDescription}
-		//- 	div#postList.timeline-container
-		//- 		ol.timeline.clearfix
-		//- 			- each post in posts
-		//- 				li.post
-		//- 					i.pointer
-		//- 					div.unit
-		//- 						div.storyUnit
-		//- 							div.imageUnit
-		//- 								img(src="#{feed.profileImage}")
-		//- 								div.imageUnit-content
-		//- 									p
-		//- 										a(href="#{post.permalink}") #{post.postDate}
-		//- 							- if (post.postText)
-		//- 								.message #{post.postText}
-		//- 								if (post.story && post.postText != post.story)
-		//- 									.message #{post.story}
-		//- 							- else
-		//- 								.message #{post.story}
-		//- 							-if (post.picture)
-		//- 								img.postPicture(src="#{post.picture}")
-		//- 							-if (post.storyLink)
-		//- 								.link
-		//- 									a(href="#{post.storyLink}") Story link
-		//- 	div#theEndBanner The Start
-		//- 	div#infiniteScrollTrigger
-		//- 		span#downIcon &#8595; More
-		//- 		img#ajaxLoaderGif(src="/images/ajax-loader.gif", style="display: none")
-
-			script.
+		var feedDescriptionItem = document.getElementById('feedDescription');
+		var dateStr = '#{feed.lastBackup}';
+			//- script.
 				//- var feedId = #{feed.id};
 				//- console.log(feedId);
 				//- var dateStr = '#{feed.lastBackup}';
