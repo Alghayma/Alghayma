@@ -381,6 +381,15 @@ function backupFbPost(postObj, callback, job){
 var redirectsCounters = {};
 
 function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
+  var didSendCallback = false;
+  function sendCallback() {
+    if (!didSendCallback){
+      callback();
+      didSendCallback = true
+    } else {
+      job.log("We are having duplicates callbacks :/");
+    }
+  }
 
   var requestProcessing = function(imgRes){
     if (imgRes.statusCode >= 200 && imgRes.statusCode < 300) { //image found, then save it
