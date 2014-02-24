@@ -241,7 +241,7 @@ function backupFbPost(postObj, callback, job){
       callback();
       didSendCallback = true
     } else {
-      console.log("We are having duplicates callbacks :/");
+      job.log("We are having duplicates callbacks :/");
     }
   }
 
@@ -387,11 +387,12 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
       callback();
       didSendCallback = true
     } else {
-      job.log("We are having duplicates callbacks :/");
+      console.log("We are having duplicates callbacks :/");
     }
   }
 
   var requestProcessing = function(imgRes){
+    
     if (imgRes.statusCode >= 200 && imgRes.statusCode < 300) { //image found, then save it
       
       imgRes.on('data', function(data){
