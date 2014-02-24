@@ -134,6 +134,48 @@ footer {
   width: 100%;
   padding-top: 5px;
 }
+.left {
+  float: left;
+  clear: left;
+}
+.right {
+  float: right;
+  clear: right;
+}
+.post-container {
+  width: 45%;
+  display: inline-block;
+  margin: 10px;
+  background: #fff;
+  padding: 10px;
+  border: 1px #c4cde0 solid;
+  border-radius: 3px;
+}
+.post-container .post-title img {
+  width: 50px;
+  height: 50px;
+}
+.post-container .post-title h4 {
+  width: 340px;
+  padding-left: 10px;
+  height: 50px;
+}
+.post-container .post-title img,
+.post-container .post-title h4 {
+  display: inline-block;
+}
+.post-container .post-picture {
+  margin-top: 20px;
+  width: 400px;
+}
+.post-container .post-picture img {
+  width: 400px;
+}
+.post-container .post-link {
+  padding-top: 10px;
+  font-size: 16px;
+  text-align: center;
+}
 .message-box {
   max-width: 500px;
   padding: 30px 30px 10px;
