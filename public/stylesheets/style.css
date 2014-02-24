@@ -81,11 +81,12 @@ footer {
 /*
 * Specific to the feed page
 */
-.timeline-container {
+.feed-container {
   width: 901px;
   margin: 0 auto;
+  background: url("../images/line.png") top repeat-y;
 }
-.timeline-more {
+.feed-more {
   clear: both;
   border: 3px solid #c0c0c0;
   border-radius: 10px;
@@ -99,6 +100,33 @@ footer {
   padding-bottom: 4px;
   margin: 24px 10px 10px 10px;
 }
+.pointer {
+  top: 10px;
+}
+.post-container.left .pointer {
+  background: url("../images/icons-4.png") -41px -28px no-repeat;
+  width: 19px;
+  height: 15px;
+  position: relative;
+  left: 415px;
+  z-index: 100;
+}
+.post-container.left .pointer {
+  background: url("../images/icons-4.png") -41px -28px no-repeat;
+  width: 19px;
+  height: 15px;
+  position: relative;
+  left: 414px;
+}
+.post-container.right .pointer {
+  background: url("../images/icons-4.png") -41px -28px no-repeat;
+  width: 19px;
+  height: 15px;
+  left: -29px;
+  right: auto;
+  background-position: -61px -28px;
+  position: relative;
+}
 #feedDescription {
   padding: 10px 0px;
   border: 3px solid #646464;
@@ -110,6 +138,7 @@ footer {
   margin-bottom: 20px;
   text-align: center;
   color: #646464;
+  background: #fff;
 }
 #theEndBanner {
   font-size: 32px;
@@ -144,11 +173,11 @@ footer {
   clear: right;
 }
 .post-container {
-  width: 45%;
+  width: 404px;
   display: inline-block;
   margin: 10px;
   background: #fff;
-  padding: 10px;
+  padding: 0px 10px 10px 10px;
   border: 1px #c4cde0 solid;
   border-radius: 3px;
 }

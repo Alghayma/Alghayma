@@ -4,13 +4,17 @@ angular.module('timeline',[])
 
 	var feedId = angular.copy(window.feedId),
 	dateStr = angular.copy(window.dateStr),
-	formattedDateStr = $filter('formatDate')(dateStr);
+	profileImage = angular.copy(window.profileImage);
 
 	$scope.posts = [];
 	$scope.offset = 0;
+	$scope.profileImage = profileImage;
 
 	// TODO refactor this part, jquery logic in angular -> BAD
-	angular.element('#feedDescription')[0].textContent = angular.element('#feedDescription')[0].textContent.replace('{[lastBackupDate]}', formattedDateStr);
+	if (typeof dateStr != 'undefined'){
+		var formattedDateStr = $filter('formatDate')(dateStr);
+		angular.element('#feedDescription')[0].textContent = angular.element('#feedDescription')[0].textContent.replace('{[lastBackupDate]}', formattedDateStr);
+	}
 
 	var getPost = function(id , offset, callback){
 		PostService.get(feedId, offset).
@@ -114,7 +118,7 @@ angular.module('timeline',[])
 					rightColumnSize += postList[i][0].offsetHeight;
 					positionClass = 'right';
 				} else {
-					if(rightColumnSize >= leftColumnSize ){
+					if(rightColumnSize > leftColumnSize ){
 						positionClass='left';
 						leftColumnSize += postList[i][0].offsetHeight;
 					} else{
@@ -124,6 +128,7 @@ angular.module('timeline',[])
 				}
 				postList[i].addClass(positionClass);
 			}
+			postList = []; // reset to avoid formatting the previous posts
 		}
 
 	};
