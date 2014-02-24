@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node app.js",
-	"test": "node tests/facebookBackupTests.js" 
+    "test": "node tests/facebookBackupTests.js"
   },
   "dependencies": {
     "test": ">=0.0.5",
@@ -20,6 +20,7 @@
     "redis-throttle": "0.0.1",
     "xregexp": "~2.0.0",
     "sha3": "~1.0.0",
-    "async": "0.2.10"
+    "async": "0.2.10",
+    "request": "^2.34.0"
   }
 }
