@@ -1,5 +1,5 @@
 var path = require('path')
-var config = require(path.join(process.cwd(), 'config'));
+var config = require(path.join(__dirname, "..", "..", 'config'));
 var https = require('https')
 
 exports.refreshToken = function refreshToken(graph, mongoose,callback){
@@ -32,7 +32,9 @@ exports.refreshToken = function refreshToken(graph, mongoose,callback){
 			    		if (chunk.data.is_valid) {
 			    			graph.setAccessToken(selectedUser.accessToken);
 			    			if (callback && typeof callback == 'function') {
-			    				callback();
+			    				callback(selectedUser.accessToken);
+			    			} else{
+			    				console.log("No callback set!")
 			    			}
 			    			return;
 			    		}

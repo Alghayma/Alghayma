@@ -2,6 +2,7 @@ module.exports = {
 	dbhost: 'localhost',
 	dbport: 27017,
 	dbname: 'alghayma',
+	testDBName: 'alghaymaTests',
 	dbuser: undefined,
 	dbpass: undefined,
 	httpport: 80,

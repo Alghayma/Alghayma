@@ -16,7 +16,7 @@ block content
 							h4 {{ post.postText }}
 								span  ({{ post.postDate | formatDate}})
 						.post-picture
-							//- img(ng-src="{{ post.picture }}")
+							img(ng-src="{{ post.picture }}")
 						.post-link
 							a(href="javascript:;", ng-href="{{post.permalink}}") Link to post
 
@@ -35,54 +35,4 @@ block content
 				div#messagePanel(class="message-{{response.type}}")
 					| {{response.message}}
 				h4#header This feed isn't backed up by Alghayma
-				br
 				button.button-blue#backItUp(ng-click="backUpRequest()") Back it up !
-				br
-				br
-
-			script.
-				//- function getSearchKey(keyName){
-				//- 	return decodeURI(window.location.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURI(keyName).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
-				//- }
-				//- backItUp.onclick = function(){
-				//- 	var fData = new FormData();
-				//- 	var targetFeed = decodeURIComponent(getSearchKey('sourceUrl'));
-				//- 	console.log('sourceUrl : ' + targetFeed);
-				//- 	fData.append('sourceUrl', decodeURI(getSearchKey('sourceUrl')));
-				//- 	var ajaxReq = new XMLHttpRequest();
-				//- 	ajaxReq.open('post', '/fb/backup/', true);
-				//- 	ajaxReq.setRequestHeader('enctype', 'application/x-www-form-urlencoded');
-				//- 	ajaxReq.onload = function(){
-				//- 		document.getElementById('messagePanel').textContent = '';
-				//- 		var panelHeading = document.createElement('div');
-				//- 		var panelBody = document.createElement('div');
-				//- 		if (this.status == 200){
-				//- 			//Request success
-				//- 			$('#messagePanel').addClass('panel panel-success');
-				//- 			panelHeading.textContent = 'Cool :)';
-				//- 			panelHeading.className = 'panel-heading';
-				//- 			panelBody.textContent = this.response;
-				//- 			panelBody.className = 'panel-body';
-				//- 			$('#messagePanel').append(panelHeading, panelBody);
-				//- 		} else {
-				//- 			//An error occured
-				//- 			$('#messagePanel').addClass('panel panel-danger');
-				//- 			panelHeading.textContent = 'Sorry, an error occured';
-				//- 			panelHeading.className = 'panel-heading';
-				//- 			panelBody.textContent = this.response;
-				//- 			panelBody.className = 'panel-body';
-				//- 			$('#messagePanel').append(panelHeading, panelBody);
-				//- 		}
-
-				//- 		$('#backItUp').css('display: none');
-				//- 		$('#header').css('display: none');
-				//- 		$('#messagePanel').append('<p id="redirectP">Redirecting to Alghayma homepage in 5 seconds. If it doesn\'t, click <a href="/">here</a>.</p>');
-				//- 		var intervalCount = 0;
-				//- 		setInterval(function(){
-				//- 			intervalCount++;
-				//- 			$('#redirectP').html('Redirecting to Alghayma homepage in ' + (5 - intervalCount).toString() + ' seconds. If it doesn\'t, click <a href="/">here</a>.');
-				//- 			if (intervalCount == 5) window.history.back();
-				//- 		}, 1000);
-				//- 	};
-				//- 	ajaxReq.send(fData);
-				//- };

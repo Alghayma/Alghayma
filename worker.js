@@ -4,13 +4,13 @@ var jobs = kue.createQueue();
 var express = require('express');
 var numCPUs = require('os').cpus().length;
 var path = require('path');
-var config = require(path.join(process.cwd(), "config"));
+var config = require(path.join(__dirname, "config"));
 var fbBgWorker = require(path.join(process.cwd(), 'extensions', 'Facebook', 'backgroundJob'));
 var net = require('net');
 var remakeJobQueue = false;
 
 if (cluster.isMaster) {
-  
+
   var clearJobs = function(err, ids){
     ids.forEach(function(id){
       kue.Job.get(id, function(err, aJob){
@@ -40,7 +40,7 @@ if (cluster.isMaster) {
               if (err) {
                 console.log("An error occured while removing a failed job : "+ err);
               } else{
-                jobs.create('facebookJob', {title: "Backup of " + failedJob.data.feed.name, feed: failedJob.data.feed}).priority('high').save();
+                jobs.create('facebookJob', {title: "Backup of " + failedJob.data.feedname, feedID: failedJob.data.feedID}).priority('high').save();
               }
             });
           }
@@ -52,7 +52,7 @@ if (cluster.isMaster) {
     jobs.failed(reschedule);
   }
 
-  // Clean completed job queue 
+  // Clean completed job queue
 
   jobs.complete(clearJobs);
 
@@ -92,7 +92,7 @@ if (cluster.isMaster) {
   jobs.promote();
 
 } else {
-    
+
     fbBgWorker.setToken(function(){
       console.log("Worker is spawned, token set and ready to process your requests sir");
       jobs.process('facebookJob', function(job, done){
@@ -100,13 +100,13 @@ if (cluster.isMaster) {
           fbBgWorker.setKiller();
           jobs.shutdown();
         });
-        console.log("New Job starting : Backupping " + job.data.feed.name);
+        console.log("New Job starting : Backupping " + job.data.feedname);
 
         var domain = require('domain').create();
 
         domain.on('error', function(er) {
         // If the backup crashes, log the error and return failed.
-          console.log("The Facebook page " + job.data.feed.name + " couldn't be backed up. Because " + er);
+          console.log("The Facebook page " + job.data.feedname + " couldn't be backed up. Because " + er);
           done(er);
         });
 

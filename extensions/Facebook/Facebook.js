@@ -1,6 +1,6 @@
 var fbgraph = require('fbgraph');
 var path = require('path');
-var config = require(path.join(process.cwd(), 'config'));
+var config = require(path.join(__dirname, "..", "..", 'config'));
 var fs = require('fs');
 var https = require('https');
 
@@ -217,18 +217,26 @@ exports.media = function(req, res){
 exports.backup = function(req, res){
 
 	if (!req.body.sourceUrl){
-		res.send(400, 'You didn\'t give us an address to backup');
+		res.send(400, 'You didn\'t give us an address to backup.');
 		return;
 	}
 	var sourceUrl = decodeURIComponent(req.body.sourceUrl);
 
 	if (!isFBURL(sourceUrl)){
-		res.send(400, 'The address you gave isn\'t from Facebook');
+		res.send(400, 'The address you gave isn\'t from Facebook.');
 		return;
 	}
 
-	exports.addFeed(sourceUrl, function(pageName){
-		res.send(200, pageName + ' was saved in Alghayma and will be backed up soon');
+	exports.addFeed(sourceUrl, function(success, pageName){
+		if (success) {
+			res.send(200, pageName + ' was saved in Alghayma and will be backed up soon.');
+		} else{
+			if (pageName) {
+				res.send(200, "We are already backupping " + pageName);
+			} else {
+				res.send(400, "Sorry, that feed can't be backed up.");
+			}
+		}
 	});
 };
 
@@ -304,15 +312,17 @@ exports.addFeed = function(feedUrl, callback){
 	fbgraph.get(fbPath, function(err, res){
 		if (err){
 			console.log('Error when getting info of: ' + fbPath + '\n' + JSON.stringify(err));
+			callback(false);
 			return;
 		}
 		//Check that the feed doesn't exist yet
-		FBFeed.find({id: res.id}, function(err, feed){
+		FBFeed.findOne({id: res.id}, function(err, feed){
 			if (err){
 				console.log('Error when checking whether ' + res.name + ' is already being backed up or not');
+				callback(false);
 				return;
 			}
-			if (!feed.id){
+			if (!feed){
 				var newFeed = new FBFeed({
 					id: res.id,
 					name: res.name,
@@ -325,9 +335,12 @@ exports.addFeed = function(feedUrl, callback){
 				newFeed.save();
 
 				// Start Queuing this feed
-				jobs.create('facebookJob', {title: "Backup of " + newFeed.name, feed: newFeed}).save();
+				console.log(newFeed.id);
+				jobs.create('facebookJob', {title: "Backup of " + newFeed.name, feedID: newFeed.id, feedname:newFeed.name}).save();
+				if (callback) callback(true, res.name);
+			} else {
+				if (callback) callback(false, res.name);
 			}
-			if (callback) callback(res.name);
 		});
 	});
 }
