@@ -492,7 +492,6 @@ exports.launchFeedBackup = function(job, queue, done){
           }
           if (!posts[0].postDate) {
             console.log("Head is backed but no posts");
-            FBFeed.update({id: feedObj.id}, {lastBackup: Date.now()}){}
           };
 
           job.log('Updating Facebook page : ' + feedObj.name + " for posts since "+ posts[0].postDate + " named " + posts[0].postText);
