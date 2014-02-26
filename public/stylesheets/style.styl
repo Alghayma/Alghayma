@@ -79,30 +79,19 @@ footer
 * Specific to the feed page
 */
 
-.timeline-container
+.feed
+	background-color: rgb(238,238,238)
+	padding-top: 40px
+	border-top: 1px solid rgb(218,218,218)
+
+.feed-container
 	width: 901px
 	margin: 0 auto
+	background: url('../images/line.png') top repeat-y
 
-#feedDescription
-	padding: 10px 0px
-	border: 3px solid #646464
-	width: 901px
-	margin: 0 auto
-	-webkit-border-radius: 5px
-	-moz-border-radius: 5px
-	border-radius: 5px
-	margin-bottom: 20px
-	text-align: center
-	color: #646464
-
-#theEndBanner
-	font-size: 32px
-	width: 100%
-	text-align: center
-	display: none
-
-#infiniteScrollTrigger
-	border: 3px solid silver
+.feed-more
+	clear: both
+	border: 1px solid rgb(218,218,218)
 	border-radius: 10px
 	background: #f1f1f1
 	left: 20%
@@ -113,6 +102,53 @@ footer
 	padding-top: 4px
 	padding-bottom: 4px
 	margin: 24px 10px 10px 10px;
+
+.pointer
+	top: 10px
+
+.post-container.left .pointer
+	background: url('../images/icons-4.png') -41px -28px no-repeat;
+	width: 19px;
+	height: 15px;
+	position: relative
+	left: 415px
+	z-index: 100
+
+.post-container.left .pointer
+	background: url('../images/icons-4.png') -41px -28px no-repeat;
+	width: 19px;
+	height: 15px;
+	position: relative
+	left: 414px
+
+.post-container.right .pointer
+	background: url('../images/icons-4.png') -41px -28px no-repeat
+	width: 19px
+	height: 15px
+	left: -29px
+	right: auto
+	background-position: -61px -28px
+	position: relative
+
+#feedDescription
+	padding: 10px 0px
+	border: 1px solid rgb(218,218,218)
+	width: 881px
+	margin: 0 auto
+	-webkit-border-radius: 5px
+	-moz-border-radius: 5px
+	border-radius: 5px
+	margin-bottom: 20px
+	text-align: center
+	color: #646464
+	background: white
+	font-weight: 400
+
+#theEndBanner
+	font-size: 32px
+	width: 100%
+	text-align: center
+	display: none
 
 #infiniteScrollTrigger:hover
 	background-color: darkgray
@@ -132,6 +168,52 @@ footer
 	width: 100%
 	padding-top: 5px
 
+.left
+	float: left
+	clear: left
+
+.right
+	float: right
+	clear: right
+
+.post-container
+	width: 404px
+	display: inline-block
+	margin: 10px
+	background: #fff
+	padding: 0px 10px 10px 10px;
+	border: 1px #C4CDE0 solid
+	border-radius: 3px
+
+	.post-title
+		img
+			width: 50px
+			height: 50px
+		h4
+			width: 340px
+			padding-left: 10px
+			height:50px
+
+		img, h4
+			display: inline-block
+		span
+			color: rgb(160, 160, 160)
+			font-weight: 200
+
+	.post-picture
+		margin-top: 20px;
+		width:400px
+		img
+			width: 400px
+
+	.post-link
+		padding-top: 10px
+		font-size: 14px;
+		text-align: center;
+		font-family: 'Helvetica'
+		border-top: 1px solid #c4cde0
+		a
+			color: #3B5998
 
 .message-box
 	max-width: 500px
@@ -143,6 +225,20 @@ footer
 	-moz-border-radius: 8px
 	border-radius: 8px
 	font-size: 16px
+
+.message-success
+	padding: 10px
+	border-radius: 5px
+	background: rgb(135, 219, 135)
+	margin-bottom: 30px
+	color: green
+
+.message-error
+	padding: 10px
+	border-radius: 5px
+	background: #F17373
+	margin-bottom: 30px
+	color: #9B3B3B
 
 /*
 * Specific to the search result page

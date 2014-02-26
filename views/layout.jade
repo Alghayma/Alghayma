@@ -5,15 +5,21 @@ html
 		//- link(rel='stylesheet', href='/stylesheets/bootstrap.min.css')
 		link(rel='stylesheet', href='/stylesheets/normalize.css')
 		link(rel='stylesheet', href='/stylesheets/all.css')
-		link(rel='stylesheet', href='/stylesheets/timeline.css')
+		//- link(rel='stylesheet', href='/stylesheets/timeline.css')
 		link(rel='stylesheet', href='/stylesheets/fb-buttons.css')
 		link(rel='stylesheet', href='/stylesheets/style.css')
-		script(src='/javascripts/jquery-2.0.3.min.js')
 		//script(src='/javascripts/bootstrap.min.js')
+
 		meta(property='og:image', content='https://www.alghayma.com/images/facebookPreview.png')
 		meta(property="og:title", content="Alghayma - Saving History")
 		meta(property="og:site_name", content="Alghayma")
 		meta(name="Description", content="Alghayma meaning, The Cloud, in arabic is designed to be a backup solution for online content.")
 		meta(name="keywords", content="facebook, pages, backup, syria, cloud, free, social, media")
-	body
+
+	body(ng-app='timeline')
+
 		block content
+
+	script(src='/javascripts/jquery-2.0.3.min.js')
+	script(src='//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.10/angular.min.js')
+	script(src='/javascripts/app/timeline.js')
