@@ -490,15 +490,15 @@ exports.launchFeedBackup = function(job, queue, done){
             console.log("There is no post for that feed in the database!");
             FBFeed.update({id: feedObj.id}, {didBackupHead: false}).exec(function(err){
               scheduleNextOne(job, queue, done);
-            }
+            });
             return;
           }
           if (!posts[0].postDate) {
             console.log("Head is backed but no posts");
             FBFeed.update({id: feedObj.id}, {didBackupHead: false}).exec(function(err){
               scheduleNextOne(job, queue, done);
-            }
-            return
+            });
+            return;
           };
 
           job.log('Updating Facebook page : ' + feedObj.name + " for posts since "+ posts[0].postDate + " named " + posts[0].postText);
