@@ -484,15 +484,15 @@ exports.launchFeedBackup = function(job, queue, done){
 
       if (feedObj.didBackupHead) {
         // Just proceed to an update to fetch newest post since the most recent one.
-        FBPost.find({feedId:feedID}).sort({postDate:'desc'}).limit(1).exec(function(err, posts) {
+        FBPost.find({id:feedID}).sort({postDate:'desc'}).limit(1).exec(function(err, posts) {
           if (err) {throw err};
           if (!posts[0]){
             console.log("There is no post for that feed in the database!"); 
-            process.exit(1);
+
           }
           if (!posts[0].postDate) {
             console.log("Head is backed but no posts");
-            process.exit(1);
+            FBFeed.update({id: feedObj.id}, {lastBackup: Date.now()}){}
           };
 
           job.log('Updating Facebook page : ' + feedObj.name + " for posts since "+ posts[0].postDate + " named " + posts[0].postText);
@@ -550,7 +550,7 @@ exports.launchFeedBackup = function(job, queue, done){
 }
 
 function verifyPathLength(path){
-  var lengthOfFileSystemMax = 100;
+  var lengthOfFileSystemMax = 50;
   if (path.length > lengthOfFileSystemMax){
     var extension = path.split('.').pop();
     var folders = path.split('/');
@@ -566,10 +566,10 @@ function verifyPathLength(path){
     var shorterPath = (extension)?truncatedHash+"."+extension:truncatedHash;
 
     if (shorterPath.length > lengthOfFileSystemMax) {
-      console.log("Truncated string is too long");
+      
       if (extension) {
         if (extension.length < 5) {
-          return truncatedHash.substring(0,45) + "." + extension;
+          return truncatedHash.substring(0,30) + "." + extension;
         }
       } else{
         return truncatedHash.substring(0,20)
