@@ -384,7 +384,7 @@ function backupFbPost(postObj, callback, job){
       var theoricImageUrlParts = theoricImageUrl.split('/');
       var imageName = theoricImageUrlParts[theoricImageUrlParts.length - 1];
 
-      var fsWriter = fs.createWriteStream(verifyPathLength(path.join(postMediaPath, feedId,imageName)));
+      var fsWriter = fs.createWriteStream(path.join(postMediaPath, feedId, verifyPathLength(imageName)));
       
       //console.log("Getting from URL " + theoricImageUrl);
 
@@ -484,14 +484,21 @@ exports.launchFeedBackup = function(job, queue, done){
 
       if (feedObj.didBackupHead) {
         // Just proceed to an update to fetch newest post since the most recent one.
-        FBPost.find({id:feedID}).sort({postDate:'desc'}).limit(1).exec(function(err, posts) {
+        FBPost.find({postId:feedID}).sort({postDate:'desc'}).limit(1).exec(function(err, posts) {
           if (err) {throw err};
           if (!posts[0]){
-            console.log("There is no post for that feed in the database!"); 
-
+            console.log("There is no post for that feed in the database!");
+            FBFeed.update({id: feedObj.id}, {didBackupHead: false}).exec(function(err){
+              scheduleNextOne(job, queue, done);
+            }
+            return;
           }
           if (!posts[0].postDate) {
             console.log("Head is backed but no posts");
+            FBFeed.update({id: feedObj.id}, {didBackupHead: false}).exec(function(err){
+              scheduleNextOne(job, queue, done);
+            }
+            return
           };
 
           job.log('Updating Facebook page : ' + feedObj.name + " for posts since "+ posts[0].postDate + " named " + posts[0].postText);
