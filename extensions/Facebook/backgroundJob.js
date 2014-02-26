@@ -282,11 +282,12 @@ function backupFbPost(postObj, callback, job){
     story: story
   }
 
+  var postMediaPath = path.join(mediaPath, feedId, postId);
+  if (!fs.existsSync(postMediaPath)) fs.mkdirSync(postMediaPath);
+
   //Getting the story link. Backup it up if it's a picture on facebook. (Assuming that a facebook page that gets deleted, all its posted content goes away with it... Pictures included)
   if (isFbUrl(storyLink, true) && (storyLink.indexOf('photo.php') > 0 && getSearchKey(storyLink, 'fbid'))) {
     //Creating a media folder for the post
-    var postMediaPath = path.join(mediaPath, feedId, postId);
-    if (!fs.existsSync(postMediaPath)) fs.mkdirSync(postMediaPath);
     //Getting the photoID from the story link. Then getting that photoID in the Graph API
     var photoId = getSearchKey(storyLink, 'fbid');
 
@@ -354,9 +355,17 @@ function backupFbPost(postObj, callback, job){
     var pictureLink = postObj.picture;
     if (isFbUrl(pictureLink, true) && pictureLink.indexOf('safe_image.php') > 0 && getSearchKey(pictureLink, 'url')){
       //Creating a media folder for the post
-      var postMediaPath = path.join(mediaPath, feedId, postId);
-      if (!fs.existsSync(postMediaPath)) fs.mkdirSync(postMediaPath);
-      //Creating the image file
+
+      try{
+        var pictureName = postObj.picture.split('/'); //Assuming that the url finishes with the image's file name
+        pictureName = pictureName[pictureName.length - 1];
+        var postMediaPath = path.join(mediaPath, pictureName);
+        if (!fs.existsSync(postMediaPath)) fs.mkdirSync(postMediaPath);
+      } catch(e){
+        saveInDb(postInDb);
+        sendCallback();
+        return;
+      }
       
       try{
         var theoricImageUrl = decodeURIComponent(getSearchKey(pictureLink, "url"));
@@ -374,7 +383,9 @@ function backupFbPost(postObj, callback, job){
       
       var theoricImageUrlParts = theoricImageUrl.split('/');
       var imageName = theoricImageUrlParts[theoricImageUrlParts.length - 1];
+
       var fsWriter = fs.createWriteStream(verifyPathLength(path.join(postMediaPath, feedId,imageName)));
+      
       //console.log("Getting from URL " + theoricImageUrl);
 
       requestGetter (theoricImageUrl, postInDb, saveInDb, fsWriter, callback);
