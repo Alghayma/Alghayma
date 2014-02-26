@@ -357,10 +357,24 @@ function backupFbPost(postObj, callback, job){
       var postMediaPath = path.join(mediaPath, feedId, postId);
       if (!fs.existsSync(postMediaPath)) fs.mkdirSync(postMediaPath);
       //Creating the image file
-      var theoricImageUrl = decodeURIComponent(getSearchKey(pictureLink, "url"));
+      
+      try{
+        var theoricImageUrl = decodeURIComponent(getSearchKey(pictureLink, "url"));
+      } catch (e) {
+        saveInDb(postInDb);
+        sendCallback();
+        return;
+      }
+      
+      if (!theoricImageUrl) {
+        saveInDb(postInDb);
+        sendCallback();
+        return;
+      };
+      
       var theoricImageUrlParts = theoricImageUrl.split('/');
       var imageName = theoricImageUrlParts[theoricImageUrlParts.length - 1];
-      var fsWriter = fs.createWriteStream(verifyPathLength(path.join(postMediaPath, imageName)));
+      var fsWriter = fs.createWriteStream(verifyPathLength(path.join(postMediaPath, feedId,imageName)));
       //console.log("Getting from URL " + theoricImageUrl);
 
       requestGetter (theoricImageUrl, postInDb, saveInDb, fsWriter, callback);
@@ -384,8 +398,10 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
     if (!didSendCallback){
       callback();
       didSendCallback = true;
+      return;
     } else {
       console.log("We are having duplicates callbacks :/");
+      return;
     }
   }
 
@@ -411,14 +427,13 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
         fsWriter.write(body);
         postInDb.picture = '/fb/media/' + postInDb.feedId + "/" + postInDb.postId;
   }
-    
     fsWriter.end();
     saveInDb(postInDb);
     sendCallback();
     return;
   }
 
-request(options, query);
+  request(options, query);
 
 }
 

@@ -103,7 +103,11 @@ if (cluster.isMaster) {
         
         console.log("New Job starting : Backupping " + job.data.feedname);
 
-        fbBgWorker.launchFeedBackup(job, jobs, done);
+        try{
+          fbBgWorker.launchFeedBackup(job, jobs, done);
+        } catch (e) {
+          fbBgWorker.launchFeedBackup(job, jobs, done);
+        }
 
       });
     });
