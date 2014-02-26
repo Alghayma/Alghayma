@@ -556,14 +556,15 @@ function verifyPathLength(path){
     var extension = path.split('.').pop();
     var folders = path.split('/');
     var filenameWithExt = folders.pop();
-    var filename = filenameWithExt.substring(0, filenameWithExt.length - extension.length-1);
 
-    var truncationLength = lengthOfFileSystemMax - folders.join("/").length - extension.length - 1;
+    var filename = (extension)?filenameWithExt.substring(0, filenameWithExt.length - extension.length-1):filenameWithExt;
+
+    var truncationLength = lengthOfFileSystemMax - extension.length - 1;
     var sha3 = new SHA3.SHA3Hash();
     sha3.update(filename ,"utf8");
     var truncatedHash = sha3.digest('hex').substring(0, truncationLength);
 
-    var shorterPath = folders.join("/")+"/"+truncatedHash+"."+extension;
+    var shorterPath = (extension)?truncatedHash+"."+extension:truncatedHash;
 
     if (shorterPath.length > lengthOfFileSystemMax) {console.log("Truncated string is too long");process.exit(1)};
     return shorterPath;
