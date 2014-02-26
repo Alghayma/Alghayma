@@ -359,7 +359,7 @@ function backupFbPost(postObj, callback, job){
       try{
         var pictureName = postObj.picture.split('/'); //Assuming that the url finishes with the image's file name
         pictureName = pictureName[pictureName.length - 1];
-        var postMediaPath = path.join(mediaPath, pictureName);
+        var postMediaPath = path.join(postMediaPath, pictureName);
         if (!fs.existsSync(postMediaPath)) fs.mkdirSync(postMediaPath);
       } catch(e){
         saveInDb(postInDb);
@@ -551,7 +551,7 @@ exports.launchFeedBackup = function(job, queue, done){
 }
 
 function verifyPathLength(path){
-  var lengthOfFileSystemMax = 256;
+  var lengthOfFileSystemMax = 200;
   if (path.length > lengthOfFileSystemMax){
     var extension = path.split('.').pop();
     var folders = path.split('/');
