@@ -95,12 +95,11 @@ if (cluster.isMaster) {
 
     fbBgWorker.setToken(function(){
       console.log("Worker is spawned, token set and ready to process your requests sir");
+      process.once( 'SIGINT', function ( sig ) {
+        fbBgWorker.setKiller();
+        jobs.shutdown();
+      });
       jobs.process('facebookJob', function(job, done){
-        process.once( 'SIGINT', function ( sig ) {
-          fbBgWorker.setKiller();
-          jobs.shutdown();
-        });
-        
         console.log("New Job starting : Backupping " + job.data.feedname);
 
         try{

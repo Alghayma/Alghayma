@@ -331,7 +331,7 @@ function backupFbPost(postObj, callback, job){
             return;
 
           } else {
-            console.log("An unknown error happened while getting photo " + photoId + ". Error " + err);
+            console.log("An unknown error happened while getting photo " + photoId + ". Error " + JSON.stringify(err));
             saveInDb(postInDb);
             sendCallback();
             return;
