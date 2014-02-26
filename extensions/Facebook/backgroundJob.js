@@ -384,7 +384,7 @@ function backupFbPost(postObj, callback, job){
       var theoricImageUrlParts = theoricImageUrl.split('/');
       var imageName = theoricImageUrlParts[theoricImageUrlParts.length - 1];
 
-      var fsWriter = fs.createWriteStream(path.join(postMediaPath, feedId, verifyPathLength(imageName)));
+      var fsWriter = fs.createWriteStream(path.join(postMediaPath, verifyPathLength(imageName)));
       
       //console.log("Getting from URL " + theoricImageUrl);
 
@@ -557,32 +557,28 @@ exports.launchFeedBackup = function(job, queue, done){
 
 function verifyPathLength(path){
   var lengthOfFileSystemMax = 50;
-  if (path.length > lengthOfFileSystemMax){
-    var extension = path.split('.').pop();
-    var folders = path.split('/');
-    var filenameWithExt = folders.pop();
+  var extension = path.split('.').pop();
+  var folders = path.split('/');
+  var filenameWithExt = folders.pop();
 
-    var filename = (extension)?filenameWithExt.substring(0, filenameWithExt.length - extension.length-1):filenameWithExt;
+  var filename = (extension)?filenameWithExt.substring(0, filenameWithExt.length - extension.length-1):filenameWithExt;
 
-    var truncationLength = lengthOfFileSystemMax - extension.length - 1;
-    var sha3 = new SHA3.SHA3Hash();
-    sha3.update(filename ,"utf8");
-    var truncatedHash = sha3.digest('hex').substring(0, truncationLength);
+  var truncationLength = lengthOfFileSystemMax - extension.length - 1;
+  var sha3 = new SHA3.SHA3Hash();
+  sha3.update(filename ,"utf8");
+  var truncatedHash = sha3.digest('hex').substring(0, truncationLength);
 
-    var shorterPath = (extension)?truncatedHash+"."+extension:truncatedHash;
+  var shorterPath = (extension)?truncatedHash+"."+extension:truncatedHash;
 
-    if (shorterPath.length > lengthOfFileSystemMax) {
-      
-      if (extension) {
-        if (extension.length < 5) {
-          return truncatedHash.substring(0,30) + "." + extension;
-        }
-      } else{
-        return truncatedHash.substring(0,20)
+  if (shorterPath.length > lengthOfFileSystemMax) {
+    
+    if (extension) {
+      if (extension.length < 5) {
+        return truncatedHash.substring(0,30) + "." + extension;
       }
-    };
-    return shorterPath;
-  } else {
-    return path;
-  }
-}
+    } else{
+      return truncatedHash.substring(0,20)
+    }
+  };
+  return shorterPath;
+} 
