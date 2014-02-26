@@ -418,7 +418,6 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
 
   if (url.indexOf('fbstaging://' == 0)){
     fsWriter.end();
-    console.log("FBStaging link. Facepalm");
     sendCallback();
     return;
   }
@@ -568,7 +567,13 @@ function verifyPathLength(path){
 
     if (shorterPath.length > lengthOfFileSystemMax) {
       console.log("Truncated string is too long");
-      process.exit(1);
+      if (extension) {
+        if (extension.length < 5) {
+          return truncatedHash.substring(0,45) + "." + extension;
+        }
+      } else{
+        return truncatedHash.substring(0,20)
+      }
     };
     return shorterPath;
   } else {
