@@ -341,7 +341,7 @@ function backupFbPost(postObj, callback, job){
         var pictureLink = fbImageRes.source;
         var pictureName = pictureLink.split('/'); //Assuming that the url finishes with the image's file name
         pictureName = pictureName[pictureName.length - 1];
-        var fsWriter = fs.createWriteStream(verifyPathLength(path.join(postMediaPath, pictureName))); //Creating after the picture name, in the posts media folder
+        var fsWriter = fs.createWriteStream(path.join(postMediaPath, verifyPathLength(pictureName))); //Creating after the picture name, in the posts media folder
         
         requestGetter (pictureLink, postInDb, saveInDb, fsWriter, callback);
         
@@ -359,7 +359,7 @@ function backupFbPost(postObj, callback, job){
       try{
         var pictureName = postObj.picture.split('/'); //Assuming that the url finishes with the image's file name
         pictureName = pictureName[pictureName.length - 1];
-        var postMediaPath = path.join(postMediaPath, pictureName);
+        var postMediaPath = path.join(postMediaPath, verifyPathLength(pictureName));
         if (!fs.existsSync(postMediaPath)) fs.mkdirSync(postMediaPath);
       } catch(e){
         saveInDb(postInDb);
