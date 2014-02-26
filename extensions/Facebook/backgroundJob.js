@@ -551,7 +551,7 @@ exports.launchFeedBackup = function(job, queue, done){
 }
 
 function verifyPathLength(path){
-  var lengthOfFileSystemMax = 200;
+  var lengthOfFileSystemMax = 100;
   if (path.length > lengthOfFileSystemMax){
     var extension = path.split('.').pop();
     var folders = path.split('/');
@@ -566,7 +566,10 @@ function verifyPathLength(path){
 
     var shorterPath = (extension)?truncatedHash+"."+extension:truncatedHash;
 
-    if (shorterPath.length > lengthOfFileSystemMax) {console.log("Truncated string is too long");process.exit(1)};
+    if (shorterPath.length > lengthOfFileSystemMax) {
+      console.log("Truncated string is too long");
+      process.exit(1);
+    };
     return shorterPath;
   } else {
     return path;
