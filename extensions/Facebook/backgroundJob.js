@@ -210,7 +210,7 @@ function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
               rateLimitedFBGet(fbRes.paging.next);
               return;
             } else {
-              console.log("Shouldn't happen");
+              job.log("Shouldn't happen");
               process.exit(1);
             }
           } else {
@@ -280,7 +280,7 @@ function backupFbPost(postObj, callback, job){
     postDate: postDate,
     postText: postText,
     storyLink: storyLink,
-    story: story
+    story: story,
     picture: initialPic
   }
 
