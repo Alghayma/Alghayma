@@ -269,6 +269,7 @@ function backupFbPost(postObj, callback, job){
   var postDate = postObj.created_time;
   var storyLink = postObj.link;
   var story = postObj.story;
+  var initialPic = postObj.picture;
 
   if (!fs.existsSync(path.join(mediaPath, feedId))) fs.mkdirSync(path.join(mediaPath, feedId));
 
@@ -280,6 +281,7 @@ function backupFbPost(postObj, callback, job){
     postText: postText,
     storyLink: storyLink,
     story: story
+    picture: initialPic
   }
 
   var postMediaPath = path.join(mediaPath, feedId, postId);
