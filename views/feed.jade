@@ -14,11 +14,12 @@ block content
 						.post-title
 							img(ng-src="{{ profileImage }}")
 							h4 {{ post.postText }}
-								span  ({{ post.postDate | formatDate}})
+								a(href="javascript:;", ng-href="{{post.permalink}}")
+									span  ({{ post.postDate | formatDate}})
 						.post-picture
 							img(ng-src="{{ post.picture }}")
 						.post-link
-							a(href="javascript:;", ng-href="{{post.permalink}}") Link to post
+							a(href="javascript:;", ng-href="{{post.storyLink}}") Story link
 
 					.feed-more(infinity-scroll)
 						| &#8595; More

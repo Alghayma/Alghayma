@@ -190,6 +190,7 @@ exports.chunk = function(req, res){
 			for (var j = 0; j < attributesToCopy.length; j++){
 				postCopy[attributesToCopy[j]] = posts[i][attributesToCopy[j]];
 			}
+			if (!(postCopy.postText)) continue; //Skip the social activity messages (Jacques and Jules became friends, for example)
 			postCopy.permalink = permalink(posts[i].postId);
 			postsCopy.push(postCopy);
 		}
