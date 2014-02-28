@@ -343,7 +343,7 @@ function backupFbPost(postObj, callback, job){
         var pictureLink = fbImageRes.source;
         var pictureName = pictureLink.split('/'); //Assuming that the url finishes with the image's file name
         pictureName = pictureName[pictureName.length - 1];
-        var fsWriter = fs.createWriteStream(path.join(postMediaPath, verifyPathLength(pictureName))); //Creating after the picture name, in the posts media folder
+        var fsWriter = fs.createWriteStream(path.join(postMediaPath, verifyPathLength(pictureName	))); //Creating after the picture name, in the posts media folder
         
         requestGetter (pictureLink, postInDb, saveInDb, fsWriter, callback);
         
@@ -362,7 +362,6 @@ function backupFbPost(postObj, callback, job){
         var pictureName = postObj.picture.split('/'); //Assuming that the url finishes with the image's file name
         pictureName = pictureName[pictureName.length - 1];
         var postMediaPath = path.join(postMediaPath, verifyPathLength(pictureName));
-        if (!fs.existsSync(postMediaPath)) fs.mkdirSync(postMediaPath);
       } catch(e){
         saveInDb(postInDb);
         sendCallback();
@@ -386,7 +385,7 @@ function backupFbPost(postObj, callback, job){
       var theoricImageUrlParts = theoricImageUrl.split('/');
       var imageName = theoricImageUrlParts[theoricImageUrlParts.length - 1];
 
-      var fsWriter = fs.createWriteStream(path.join(postMediaPath, verifyPathLength(imageName)));
+      var fsWriter = fs.createWriteStream(postMediaPath);
       
       //console.log("Getting from URL " + theoricImageUrl);
 
@@ -430,25 +429,64 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
     timeout: 15000
   }
 
-  function query(error, response, body) {
-  	if (error){
-  		console.log('Error for ' + url + '\n' + JSON.stringify(error));
+  /*function query(error, response, body) {
+  	if (!response){
+  		console.log('No reponse for ' + url);
       fsWriter.end();
       saveInDb(postInDb);
       sendCallback();
-      return; 
+      return;
+    } else if (error) {
+    	console.log('Error for ' + url);
+      fsWriter.end();
+      saveInDb(postInDb);
+      sendCallback();
+      return;
     } else if (!error && response.statusCode >= 200 && response.statusCode < 300) {
-      fsWriter.write(body);
-      postInDb.picture = '/fb/media/' + postInDb.feedId + "/" + postInDb.postId;
+    	console.log("Closed socket. Body size : " + response.body.length);
+    	response.on('data', function(chunk){
+    		console.log('Bzzbzz writing on disk');
+    		fsWriter.write(chunk);
+    	});
+    	response.on('end', function(){
+    		postInDb.picture = '/fb/media/' + postInDb.feedId + "/" + postInDb.postId;
+    		fsWriter.end();
+    		saveInDb(postInDb);
+    		sendCallback();
+    	});
+  	} else {
+  		console.log('unhandled case');
+	    fsWriter.end();
+	    saveInDb(postInDb);
+	    sendCallback();
+	    return;
   	}
+  }*/
+
+  var r = request(options);
+  r.pipe(fsWriter);
+  r.on('response', function(res){
+  	console.log('We are receiveing things!');
+  	if (!res){
+  		console.log('No reponse for ' + url);
+      fsWriter.end();
+      saveInDb(postInDb);
+      sendCallback();
+  	} else if (res.statusCode >= 200 && res.statusCode < 300){
+  		postInDb.picture = '/fb/media/' + postInDb.feedId + "/" + postInDb.postId;	
+  		saveInDb(postInDb);
+  		sendCallback();
+  	} else {
+  		saveInDb(postInDb);
+  		sendCallback();
+  	}
+  });
+  r.on('error', function(error){
+  	console.log('Error for ' + url);
     fsWriter.end();
     saveInDb(postInDb);
     sendCallback();
-    return;
-  }
-
-  request(options, query);
-
+  });
 }
 
 function scheduleNextOne(job, queue, done){
