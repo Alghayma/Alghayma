@@ -405,6 +405,7 @@ function backupFbPost(postObj, callback, job){
 }
 
 function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
+	console.log('GET : ' + url);
   var didSendCallback = false;
   
   function sendCallback() {
@@ -418,7 +419,7 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
     }
   }
 
-  if (url.indexOf('fbstaging://' == 0)){
+  if (url.indexOf('fbstaging://') == 0){
     fsWriter.end();
     sendCallback();
     return;
@@ -430,15 +431,16 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
   }
 
   function query(error, response, body) {
-    if (!response) {
+  	if (error){
+  		console.log('Error for ' + url + '\n' + JSON.stringify(error));
       fsWriter.end();
       saveInDb(postInDb);
       sendCallback();
       return; 
     } else if (!error && response.statusCode >= 200 && response.statusCode < 300) {
-        fsWriter.write(body);
-        postInDb.picture = '/fb/media/' + postInDb.feedId + "/" + postInDb.postId;
-  }
+      fsWriter.write(body);
+      postInDb.picture = '/fb/media/' + postInDb.feedId + "/" + postInDb.postId;
+  	}
     fsWriter.end();
     saveInDb(postInDb);
     sendCallback();
@@ -505,7 +507,7 @@ exports.launchFeedBackup = function(job, queue, done){
 
           job.log('Updating Facebook page : ' + feedObj.name + " for posts since "+ posts[0].postDate + " named " + posts[0].postText);
 
-          navigatePage(feedObj.id, posts[0].postDate, undefined, function(){
+          navigatePage(feedObj.id, undefined, posts[0].postDate, function(){
             FBFeed.update({id: feedObj.id}, {lastBackup: Date.now()}).exec(function(err){
               if (err){
                 console.log('Error while updating "lastBackup" date for "' + feedObj.name + '"');
