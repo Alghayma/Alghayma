@@ -369,7 +369,6 @@ function backupFbPost(postObj, callback, job){
         //pictureName = pictureName[pictureName.length - 1];
         //console.log('Picture : ' + pictureName);
         postMediaPath = path.join(postMediaPath, nameForPictureAtPath(theoricImageUrl));
-        console.log('Picture name : ' + postMediaPath);
       } catch(e){
         saveInDb(postInDb);
         sendCallback();
@@ -401,7 +400,6 @@ function backupFbPost(postObj, callback, job){
 }
 
 function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
-	console.log('GET : ' + url);
   var didSendCallback = false;
   
   function sendCallback() {
@@ -463,7 +461,6 @@ function requestGetter (url, postInDb, saveInDb, fsWriter, callback){
   var r = request(options);
   r.pipe(fsWriter);
   r.on('response', function(res){
-  	console.log('We are receiveing things!');
   	if (!res){
   		console.log('No reponse for ' + url);
       fsWriter.end();
@@ -599,10 +596,8 @@ function nameForPictureAtPath(path){
   var folders = path.split('/');
   var filenameWithExt = folders.pop();
   var extension = filenameWithExt.split('.').pop().split('?')[0];
-  console.log('extension: ' + extension);
 
   var filename = (extension)?filenameWithExt.substring(0, filenameWithExt.length - extension.length-1):filenameWithExt;
-  console.log('filename: ' + filename);
   var truncationLength = lengthOfFileSystemMax - extension.length - 1;
   var sha3 = new SHA3.SHA3Hash();
   sha3.update(filename ,"utf8");
