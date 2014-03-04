@@ -341,9 +341,7 @@ function backupFbPost(postObj, callback, job){
         }
         //Getting the URL where the full size image is stored. OMG, gotta do lots of hops in Facebook before getting what you want... And yes, it's getting late in the night..
         var pictureLink = fbImageRes.source;
-        var pictureName = pictureLink.split('/'); //Assuming that the url finishes with the image's file name
-        pictureName = pictureName[pictureName.length - 1];
-        var fsWriter = fs.createWriteStream(path.join(postMediaPath, verifyPathLength(pictureName	))); //Creating after the picture name, in the posts media folder
+        var fsWriter = fs.createWriteStream(path.join(postMediaPath, nameForPictureAtPath(pictureLink))); //Creating after the picture name, in the posts media folder
         
         requestGetter (pictureLink, postInDb, saveInDb, fsWriter, callback);
         
@@ -357,16 +355,6 @@ function backupFbPost(postObj, callback, job){
     var pictureLink = postObj.picture;
     if (isFbUrl(pictureLink, true) && pictureLink.indexOf('safe_image.php') > 0 && getSearchKey(pictureLink, 'url')){
       //Creating a media folder for the post
-
-      try{
-        var pictureName = postObj.picture.split('/'); //Assuming that the url finishes with the image's file name
-        pictureName = pictureName[pictureName.length - 1];
-        var postMediaPath = path.join(postMediaPath, verifyPathLength(pictureName));
-      } catch(e){
-        saveInDb(postInDb);
-        sendCallback();
-        return;
-      }
       
       try{
         var theoricImageUrl = decodeURIComponent(getSearchKey(pictureLink, "url"));
@@ -376,14 +364,23 @@ function backupFbPost(postObj, callback, job){
         return;
       }
       
+      try{
+        //var pictureName = postObj.picture.split('/'); //Assuming that the url finishes with the image's file name
+        //pictureName = pictureName[pictureName.length - 1];
+        //console.log('Picture : ' + pictureName);
+        postMediaPath = path.join(postMediaPath, nameForPictureAtPath(theoricImageUrl));
+        console.log('Picture name : ' + postMediaPath);
+      } catch(e){
+        saveInDb(postInDb);
+        sendCallback();
+        return;
+      }
+
       if (!theoricImageUrl) {
         saveInDb(postInDb);
         sendCallback();
         return;
       };
-      
-      var theoricImageUrlParts = theoricImageUrl.split('/');
-      var imageName = theoricImageUrlParts[theoricImageUrlParts.length - 1];
 
       var fsWriter = fs.createWriteStream(postMediaPath);
       
@@ -597,14 +594,15 @@ exports.launchFeedBackup = function(job, queue, done){
   });
 }
 
-function verifyPathLength(path){
+function nameForPictureAtPath(path){
   var lengthOfFileSystemMax = 50;
-  var extension = path.split('.').pop();
   var folders = path.split('/');
   var filenameWithExt = folders.pop();
+  var extension = filenameWithExt.split('.').pop().split('?')[0];
+  console.log('extension: ' + extension);
 
   var filename = (extension)?filenameWithExt.substring(0, filenameWithExt.length - extension.length-1):filenameWithExt;
-
+  console.log('filename: ' + filename);
   var truncationLength = lengthOfFileSystemMax - extension.length - 1;
   var sha3 = new SHA3.SHA3Hash();
   sha3.update(filename ,"utf8");

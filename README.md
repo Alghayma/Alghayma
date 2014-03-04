@@ -28,6 +28,7 @@ Alghayma is *free and open-source* software. You can find us on GitHub to report
 
 We would like to thank:
 
+- [Salah Sibaï](https://twitter.com/salah_sibai) ([`salah_sibai`](http://dribbble.com/salah_sibai)) for designing the Alghayma logo.
 - [Arnaud Benard](https://twitter.com/arnaudbenard) ([`arnaudbenard`](https://github.com/arnaudbenard/)) for substantial contributions improving your Alghayma experience.
 
 ## Contact
