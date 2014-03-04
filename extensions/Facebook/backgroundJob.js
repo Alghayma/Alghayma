@@ -83,11 +83,10 @@ function refreshMetadata(){
 }
 
 //Getting all the posts, with an optional interval (since or until parameter)
-function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
+function navigatePage (pageId, Until, Since, cb, job, done) {
   if (typeof pageId != 'string') throw new TypeError('pageId must be a string');
   if (cb && typeof cb != 'function') throw new TypeError('When defined, "cb" must be a function');
   var reqText = pageId + '/posts';
-  var didMakeUselessCall = trollCall?true:false;
 
   function rateLimitedFBGet(path, until, since){
     throttle.increment(1, function(err, count) {
@@ -132,7 +131,7 @@ function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
     }
     if (since){
       if (!(since instanceof Date)) since = new Date(since);
-      options.since = Math.floor(since.getTime() / 1000) - 1 ;
+      options.since = Math.floor(since.getTime() / 1000) - 1;
     }
     
     fbgraph.get(path, options, function(err, fbRes){
@@ -157,18 +156,12 @@ function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
         return;
       }
 
-      if (trollCall){
-        trollCall = false;
-        rateLimitedFBGet(fbRes.paging.previous);
-        return;
-      }
-
       var tasksToExecute = [];
       for (var i = 0; i < fbRes.data.length; i++){
         //Backup a post if it meets the conditions and go to the next one
 
         var postCreationDate = new Date(fbRes.data[i].created_time);
-        if ((!Until || postCreationDate.getTime() < Until.getTime() || (didMakeUselessCall && postCreationDate.getTime() > Until.getTime())) && (!Since || postCreationDate.getTime() > Since.getTime())) {
+        if ((!Until || postCreationDate.getTime() < Until.getTime() ) && (!Since || postCreationDate.getTime() > Since.getTime())) {
 
           var postData = fbRes.data[i];
           function closure (apostData){
@@ -183,11 +176,10 @@ function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
           process.exit(1);
         } else if ((Until && (postCreationDate.getTime() == Until.getTime()))||(Since && (postCreationDate.getTime() == Since.getTime()))){
           job.log("We requested the last post we had too");
+        } else {
+          job.log(">>>>> This case is unhandled: ")
+          job.log(fbRes.data[i]);
         }
-          else{
-            job.log(">>>>> This case is unhandled: ")
-            job.log(fbRes.data[i]);
-          }
       }
       //async.series(tasksToExecute, function (err){
       async.parallelLimit(tasksToExecute,7, function (err, results){
@@ -201,14 +193,12 @@ function navigatePage (pageId, Until, Since, cb, job, done, trollCall) {
               rateLimitedFBGet(fbRes.paging.next);
               return;
             } else if (Until){
-              if (didMakeUselessCall) {
-                job.log("Requesting next batched updates")
-                rateLimitedFBGet(fbRes.paging.previous);
-                return;
-              }
               job.log("Finished processing batch (Until checked), requesting next one.");
               rateLimitedFBGet(fbRes.paging.next);
               return;
+            } else if (Since){
+            	job.log("Requesting next batched updates")
+              rateLimitedFBGet(fbRes.paging.next);
             } else {
               job.log("Shouldn't happen");
               process.exit(1);
@@ -520,7 +510,7 @@ exports.launchFeedBackup = function(job, queue, done){
 
       if (feedObj.didBackupHead) {
         // Just proceed to an update to fetch newest post since the most recent one.
-        FBPost.find({postId:feedID}).sort({postDate:'desc'}).limit(1).exec(function(err, posts) {
+        FBPost.find({feedId:feedID}).sort({postDate:'desc'}).limit(1).exec(function(err, posts) {
           if (err) {throw err};
           if (!posts[0]){
             console.log("There is no post for that feed in the database!");
@@ -537,7 +527,7 @@ exports.launchFeedBackup = function(job, queue, done){
             return;
           };
 
-          job.log('Updating Facebook page : ' + feedObj.name + " for posts since "+ posts[0].postDate + " named " + posts[0].postText);
+          job.log('Updating Facebook page : ' + feedObj.name + " for posts since " + posts[0].postDate + " named " + posts[0].postText);
 
           navigatePage(feedObj.id, undefined, posts[0].postDate, function(){
             FBFeed.update({id: feedObj.id}, {lastBackup: Date.now()}).exec(function(err){
