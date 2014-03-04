@@ -172,8 +172,7 @@ function navigatePage (pageId, Until, Since, cb, job, done) {
           closure(postData);
 
         } else if ((Since && postCreationDate.getTime() < Since.getTime()) || (Until && postCreationDate.getTime() > Until.getTime()) ){
-          console.log("The date of the post is older than what we asked!");
-          process.exit(1);
+          console.log("The date of the post is older than what we asked! We just reached the end of the backup");
         } else if ((Until && (postCreationDate.getTime() == Until.getTime()))||(Since && (postCreationDate.getTime() == Since.getTime()))){
           job.log("We requested the last post we had too");
         } else {
