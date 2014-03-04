@@ -138,6 +138,9 @@ function navigatePage (pageId, Until, Since, cb, job, done) {
       if (err) {
         if (err.code == 1 || err.code == 2){ //Internal FB errors
           job.log(JSON.stringify(err));
+          job.log('Gonna reschedule that job');
+          if (cb) cb;
+          return;
         } else if (err.code == 17){
           job.log("Hitting the maximum rate limit " + JSON.stringify(err));
         } else if (err.code == 100) {
