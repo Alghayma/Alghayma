@@ -58,7 +58,7 @@ exports.permalink = function getPermalink(postId){
 exports.setupRoutes = function(express, ext){
 	var path = require('path');
 	var shortname = require(path.join(__dirname, ext)).config.shortname
-	express.get('/' + shortname + '/search', this.search);
+	//express.get('/' + shortname + '/search', this.search);
 	express.get('/' + shortname +'/p', this.viewpage);
 	express.get('/' + shortname +'/chunk', this.chunk);
 	express.get('/' + shortname + '/media/:feedid/:postid', this.media);
@@ -158,7 +158,7 @@ exports.searchContent = function(req, res){
 		}
 		if (results){
 			
-		} else res.render('message', {title: 'Error', 'No results found for your search'});
+		} else res.render('message', {title: 'Error', message: 'No results found for your search'});
 	});
 };
 
