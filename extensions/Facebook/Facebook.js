@@ -58,7 +58,7 @@ exports.permalink = function getPermalink(postId){
 exports.setupRoutes = function(express, ext){
 	var path = require('path');
 	var shortname = require(path.join(__dirname, ext)).config.shortname
-	express.get('/' + shortname + '/search', this.search);
+	//express.get('/' + shortname + '/search', this.search);
 	express.get('/' + shortname +'/p', this.viewpage);
 	express.get('/' + shortname +'/chunk', this.chunk);
 	express.get('/' + shortname + '/media/:feedid/:postid', this.media);
@@ -118,6 +118,50 @@ exports.search = function(req, res){
 	});
 };
 
+exports.searchContent = function(req, res){
+	var feedId = req.param('feed');
+	var textQuery = req.param('q');
+	var since = req.param('since');
+	var until = req.param('until');
+
+	var limit = req.param('limit');
+	var offset = req.param('offset');
+
+	if (!limit) limit = 25;
+	if (!offset) offset = 0;
+
+	var searchRegexStr = '';
+	var queryWords = textQuery.split(' ');
+	for (var i = 0; i < queryWords.length; i++){
+		searchRegexStr += queryWords[i];
+		if (i != queryWords.length - 1) searchRegexStr += '|';
+	}
+	var searchRegex = new RegExp(searchRegexStr);
+
+	var queryObj = {postText: searchRegex, feedId: feedId};
+	var query = FBPost.find(queryObj).sort({postDate: -1});
+	if (until || since){
+		query = query.where('postDate');
+	}
+	if (until){
+		query = query.lte(until);
+	}
+	if (since){
+		query = query.gte(since);
+	}
+
+	query.exec(function(err, results){
+		if (err){
+			console.log('Error while doing an advanced search:\n' + JSON.stringify(err));
+			res.send(500,'Internal error');
+			return;
+		}
+		if (results){
+			
+		} else res.render('message', {title: 'Error', message: 'No results found for your search'});
+	});
+};
+
 exports.viewpage = function(req, res){
 
 	function formatDate(date) { return 'on ' + date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear() + ', at ' + date.getHours() + ':' + (date.getMinutes().toString().length == 1 ? date.getMinutes().toString() + '0' : date.getMinutes());} //That last part prevents from getting timestamps such as 15:0
@@ -128,7 +172,7 @@ exports.viewpage = function(req, res){
 		res.render('message', {title: 'Error', message: 'Sorry, but this address doesn\'t seem to come from Facebook...'});
 	}
 
-	FBFeed.findOne().or([{url: getPath(sourceUrl)}, {id: getPath(sourceUrl)}]).exec(function(err, feed){
+	FBFeed.findOne().or([{url: getPath(sourceUrl).toLowerCase()}, {id: getPath(sourceUrl)}]).exec(function(err, feed){
 		if (err){
 			throw err;
 			res.send(500, 'Internal error');
@@ -328,7 +372,7 @@ exports.addFeed = function(feedUrl, callback){
 					id: res.id,
 					name: res.name,
 					type: 'fbpage',
-					url: getFbPath(feedUrl),
+					url: getFbPath(feedUrl).toLowerCase(),
 					profileImage: res.picture.data.url,
 					didBackupHead: false
 				});
