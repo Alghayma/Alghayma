@@ -172,7 +172,7 @@ exports.viewpage = function(req, res){
 		res.render('message', {title: 'Error', message: 'Sorry, but this address doesn\'t seem to come from Facebook...'});
 	}
 
-	FBFeed.findOne().or([{url: getPath(sourceUrl).toLowerCase()}, {id: getPath(sourceUrl)}]).exec(function(err, feed){
+	FBFeed.findOne().or([{url: getPath(sourceUrl)}, {id: getPath(sourceUrl)}]).exec(function(err, feed){
 		if (err){
 			throw err;
 			res.send(500, 'Internal error');

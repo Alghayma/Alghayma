@@ -41,7 +41,7 @@ exports.refreshToken = function refreshToken(graph, mongoose,callback){
 			    		}
 			    		else{
 			    			console.log("The token we tried to use has been revoked. Deleting from database")
-			    			selectedUser.remove(function(err){if (error) {"Couldn't delete selected user"};});
+			    			selectedUser.remove(function(err){if (err) {"Couldn't delete selected user"};});
 			    			users = users.splice(chosenUserIndex, 1);
 			    			pickUser();
 			    			return;
