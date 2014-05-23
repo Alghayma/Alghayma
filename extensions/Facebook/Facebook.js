@@ -157,7 +157,7 @@ exports.searchContent = function(req, res){
 			return;
 		}
 		if (results){
-			
+
 		} else res.render('message', {title: 'Error', message: 'No results found for your search'});
 	});
 };
@@ -172,7 +172,7 @@ exports.viewpage = function(req, res){
 		res.render('message', {title: 'Error', message: 'Sorry, but this address doesn\'t seem to come from Facebook...'});
 	}
 
-	FBFeed.findOne().or([{url: getPath(sourceUrl).toLowerCase()}, {id: getPath(sourceUrl)}]).exec(function(err, feed){
+	FBFeed.findOne().or([{url: new RegExp(getPath(sourceUrl))}, {id: getPath(sourceUrl)}]).exec(function(err, feed){
 		if (err){
 			throw err;
 			res.send(500, 'Internal error');
@@ -381,7 +381,7 @@ exports.addFeed = function(feedUrl, callback){
 
 				jobs.create('facebookJob', {title: "Backup of " + newFeed.name, feedID: newFeed.id, feedname:newFeed.name}).save();
 				if (callback) callback(true, res.name);
-				
+
 			} else {
 				if (callback) callback(false, res.name);
 			}
