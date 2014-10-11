@@ -2,6 +2,8 @@
 
 # What is Alghayma?
 
+## Due to time constraints, Alghayma is no longer maintained. Facebook, please behave!
+
 Alghayma, meaning “The Cloud” in arabic, is designed to be a backup solution for online content. Social networks like Facebook and YouTube have been key players for citizen journalism during the arab spring. Unfortunately, some of the content being uploaded to these networks can violate the terms of service and thus are at risk of being deleted. The content has historical and analytic value, it can be used as precious evidence if the Assad regime would be tried at the International Criminal Court. Alghayma is a easy to use tool that provides free to backups of your favorite content. Anyone can add pages to be backed up in the system at no charge.
 
 ## How can I get my page backed up?
